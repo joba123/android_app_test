@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Build a tiny Android APK without requiring the Android SDK.
+"""Build the Sternenlabyrinth APK without requiring the Android SDK.
 
-It emits a valid APK with a binary AndroidManifest.xml and a classes.dex that
-creates an Activity containing a single centered Button.
+It emits a valid APK with a binary AndroidManifest.xml, the WebView Activity
+DEX, and the HTML/CSS/JavaScript game asset used by the Gradle project.
 """
 from __future__ import annotations
 
@@ -128,62 +128,34 @@ class DexBuilder:
         main = type_desc(PACKAGE + ".MainActivity")
         activity = "Landroid/app/Activity;"
         bundle = "Landroid/os/Bundle;"
-        button = "Landroid/widget/Button;"
-        frame = "Landroid/widget/FrameLayout;"
-        params = "Landroid/widget/FrameLayout$LayoutParams;"
         context = "Landroid/content/Context;"
         view = "Landroid/view/View;"
-        view_group_params = "Landroid/view/ViewGroup$LayoutParams;"
-        charseq = "Ljava/lang/CharSequence;"
+        webview = "Landroid/webkit/WebView;"
+        websettings = "Landroid/webkit/WebSettings;"
+        string = "Ljava/lang/String;"
         void = "V"
         boolean = "Z"
         int_t = "I"
 
-        for t in [main, activity, bundle, button, frame, params, context, view, view_group_params, charseq, void, boolean, int_t]:
+        for t in [main, activity, bundle, context, view, webview, websettings, string, void, boolean, int_t]:
             self.t(t)
 
-        m_activity_init = self.method(activity, "<init>", void, ())
-        m_main_init = self.method(main, "<init>", void, ())
-        m_activity_oncreate = self.method(activity, "onCreate", void, (bundle,))
-        m_main_oncreate = self.method(main, "onCreate", void, (bundle,))
-        m_button_init = self.method(button, "<init>", void, (context,))
-        m_set_text = self.method(button, "setText", void, (charseq,))
-        m_set_all_caps = self.method(button, "setAllCaps", void, (boolean,))
-        m_params_init = self.method(params, "<init>", void, (int_t, int_t, int_t))
-        m_frame_init = self.method(frame, "<init>", void, (context,))
-        m_add_view = self.method(frame, "addView", void, (view, view_group_params))
-        m_set_content = self.method(activity, "setContentView", void, (view,))
-        s_button_text = self.s("Test Button")
+        self.method(activity, "<init>", void, ())
+        self.method(main, "<init>", void, ())
+        self.method(activity, "onCreate", void, (bundle,))
+        self.method(main, "onCreate", void, (bundle,))
+        self.method(webview, "<init>", void, (context,))
+        self.method(webview, "getSettings", websettings, ())
+        self.method(websettings, "setJavaScriptEnabled", void, (boolean,))
+        self.method(websettings, "setDomStorageEnabled", void, (boolean,))
+        self.method(view, "setBackgroundColor", void, (int_t,))
+        self.method(webview, "loadUrl", void, (string,))
+        self.method(activity, "setContentView", void, (view,))
+        self.s("file:///android_asset/index.html")
         self.s("MainActivity.java")
 
         for ret, params_tuple in list(self.protos):
             self.s(self.shorty(ret) + "".join(self.shorty(p) for p in params_tuple))
-
-        init_bc = b"".join([
-            self.ins_35c(0x70, [0], m_activity_init),  # invoke-direct
-            self.ins_10x(0x0e),
-        ])
-        init_code = self.build_code(1, 1, 1, init_bc)
-
-        oncreate_bc = b"".join([
-            self.ins_35c(0x6f, [4, 5], m_activity_oncreate),
-            self.ins_21c(0x22, 1, self.t(button)),
-            self.ins_35c(0x70, [1, 4], m_button_init),
-            self.ins_21c(0x1a, 0, s_button_text),
-            self.ins_35c(0x6e, [1, 0], m_set_text),
-            self.ins_11n(0x12, 0, 0),
-            self.ins_35c(0x6e, [1, 0], m_set_all_caps),
-            self.ins_21c(0x22, 2, self.t(params)),
-            self.ins_11n(0x12, 0, -2),
-            self.ins_21s(0x13, 3, 17),
-            self.ins_35c(0x70, [2, 0, 0, 3], m_params_init),
-            self.ins_21c(0x22, 0, self.t(frame)),
-            self.ins_35c(0x70, [0, 4], m_frame_init),
-            self.ins_35c(0x6e, [0, 1, 2], m_add_view),
-            self.ins_35c(0x6e, [4, 0], m_set_content),
-            self.ins_10x(0x0e),
-        ])
-        oncreate_code = self.build_code(6, 2, 4, oncreate_bc)
 
         # Stable sorting required by the DEX format.
         self.strings.sort()
@@ -191,44 +163,42 @@ class DexBuilder:
         self.protos.sort(key=lambda p: (self.t(p[0]), tuple(self.t(x) for x in p[1])))
         self.methods.sort(key=lambda m: (self.t(m[0]), self.proto(*m[2]), self.s(m[1])))
 
-        # Recompute method indexes after sorting.
         m_main_init = self.methods.index((main, "<init>", (void, ())))
         m_main_oncreate = self.methods.index((main, "onCreate", (void, (bundle,))))
         m_activity_init = self.methods.index((activity, "<init>", (void, ())))
         m_activity_oncreate = self.methods.index((activity, "onCreate", (void, (bundle,))))
-        m_button_init = self.methods.index((button, "<init>", (void, (context,))))
-        m_set_text = self.methods.index((button, "setText", (void, (charseq,))))
-        m_set_all_caps = self.methods.index((button, "setAllCaps", (void, (boolean,))))
-        m_params_init = self.methods.index((params, "<init>", (void, (int_t, int_t, int_t))))
-        m_frame_init = self.methods.index((frame, "<init>", (void, (context,))))
-        m_add_view = self.methods.index((frame, "addView", (void, (view, view_group_params))))
+        m_webview_init = self.methods.index((webview, "<init>", (void, (context,))))
+        m_get_settings = self.methods.index((webview, "getSettings", (websettings, ())))
+        m_js = self.methods.index((websettings, "setJavaScriptEnabled", (void, (boolean,))))
+        m_dom = self.methods.index((websettings, "setDomStorageEnabled", (void, (boolean,))))
+        m_bg = self.methods.index((view, "setBackgroundColor", (void, (int_t,))))
+        m_load = self.methods.index((webview, "loadUrl", (void, (string,))))
         m_set_content = self.methods.index((activity, "setContentView", (void, (view,))))
-        s_button_text = self.s("Test Button")
+        s_url = self.s("file:///android_asset/index.html")
 
         init_bc = b"".join([
             self.ins_35c(0x70, [0], m_activity_init),
             self.ins_10x(0x0e),
         ])
         init_code = self.build_code(1, 1, 1, init_bc)
+
         oncreate_bc = b"".join([
-            self.ins_35c(0x6f, [4, 5], m_activity_oncreate),
-            self.ins_21c(0x22, 1, self.t(button)),
-            self.ins_35c(0x70, [1, 4], m_button_init),
-            self.ins_21c(0x1a, 0, s_button_text),
-            self.ins_35c(0x6e, [1, 0], m_set_text),
-            self.ins_11n(0x12, 0, 0),
-            self.ins_35c(0x6e, [1, 0], m_set_all_caps),
-            self.ins_21c(0x22, 2, self.t(params)),
-            self.ins_11n(0x12, 0, -2),
-            self.ins_21s(0x13, 3, 17),
-            self.ins_35c(0x70, [2, 0, 0, 3], m_params_init),
-            self.ins_21c(0x22, 0, self.t(frame)),
-            self.ins_35c(0x70, [0, 4], m_frame_init),
-            self.ins_35c(0x6e, [0, 1, 2], m_add_view),
-            self.ins_35c(0x6e, [4, 0], m_set_content),
+            self.ins_35c(0x6f, [3, 4], m_activity_oncreate),      # super.onCreate(bundle)
+            self.ins_21c(0x22, 0, self.t(webview)),               # new-instance v0, WebView
+            self.ins_35c(0x70, [0, 3], m_webview_init),           # WebView(this)
+            self.ins_35c(0x6e, [0], m_get_settings),              # getSettings()
+            self.ins_11n(0x0c, 1, 0),                             # move-result-object v1
+            self.ins_11n(0x12, 2, 1),                             # const/4 v2, #1
+            self.ins_35c(0x6e, [1, 2], m_js),                     # setJavaScriptEnabled(true)
+            self.ins_35c(0x6e, [1, 2], m_dom),                    # setDomStorageEnabled(true)
+            self.ins_21s(0x13, 2, 0xFF08),                        # const/16 v2, -0x6fe2 (0xFFFF901e low part)
+            self.ins_35c(0x6e, [0, 2], m_bg),                     # setBackgroundColor(fallback dark)
+            self.ins_21c(0x1a, 1, s_url),                         # const-string v1, url
+            self.ins_35c(0x6e, [0, 1], m_load),                   # loadUrl(url)
+            self.ins_35c(0x6e, [3, 0], m_set_content),            # setContentView(webView)
             self.ins_10x(0x0e),
         ])
-        oncreate_code = self.build_code(6, 2, 4, oncreate_bc)
+        oncreate_code = self.build_code(5, 2, 2, oncreate_bc)
 
         data = bytearray()
         string_offsets = []
@@ -257,8 +227,8 @@ class DexBuilder:
         class_data_off = len(data)
         class_data = bytearray()
         class_data += uleb128(1) + uleb128(0) + uleb128(1) + uleb128(0)
-        class_data += uleb128(m_main_init) + uleb128(0x10001) + uleb128(code_init_off)  # public constructor
-        class_data += uleb128(m_main_oncreate) + uleb128(0x0004) + uleb128(code_oncreate_off)  # protected
+        class_data += uleb128(m_main_init) + uleb128(0x10001) + uleb128(code_init_off)
+        class_data += uleb128(m_main_oncreate) + uleb128(0x0004) + uleb128(code_oncreate_off)
         data += class_data
         align4(data)
 
@@ -267,7 +237,7 @@ class DexBuilder:
         first_type_list_off = min(type_list_offsets.values()) if type_list_offsets else 0
         map_items = [
             (0x0000, 1, 0),
-            (0x0001, len(self.strings), 0),  # patched after ID offsets are known
+            (0x0001, len(self.strings), 0),
             (0x0002, len(self.types), 0),
             (0x0003, len(self.protos), 0),
             (0x0005, len(self.methods), 0),
@@ -304,7 +274,6 @@ class DexBuilder:
             for cls, name, proto in self.methods
         )
         class_defs_off = method_ids_off + len(method_ids)
-        # Patch map-list offsets that depend on sections placed after the data section.
         map_cursor = map_off_in_data + 4
         patch_offsets = {0x0001: string_ids_off, 0x0002: type_ids_off, 0x0003: proto_ids_off, 0x0005: method_ids_off, 0x0006: class_defs_off}
         for _ in range(struct.unpack_from("<I", data, map_off_in_data)[0]):
@@ -315,7 +284,7 @@ class DexBuilder:
         class_defs = struct.pack(
             "<IIIIIIII",
             self.t(main),
-            0x0001 | 0x0020,  # public | super
+            0x0001 | 0x0020,
             self.t(activity),
             0,
             self.s("MainActivity.java"),
@@ -380,7 +349,7 @@ def build_manifest() -> bytes:
         "manifest", "package", "uses-sdk", "android", "http://schemas.android.com/apk/res/android",
         "minSdkVersion", "targetSdkVersion", "application", "label", "allowBackup", "supportsRtl",
         "activity", "name", "exported", "intent-filter", "action", "category",
-        PACKAGE, ".MainActivity", "Android App Test", "true", "android.intent.action.MAIN", "android.intent.category.LAUNCHER",
+        PACKAGE, ".MainActivity", "Sternenlabyrinth", "true", "android.intent.action.MAIN", "android.intent.category.LAUNCHER",
     ]
     idx = {s: i for i, s in enumerate(strings)}
     android_ns = idx["http://schemas.android.com/apk/res/android"]
@@ -412,10 +381,10 @@ def build_manifest() -> bytes:
 
     chunks += struct.pack("<HHIIIII", 0x0100, 16, 24, 0, no, idx["android"], android_ns)
     chunks += start("manifest", [attr(no, "package", idx[PACKAGE], 3, idx[PACKAGE])])
-    chunks += start("uses-sdk", [attr(android_ns, "minSdkVersion", no, 0x10, 23), attr(android_ns, "targetSdkVersion", no, 0x10, 23)])
+    chunks += start("uses-sdk", [attr(android_ns, "minSdkVersion", no, 0x10, 23), attr(android_ns, "targetSdkVersion", no, 0x10, 35)])
     chunks += end("uses-sdk")
     chunks += start("application", [
-        attr(android_ns, "label", idx["Android App Test"], 3, idx["Android App Test"]),
+        attr(android_ns, "label", idx["Sternenlabyrinth"], 3, idx["Sternenlabyrinth"]),
         attr(android_ns, "allowBackup", idx["true"], 0x12, 0xFFFFFFFF),
         attr(android_ns, "supportsRtl", idx["true"], 0x12, 0xFFFFFFFF),
     ])
@@ -450,6 +419,7 @@ def main() -> None:
     with zipfile.ZipFile(APK_UNSIGNED, "w", compression=zipfile.ZIP_DEFLATED) as apk:
         apk.writestr("AndroidManifest.xml", manifest)
         apk.writestr("classes.dex", dex)
+        apk.write("app/src/main/assets/index.html", "assets/index.html")
     key = Path("build/debug.keystore")
     ensure_debug_keystore(key)
     if APK_SIGNED.exists():
