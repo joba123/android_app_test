@@ -9,7 +9,7 @@ This repository intentionally stores only text-based source and project files. G
 In an Android development environment with the Android SDK installed and access to Google's Maven repository, build the debug APK with:
 
 ```bash
-./gradlew assembleDebug
+gradle assembleDebug
 ```
 
 The generated debug APK is written to:
