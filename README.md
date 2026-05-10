@@ -1,35 +1,41 @@
-# Android App Test
+# Sternenlabyrinth
 
-Minimal Android test application. The first screen contains one centered button labeled **Test Button**.
+Eine vollständige Android-Spiel-App als kompaktes WebView-Spiel. **Sternenlabyrinth** ist ein taktisches Weltraum-Puzzle mit Hauptmenü, Levelauswahl, Einstellungen, lokal gespeichertem Fortschritt und sechs freischaltbaren Leveln.
 
-## Build APK locally
+## Spielprinzip
 
-This repository intentionally stores only text-based source and project files. Generated binary artifacts such as APKs are ignored and should be built locally or by CI.
+- Sammle in jedem Level alle gelben Energiekerne.
+- Meide rote Pulsare, denn sie beenden den Versuch sofort.
+- Erreiche danach das Portal, bevor das Zuglimit erreicht ist.
+- Steuere per Wischgeste oder über die eingeblendeten Pfeiltasten.
+- Einstellungen und freigeschaltete Level werden lokal auf dem Gerät gespeichert.
 
-In an Android development environment with the Android SDK installed and access to Google's Maven repository, build the debug APK with:
+## Build APK lokal
+
+In einer vollständigen Android-Entwicklungsumgebung mit Android SDK kann die Debug-APK so gebaut werden:
 
 ```bash
-gradle assembleDebug
+./gradlew assembleDebug
 ```
 
-The generated debug APK is written to:
+Die erzeugte APK liegt danach hier:
 
 ```text
 app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## SDK-free fallback builder
+## SDK-freier APK-Builder
 
-If the Android SDK is unavailable, the repository also includes a text-only helper script that can generate a minimal debug-signed APK locally:
+Falls kein Android SDK vorhanden ist, erzeugt das Repository zusätzlich eine debug-signierte APK aus den enthaltenen Textquellen:
 
 ```bash
 python3 scripts/build_manual_apk.py
 ```
 
-That generated APK is written to:
+Diese APK liegt danach hier:
 
 ```text
 build/outputs/apk/debug/app-debug.apk
 ```
 
-Generated APKs, keystores, and build output directories are ignored by Git.
+Generierte APKs, Keystores und Build-Ausgaben werden nicht versioniert.
