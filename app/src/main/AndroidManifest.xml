@@ -1,9 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <uses-permission android:name="android.permission.VIBRATE" />
-
     <application
         android:theme="@style/AppTheme"
-        android:label="Sternenlabyrinth"
+        android:label="Mehr oder Weniger: Deutschland"
         android:allowBackup="true"
         android:supportsRtl="true">
         <activity

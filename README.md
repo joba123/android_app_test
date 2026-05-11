@@ -1,41 +1,22 @@
-# Sternenlabyrinth
+# Mehr oder Weniger: Deutschland
 
-Eine vollständige Android-Spiel-App als kompaktes WebView-Spiel. **Sternenlabyrinth** ist ein taktisches Weltraum-Puzzle mit Hauptmenü, Levelauswahl, Einstellungen, lokal gespeichertem Fortschritt und sechs freischaltbaren Leveln.
+Native Android-Spiel-App in Kotlin mit dunklem Deutschland-Look. Das Quiz vergleicht lokale Dummy-Daten aus Kategorien wie Städte, Fußball, Autos, Preise & Alltag, Bundesländer und Unternehmen.
 
-## Spielprinzip
+## Features
 
-- Sammle in jedem Level alle gelben Energiekerne.
-- Meide rote Pulsare, denn sie beenden den Versuch sofort.
-- Erreiche danach das Portal, bevor das Zuglimit erreicht ist.
-- Steuere per Wischgeste oder über die eingeblendeten Pfeiltasten.
-- Einstellungen und freigeschaltete Level werden lokal auf dem Gerät gespeichert.
+- HomeScreen mit Endlosmodus, Kategorien, deaktivierter Daily Challenge und Statistiken.
+- GameScreen mit zwei großen Karten, Score/Streak, Leben, Höher/Weniger-Auswahl und Feedback.
+- CategoryScreen mit sieben Kategorien.
+- StatsScreen mit Highscore, gespielten Spielen, bester Streak, richtigen/falschen Antworten und Genauigkeit.
+- Keine XML-Layouts; die UI wird vollständig programmatisch aufgebaut.
+- Offline nutzbar, alle Fragen liegen lokal in der App.
 
-## Build APK lokal
+## Build
 
-In einer vollständigen Android-Entwicklungsumgebung mit Android SDK kann die Debug-APK so gebaut werden:
-
-```bash
-./gradlew assembleDebug
-```
-
-Die erzeugte APK liegt danach hier:
-
-```text
-app/build/outputs/apk/debug/app-debug.apk
-```
-
-## SDK-freier APK-Builder
-
-Falls kein Android SDK vorhanden ist, erzeugt das Repository zusätzlich eine debug-signierte APK aus den enthaltenen Textquellen:
+In einer vollständigen Android-Entwicklungsumgebung mit Android SDK:
 
 ```bash
-python3 scripts/build_manual_apk.py
+./gradlew :app:assembleDebug
 ```
 
-Diese APK liegt danach hier:
-
-```text
-build/outputs/apk/debug/app-debug.apk
-```
-
-Generierte APKs, Keystores und Build-Ausgaben werden nicht versioniert.
+Die Debug-APK wird unter `app/build/outputs/apk/debug/app-debug.apk` erzeugt.
