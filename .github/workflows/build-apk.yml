@@ -39,21 +39,39 @@ jobs:
         if: ${{ github.event_name != 'pull_request' }}
         env:
           APPETIZE_API_TOKEN: ${{ secrets.APPETIZE_API_TOKEN || vars.APPETIZE_API_TOKEN }}
+          APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY || vars.APPETIZE_PUBLIC_KEY }}
           APK_PATH: app/build/outputs/apk/debug/app-debug.apk
         run: |
-          if [ -z "$APPETIZE_API_TOKEN" ]; then
-            echo "APPETIZE_API_TOKEN is not configured; skipping Appetize.io upload."
-            exit 0
+          set -euo pipefail
+
+          if [ -z "${APPETIZE_API_TOKEN}" ]; then
+            echo "APPETIZE_API_TOKEN is not configured; Appetize.io upload cannot run." >&2
+            echo "Create an Appetize API token and save it as a repository secret or variable named APPETIZE_API_TOKEN." >&2
+            exit 1
+          fi
+
+          if [ ! -f "${APK_PATH}" ]; then
+            echo "APK was not found at ${APK_PATH}." >&2
+            exit 1
+          fi
+
+          upload_url="https://api.appetize.io/v1/apps"
+          if [ -n "${APPETIZE_PUBLIC_KEY}" ]; then
+            upload_url="${upload_url}/${APPETIZE_PUBLIC_KEY}"
+            echo "Updating existing Appetize.io app ${APPETIZE_PUBLIC_KEY}."
+          else
+            echo "Creating a new Appetize.io app. Set APPETIZE_PUBLIC_KEY to update the same app on future runs."
           fi
 
           response_file="$(mktemp)"
           http_status="$(curl --silent --show-error --location \
             --output "$response_file" \
             --write-out "%{http_code}" \
-            --request POST "https://api.appetize.io/v1/apps" \
+            --request POST "$upload_url" \
             --header "X-API-KEY: ${APPETIZE_API_TOKEN}" \
             --form "file=@${APK_PATH}" \
-            --form "platform=android")"
+            --form "platform=android" \
+            --form "note=android_app_test ${GITHUB_REF_NAME} ${GITHUB_SHA}")"
 
           if [ "$http_status" -lt 200 ] || [ "$http_status" -ge 300 ]; then
             echo "Appetize.io upload failed with HTTP status ${http_status}." >&2
@@ -61,20 +79,35 @@ jobs:
             exit 1
           fi
 
-          build_id="$(jq -r '.buildId // .build_id // .publicKey // .public_key // .app.buildId // .app.build_id // .app.publicKey // .app.public_key // empty' "$response_file")"
-          if [ -n "$build_id" ]; then
-            echo "Uploaded APK to Appetize.io: https://appetize.io/app/${build_id}"
-            {
-              echo "### Appetize.io"
-              echo "Uploaded APK: https://appetize.io/app/${build_id}"
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "Uploaded APK to Appetize.io."
-            {
-              echo "### Appetize.io"
-              echo "Uploaded APK successfully, but no build ID was found in the API response."
-            } >> "$GITHUB_STEP_SUMMARY"
+          app_key="$(jq -r '.publicKey // .public_key // .app.publicKey // .app.public_key // empty' "$response_file")"
+          build_id="$(jq -r '.buildId // .build_id // .build.id // .build.buildId // .build.build_id // empty' "$response_file")"
+
+          if [ -z "$app_key" ] && [ -n "${APPETIZE_PUBLIC_KEY}" ]; then
+            app_key="${APPETIZE_PUBLIC_KEY}"
           fi
+
+          if [ -z "$app_key" ] && [ -n "$build_id" ]; then
+            app_url="https://appetize.io/app/${build_id}"
+          elif [ -n "$app_key" ]; then
+            app_url="https://appetize.io/app/${app_key}"
+          else
+            echo "Appetize.io upload succeeded, but the response did not contain a publicKey/buildId." >&2
+            cat "$response_file" >&2
+            exit 1
+          fi
+
+          echo "Uploaded APK to Appetize.io: ${app_url}"
+          {
+            echo "### Appetize.io"
+            echo "Uploaded APK: ${app_url}"
+            if [ -n "$app_key" ]; then
+              echo "App public key: \`${app_key}\`"
+              echo "Save this value as APPETIZE_PUBLIC_KEY to update this app instead of creating a new one."
+            fi
+            if [ -n "$build_id" ]; then
+              echo "Build ID: \`${build_id}\`"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
