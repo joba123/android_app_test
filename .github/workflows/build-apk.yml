@@ -35,6 +35,47 @@ jobs:
       - name: Build debug APK
         run: gradle assembleDebug
 
+      - name: Upload APK to Appetize.io
+        if: ${{ github.event_name != 'pull_request' }}
+        env:
+          APPETIZE_API_TOKEN: ${{ secrets.APPETIZE_API_TOKEN || vars.APPETIZE_API_TOKEN }}
+          APK_PATH: app/build/outputs/apk/debug/app-debug.apk
+        run: |
+          if [ -z "$APPETIZE_API_TOKEN" ]; then
+            echo "APPETIZE_API_TOKEN is not configured; skipping Appetize.io upload."
+            exit 0
+          fi
+
+          response_file="$(mktemp)"
+          http_status="$(curl --silent --show-error --location \
+            --output "$response_file" \
+            --write-out "%{http_code}" \
+            --request POST "https://api.appetize.io/v1/apps" \
+            --header "X-API-KEY: ${APPETIZE_API_TOKEN}" \
+            --form "file=@${APK_PATH}" \
+            --form "platform=android")"
+
+          if [ "$http_status" -lt 200 ] || [ "$http_status" -ge 300 ]; then
+            echo "Appetize.io upload failed with HTTP status ${http_status}." >&2
+            cat "$response_file" >&2
+            exit 1
+          fi
+
+          build_id="$(jq -r '.buildId // .build_id // .publicKey // .public_key // .app.buildId // .app.build_id // .app.publicKey // .app.public_key // empty' "$response_file")"
+          if [ -n "$build_id" ]; then
+            echo "Uploaded APK to Appetize.io: https://appetize.io/app/${build_id}"
+            {
+              echo "### Appetize.io"
+              echo "Uploaded APK: https://appetize.io/app/${build_id}"
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Uploaded APK to Appetize.io."
+            {
+              echo "### Appetize.io"
+              echo "Uploaded APK successfully, but no build ID was found in the API response."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:

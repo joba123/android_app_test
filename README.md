@@ -4,7 +4,7 @@ Minimal Android test application. The app intentionally shows an empty white scr
 
 ## Build APK in GitHub
 
-The GitHub Actions workflow `Build APK` builds the debug APK on every push, pull request, and manual workflow dispatch.
+The GitHub Actions workflow `Build APK` builds the debug APK on every push, pull request, and manual workflow dispatch. On push and manual runs, it also uploads the generated APK directly to Appetize.io when `APPETIZE_API_TOKEN` is configured as a repository secret or variable. Pull request runs skip the Appetize.io upload so that tokens are not exposed to untrusted PR workflows.
 
 To download the APK:
 
