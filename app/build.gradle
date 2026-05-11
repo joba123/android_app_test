@@ -14,3 +14,38 @@ android {
         versionName '1.0'
     }
 }
+
+def kotlinCompilerJar = file("${System.properties['user.home']}/.local/share/mise/installs/gradle/8.14.4/gradle-8.14.4/lib/kotlin-compiler-embeddable-2.0.21.jar")
+def kotlinStdlibJar = fileTree("${System.properties['user.home']}/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-stdlib/2.1.20").matching { include '**/kotlin-stdlib-2.1.20.jar' }.singleFile
+def kotlinReflectJar = fileTree("${System.properties['user.home']}/.gradle/caches/modules-2/files-2.1/org.jetbrains.kotlin/kotlin-reflect/2.1.20").matching { include '**/kotlin-reflect-2.1.20.jar' }.singleFile
+def kotlinOutputDir = layout.buildDirectory.dir('generated/kotlinClasses')
+def kotlinJar = layout.buildDirectory.file('generated/kotlinApp.jar')
+
+tasks.register('compileKotlinSources', JavaExec) {
+    def sourceFiles = fileTree('src/main/java') { include '**/*.kt' }
+    inputs.files(sourceFiles)
+    outputs.file(kotlinJar)
+    classpath = fileTree("${System.properties['user.home']}/.local/share/mise/installs/gradle/8.14.4/gradle-8.14.4/lib") { include '*.jar' } + files(kotlinStdlibJar, kotlinReflectJar)
+    mainClass = 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler'
+    doFirst {
+        kotlinOutputDir.get().asFile.mkdirs()
+        kotlinJar.get().asFile.parentFile.mkdirs()
+        args = [
+            '-no-reflect',
+            '-no-stdlib',
+            '-jvm-target', '17',
+            '-classpath', "${android.sdkDirectory}/platforms/android-${android.compileSdk}/android.jar:${kotlinStdlibJar}",
+            '-d', kotlinOutputDir.get().asFile.absolutePath
+        ] + sourceFiles.files.collect { it.absolutePath }
+    }
+    doLast {
+        ant.jar(destfile: kotlinJar.get().asFile, basedir: kotlinOutputDir.get().asFile)
+    }
+}
+
+preBuild.dependsOn('compileKotlinSources')
+
+dependencies {
+    implementation files(kotlinJar)
+    implementation files(kotlinStdlibJar)
+}

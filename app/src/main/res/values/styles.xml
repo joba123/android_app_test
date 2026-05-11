@@ -3,9 +3,8 @@
         <item name="android:fontFamily">sans</item>
         <item name="android:windowNoTitle">true</item>
         <item name="android:windowActionBar">false</item>
-        <item name="android:windowFullscreen">true</item>
-        <item name="android:colorAccent">#72E8FF</item>
-        <item name="android:navigationBarColor">#071A2D</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">#090909</item>
+        <item name="android:navigationBarColor">#090909</item>
     </style>
 </resources>
