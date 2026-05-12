@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -24,6 +26,8 @@ import com.example.androidapptest.ui.GameViewModel
 import com.example.androidapptest.ui.screens.CategoryScreen
 import com.example.androidapptest.ui.screens.GameScreen
 import com.example.androidapptest.ui.screens.HomeScreen
+import com.example.androidapptest.ui.screens.LegalInfoScreen
+import com.example.androidapptest.ui.screens.SettingsScreen
 import com.example.androidapptest.ui.screens.StatsScreen
 import com.example.androidapptest.ui.theme.DeutschlandQuizTheme
 
@@ -31,6 +35,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var adMobManager: AdMobManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         adMobManager = AdMobManager(applicationContext)
@@ -47,7 +52,10 @@ private enum class AppScreen {
     Home,
     Game,
     Categories,
-    Stats
+    Stats,
+    Settings,
+    Privacy,
+    Imprint
 }
 
 @Composable
@@ -62,6 +70,8 @@ private fun DeutschlandQuizApp(
     val isRewardedAdReady by adMobManager.isRewardedAdReady.collectAsStateWithLifecycle()
     var screen by remember { mutableStateOf(AppScreen.Home) }
     var interstitialShownForGameOver by remember { mutableStateOf(false) }
+    var soundEnabled by rememberSaveable { mutableStateOf(false) }
+    var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
 
     fun openGame(category: QuizCategory) {
         interstitialShownForGameOver = false
@@ -88,7 +98,8 @@ private fun DeutschlandQuizApp(
             AppScreen.Home -> HomeScreen(
                 onStartEndless = { openGame(QuizCategory.Mixed) },
                 onOpenCategories = { screen = AppScreen.Categories },
-                onOpenStats = { screen = AppScreen.Stats }
+                onOpenStats = { screen = AppScreen.Stats },
+                onOpenSettings = { screen = AppScreen.Settings }
             )
 
             AppScreen.Game -> GameScreen(
@@ -98,6 +109,7 @@ private fun DeutschlandQuizApp(
                     viewModel.finishGameFromNavigation()
                     screen = AppScreen.Home
                 },
+                hapticsEnabled = hapticsEnabled,
                 onGuess = viewModel::submitGuess,
                 onNextRound = viewModel::nextRound,
                 onRestart = { openGame(state.category) },
@@ -119,6 +131,28 @@ private fun DeutschlandQuizApp(
             AppScreen.Stats -> StatsScreen(
                 stats = state.stats,
                 onBack = { screen = AppScreen.Home }
+            )
+
+            AppScreen.Settings -> SettingsScreen(
+                soundEnabled = soundEnabled,
+                hapticsEnabled = hapticsEnabled,
+                onSoundChanged = { soundEnabled = it },
+                onHapticsChanged = { hapticsEnabled = it },
+                onOpenPrivacy = { screen = AppScreen.Privacy },
+                onOpenImprint = { screen = AppScreen.Imprint },
+                onBack = { screen = AppScreen.Home }
+            )
+
+            AppScreen.Privacy -> LegalInfoScreen(
+                title = "Datenschutz",
+                body = "Platzhalter: Hier wird vor Veröffentlichung die vollständige Datenschutzerklärung ergänzt. Sie beschreibt, welche Daten verarbeitet werden, wie Werbung eingebunden ist und wie Nutzer Kontakt aufnehmen können.",
+                onBack = { screen = AppScreen.Settings }
+            )
+
+            AppScreen.Imprint -> LegalInfoScreen(
+                title = "Impressum",
+                body = "Platzhalter: Anbietername, Anschrift, Kontakt-E-Mail und vertretungsberechtigte Person vor dem Play-Store-Release ergänzen.",
+                onBack = { screen = AppScreen.Settings }
             )
         }
     }
