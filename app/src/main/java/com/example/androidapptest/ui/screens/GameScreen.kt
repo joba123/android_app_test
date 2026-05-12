@@ -9,12 +9,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -51,7 +47,7 @@ fun GameScreen(
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Zurück")
+                    Text("←", style = MaterialTheme.typography.titleLarge)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = state.category.title, style = MaterialTheme.typography.titleMedium, color = GermanyGold)
@@ -63,10 +59,10 @@ fun GameScreen(
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     repeat(3) { index ->
-                        Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = null,
-                            tint = if (index < state.lives) GermanyRed else MaterialTheme.colorScheme.surfaceVariant
+                        Text(
+                            text = "♥",
+                            color = if (index < state.lives) GermanyRed else MaterialTheme.colorScheme.surfaceVariant,
+                            style = MaterialTheme.typography.titleMedium
                         )
                     }
                 }
