@@ -1,5 +1,6 @@
 plugins {
     id 'com.android.application'
+    // Keep only the Compose compiler plugin here. AGP 9 compiles Kotlin sources itself.
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
