@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.IconButton
@@ -32,13 +33,25 @@ import com.example.androidapptest.ui.theme.SuccessGreen
 @Composable
 fun GameScreen(
     state: GameUiState,
+    isRewardedAdReady: Boolean,
     onBack: () -> Unit,
     onGuess: (Guess) -> Unit,
     onNextRound: () -> Unit,
-    onRestart: () -> Unit
+    onRestart: () -> Unit,
+    onContinueWithAd: () -> Unit
 ) {
     val leftItem = state.leftItem ?: return
     val rightItem = state.rightItem ?: return
+
+    if (state.gameOver) {
+        GameOverDialog(
+            score = state.score,
+            isRewardedAdReady = isRewardedAdReady,
+            rewardedAdMessage = state.rewardedAdMessage,
+            onRestart = onRestart,
+            onContinueWithAd = onContinueWithAd
+        )
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(20.dp),
@@ -121,4 +134,38 @@ fun GameScreen(
             Spacer(modifier = Modifier.height(4.dp))
         }
     }
+}
+
+@Composable
+private fun GameOverDialog(
+    score: Int,
+    isRewardedAdReady: Boolean,
+    rewardedAdMessage: String?,
+    onRestart: () -> Unit,
+    onContinueWithAd: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = {},
+        title = { Text("Game Over") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Dein Endscore: $score")
+                Text("Du kannst neu starten oder eine Rewarded Ad ansehen, um 1 Leben zu erhalten.")
+                if (!isRewardedAdReady) {
+                    Text("Werbung wird geladen …", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                rewardedAdMessage?.let { Text(it, color = GermanyGold, fontWeight = FontWeight.Bold) }
+            }
+        },
+        confirmButton = {
+            Button(onClick = onContinueWithAd, enabled = isRewardedAdReady) {
+                Text("Weiter mit Werbung")
+            }
+        },
+        dismissButton = {
+            OutlinedButton(onClick = onRestart) {
+                Text("Nochmal spielen")
+            }
+        }
+    )
 }
