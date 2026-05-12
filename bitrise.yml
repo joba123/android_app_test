@@ -11,9 +11,13 @@ workflows:
           inputs:
             - set_java_version: "17"
       - script@1:
-          title: Make gradlew executable
+          title: Prepare Gradle wrapper
           inputs:
             - content: |
+                set -euo pipefail
+                if [ ! -x ./gradlew ] || [ ! -f ./gradle/wrapper/gradle-wrapper.jar ]; then
+                  gradle --no-daemon --max-workers=1 wrapper --gradle-version 8.14.4 --distribution-type bin
+                fi
                 chmod +x ./gradlew
       - script@1:
           title: Build debug APK
