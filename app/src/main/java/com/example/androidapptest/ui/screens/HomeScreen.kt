@@ -26,7 +26,8 @@ import com.example.androidapptest.ui.theme.NightBlack
 fun HomeScreen(
     onStartEndless: () -> Unit,
     onOpenCategories: () -> Unit,
-    onOpenStats: () -> Unit
+    onOpenStats: () -> Unit,
+    onOpenSettings: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -67,6 +68,7 @@ fun HomeScreen(
             PrimaryMenuButton(text = "Kategorien", onClick = onOpenCategories, outlined = true)
             PrimaryMenuButton(text = "Daily Challenge · Coming soon", onClick = {}, enabled = false)
             PrimaryMenuButton(text = "Statistiken", onClick = onOpenStats, outlined = true)
+            PrimaryMenuButton(text = "Einstellungen", onClick = onOpenSettings, outlined = true)
         }
     }
 }
