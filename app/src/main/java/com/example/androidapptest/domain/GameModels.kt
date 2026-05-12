@@ -5,7 +5,8 @@ data class Stats(
     val gamesPlayed: Int = 0,
     val bestStreak: Int = 0,
     val correctAnswers: Int = 0,
-    val wrongAnswers: Int = 0
+    val wrongAnswers: Int = 0,
+    val selectedCategory: QuizCategory? = null
 ) {
     val accuracy: Int
         get() {
@@ -24,7 +25,8 @@ data class GameUiState(
     val isAnswerRevealed: Boolean = false,
     val lastAnswerCorrect: Boolean? = null,
     val gameOver: Boolean = false,
-    val stats: Stats = Stats()
+    val stats: Stats = Stats(),
+    val rewardedAdMessage: String? = null
 )
 
 enum class Guess {

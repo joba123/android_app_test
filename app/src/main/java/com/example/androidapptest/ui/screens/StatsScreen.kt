@@ -33,6 +33,14 @@ fun StatsScreen(stats: Stats, onBack: () -> Unit) {
                 fontWeight = FontWeight.ExtraBold
             )
         }
+        if (stats.gamesPlayed == 0 && stats.correctAnswers == 0 && stats.wrongAnswers == 0) {
+            Text(
+                text = "Noch keine Spiele",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = 16.dp)
+            )
+        }
         FlowRow(
             modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -45,6 +53,7 @@ fun StatsScreen(stats: Stats, onBack: () -> Unit) {
             StatTile("Richtige Antworten", stats.correctAnswers.toString(), Modifier.weight(1f))
             StatTile("Falsche Antworten", stats.wrongAnswers.toString(), Modifier.weight(1f))
             StatTile("Genauigkeit", "${stats.accuracy}%", Modifier.weight(1f))
+            StatTile("Letzte Kategorie", stats.selectedCategory?.title ?: "Noch keine Spiele", Modifier.weight(1f))
         }
     }
 }
