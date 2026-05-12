@@ -7,5 +7,6 @@ data class QuizItem(
     val value: Int,
     val displayValue: String,
     val category: QuizCategory,
-    val detail: String
+    val detail: String,
+    val funFact: String = detail
 )

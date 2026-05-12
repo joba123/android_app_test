@@ -101,7 +101,7 @@ class GameViewModel(
         val current = _uiState.value
         val right = current.rightItem ?: return
         if (current.gameOver) return
-        val next = randomItem(excluding = right.id)
+        val next = randomItem(excluding = right.id, anchorValue = right.value, score = current.score)
         lastItemId = next.id
         _uiState.update {
             it.copy(
@@ -153,11 +153,22 @@ class GameViewModel(
         }
     }
 
-    private fun randomItem(excluding: Int?): QuizItem {
-        val candidates = pool.filter { it.id != excluding && it.id != lastItemId }
+    private fun randomItem(excluding: Int?, anchorValue: Int? = null, score: Int = 0): QuizItem {
+        val baseCandidates = pool.filter { it.id != excluding && it.id != lastItemId }
             .ifEmpty { pool.filter { it.id != excluding } }
             .ifEmpty { pool }
-        return candidates.random()
+        if (anchorValue == null || score < 2) return baseCandidates.random()
+
+        val similarityWindow = when {
+            score >= 14 -> 0.18f
+            score >= 9 -> 0.28f
+            score >= 5 -> 0.42f
+            else -> 0.65f
+        }
+        val lowerBound = (anchorValue * (1f - similarityWindow)).toInt()
+        val upperBound = (anchorValue * (1f + similarityWindow)).toInt()
+        val similarCandidates = baseCandidates.filter { it.value in lowerBound..upperBound }
+        return similarCandidates.ifEmpty { baseCandidates.sortedBy { kotlin.math.abs(it.value - anchorValue) }.take(3) }.random()
     }
 
     class Factory(private val statsRepository: StatsRepository) : ViewModelProvider.Factory {

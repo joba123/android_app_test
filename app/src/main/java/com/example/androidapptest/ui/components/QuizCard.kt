@@ -2,6 +2,7 @@ package com.example.androidapptest.ui.components
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -45,12 +47,23 @@ fun QuizCard(
         null -> GermanyGold
     }
     val scale by animateFloatAsState(
-        targetValue = if (feedbackCorrect != null) 1.03f else 1f,
+        targetValue = if (feedbackCorrect != null) 1.025f else 1f,
+        animationSpec = tween(durationMillis = 180),
         label = "card feedback scale"
+    )
+    val rotation by animateFloatAsState(
+        targetValue = if (revealValue) 0f else -4f,
+        animationSpec = tween(durationMillis = 260),
+        label = "card reveal tilt"
     )
 
     Card(
-        modifier = modifier.scale(scale),
+        modifier = modifier
+            .scale(scale)
+            .graphicsLayer {
+                rotationY = rotation
+                cameraDistance = 12f * density
+            },
         shape = RoundedCornerShape(28.dp),
         border = BorderStroke(1.dp, accent.copy(alpha = 0.45f)),
         colors = CardDefaults.cardColors(containerColor = SoftGraphite),
