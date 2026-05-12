@@ -1,0 +1,31 @@
+format_version: "13"
+default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+project_type: android
+
+workflows:
+  build_debug_apk:
+    description: Build Android Debug APK
+    steps:
+      - git-clone@8: {}
+      - set-java-version@1:
+          inputs:
+            - set_java_version: "17"
+      - script@1:
+          title: Make gradlew executable
+          inputs:
+            - content: |
+                chmod +x ./gradlew
+      - script@1:
+          title: Build debug APK
+          inputs:
+            - content: |
+                ./gradlew --no-daemon --max-workers=1 --stacktrace :app:assembleDebug
+      - script@1:
+          title: Copy APK to deploy directory
+          inputs:
+            - content: |
+                mkdir -p "$BITRISE_DEPLOY_DIR"
+                APK_PATH=$(find . -path "*/build/outputs/apk/debug/*.apk" | head -n 1)
+                echo "APK found: $APK_PATH"
+                cp "$APK_PATH" "$BITRISE_DEPLOY_DIR/"
+      - deploy-to-bitrise-io@2: {}
