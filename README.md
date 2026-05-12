@@ -22,10 +22,10 @@ To download the APK:
 
 ## Local build
 
-Use Gradle 9.1.0 or newer with JDK 17.
+Use the committed Gradle wrapper with JDK 17. The wrapper pins the Gradle version used by CI, so local builds do not require a system Gradle installation.
 
 ```bash
-gradle assembleDebug
+./gradlew :app:assembleDebug
 ```
 
 The generated APK is written to `app/build/outputs/apk/debug/app-debug.apk`.

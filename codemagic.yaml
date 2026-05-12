@@ -39,6 +39,9 @@ workflows:
         script: |
           set -euo pipefail
           cd "$PROJECT_DIR"
+          if [ ! -x ./gradlew ] || [ ! -f ./gradle/wrapper/gradle-wrapper.jar ]; then
+            gradle --no-daemon --max-workers=1 wrapper --gradle-version 8.14.4 --distribution-type bin
+          fi
           chmod +x ./gradlew
       - name: Configure memory-conscious Gradle defaults
         script: |
