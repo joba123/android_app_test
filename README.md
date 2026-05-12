@@ -22,6 +22,8 @@ To download the APK:
 
 ## Local build
 
+Use Gradle 9.1.0 or newer with JDK 17.
+
 ```bash
 gradle assembleDebug
 ```
