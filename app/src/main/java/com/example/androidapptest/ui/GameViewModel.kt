@@ -1,18 +1,22 @@
 package com.example.androidapptest.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.example.androidapptest.data.QuestionRepository
+import com.example.androidapptest.data.StatsRepository
 import com.example.androidapptest.domain.GameUiState
 import com.example.androidapptest.domain.Guess
 import com.example.androidapptest.domain.QuizCategory
 import com.example.androidapptest.domain.QuizItem
-import com.example.androidapptest.domain.Stats
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 class GameViewModel(
+    private val statsRepository: StatsRepository,
     private val repository: QuestionRepository = QuestionRepository()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
@@ -21,10 +25,18 @@ class GameViewModel(
     val categories: List<QuizCategory> = repository.categories
 
     private var pool: List<QuizItem> = repository.getQuestions(QuizCategory.Mixed)
-    private var stats = Stats()
     private var lastItemId: Int? = null
+    private var correctAnswersInCurrentGame = 0
+    private var wrongAnswersInCurrentGame = 0
+    private var bestStreakInCurrentGame = 0
+    private var gameOverRecorded = false
 
     init {
+        viewModelScope.launch {
+            statsRepository.stats.collect { savedStats ->
+                _uiState.update { it.copy(stats = savedStats) }
+            }
+        }
         startGame(QuizCategory.Mixed)
     }
 
@@ -33,12 +45,19 @@ class GameViewModel(
         val first = randomItem(excluding = null)
         val second = randomItem(excluding = first.id)
         lastItemId = second.id
-        _uiState.value = GameUiState(
-            category = category,
-            leftItem = first,
-            rightItem = second,
-            stats = stats
-        )
+        correctAnswersInCurrentGame = 0
+        wrongAnswersInCurrentGame = 0
+        bestStreakInCurrentGame = 0
+        gameOverRecorded = false
+        _uiState.update { current ->
+            GameUiState(
+                category = category,
+                leftItem = first,
+                rightItem = second,
+                stats = current.stats.copy(selectedCategory = category)
+            )
+        }
+        viewModelScope.launch { statsRepository.saveSelectedCategory(category) }
     }
 
     fun submitGuess(guess: Guess) {
@@ -56,13 +75,12 @@ class GameViewModel(
         val newLives = if (isCorrect) current.lives else current.lives - 1
         val isGameOver = newLives <= 0
 
-        stats = stats.copy(
-            highScore = maxOf(stats.highScore, newScore),
-            bestStreak = maxOf(stats.bestStreak, newStreak),
-            correctAnswers = stats.correctAnswers + if (isCorrect) 1 else 0,
-            wrongAnswers = stats.wrongAnswers + if (isCorrect) 0 else 1,
-            gamesPlayed = stats.gamesPlayed + if (isGameOver) 1 else 0
-        )
+        if (isCorrect) {
+            correctAnswersInCurrentGame += 1
+        } else {
+            wrongAnswersInCurrentGame += 1
+        }
+        bestStreakInCurrentGame = maxOf(bestStreakInCurrentGame, newStreak)
 
         _uiState.update {
             it.copy(
@@ -72,9 +90,11 @@ class GameViewModel(
                 isAnswerRevealed = true,
                 lastAnswerCorrect = isCorrect,
                 gameOver = isGameOver,
-                stats = stats
+                rewardedAdMessage = null
             )
         }
+
+        if (isGameOver) recordGameOverOnce()
     }
 
     fun nextRound() {
@@ -88,20 +108,48 @@ class GameViewModel(
                 leftItem = right,
                 rightItem = next,
                 isAnswerRevealed = false,
-                lastAnswerCorrect = null
+                lastAnswerCorrect = null,
+                rewardedAdMessage = null
             )
         }
     }
 
+    fun continueAfterRewardedAd() {
+        val current = _uiState.value
+        if (!current.gameOver) return
+        _uiState.update {
+            it.copy(
+                lives = 1,
+                gameOver = false,
+                isAnswerRevealed = true,
+                rewardedAdMessage = "Du hast 1 Leben erhalten. Weiter geht's!"
+            )
+        }
+    }
+
+    fun markRewardedAdUnavailable() {
+        _uiState.update { it.copy(rewardedAdMessage = "Werbung ist gerade nicht verfügbar. Bitte versuche es später erneut.") }
+    }
+
     fun finishGameFromNavigation() {
         val current = _uiState.value
-        if (current.score > 0 || current.lives < 3) {
-            stats = stats.copy(
-                highScore = maxOf(stats.highScore, current.score),
-                bestStreak = maxOf(stats.bestStreak, current.streak),
-                gamesPlayed = stats.gamesPlayed + 1
+        if (current.gameOver) {
+            recordGameOverOnce()
+        }
+    }
+
+    private fun recordGameOverOnce() {
+        if (gameOverRecorded) return
+        gameOverRecorded = true
+        val current = _uiState.value
+        viewModelScope.launch {
+            statsRepository.recordGameOver(
+                score = current.score,
+                bestStreakInGame = bestStreakInCurrentGame,
+                correctAnswersInGame = correctAnswersInCurrentGame,
+                wrongAnswersInGame = wrongAnswersInCurrentGame,
+                selectedCategory = current.category
             )
-            _uiState.update { it.copy(stats = stats) }
         }
     }
 
@@ -110,5 +158,15 @@ class GameViewModel(
             .ifEmpty { pool.filter { it.id != excluding } }
             .ifEmpty { pool }
         return candidates.random()
+    }
+
+    class Factory(private val statsRepository: StatsRepository) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(GameViewModel::class.java)) {
+                return GameViewModel(statsRepository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+        }
     }
 }
