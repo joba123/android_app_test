@@ -22,10 +22,13 @@ To download the APK:
 
 ## Local build
 
-Use Gradle 9.1.0 or newer with JDK 17.
+Use Gradle 9.1.0 or newer with JDK 17. Binary wrapper artifacts are intentionally not checked into this repository, so install Gradle locally or use a version manager.
+
+If you see a JVM class-initialization error such as `Could not initialize class jdk.internal.math.FormattedFloatingDecimal$Form`, stop any old Gradle daemons and make sure `JAVA_HOME` points at JDK 17 before rebuilding.
 
 ```bash
-gradle assembleDebug
+gradle --stop
+JAVA_HOME=/path/to/jdk17 gradle assembleDebug
 ```
 
 The generated APK is written to `app/build/outputs/apk/debug/app-debug.apk`.
