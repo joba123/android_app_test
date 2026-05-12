@@ -1,0 +1,68 @@
+workflows:
+  android-debug-apk:
+    name: android-debug-apk
+    max_build_duration: 30
+    instance_type: linux_x2
+    environment:
+      java: 17
+      vars:
+        GRADLE_OPTS: >-
+          -Dorg.gradle.daemon=false
+          -Dorg.gradle.parallel=false
+          -Dorg.gradle.workers.max=1
+          -Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=768m -Dfile.encoding=UTF-8
+          -Dkotlin.daemon.jvm.options=-Xmx1024m
+          -Dkotlin.compiler.execution.strategy=in-process
+    scripts:
+      - name: Find Android project
+        script: |
+          set -euo pipefail
+
+          PROJECT_DIR=""
+          while IFS= read -r gradlew_file; do
+            candidate_dir="$(dirname "$gradlew_file")"
+            if { [ -f "$candidate_dir/settings.gradle" ] || [ -f "$candidate_dir/settings.gradle.kts" ]; } && \
+               { [ -f "$candidate_dir/app/build.gradle" ] || [ -f "$candidate_dir/app/build.gradle.kts" ]; }; then
+              PROJECT_DIR="$candidate_dir"
+              break
+            fi
+          done < <(find "$CM_BUILD_DIR" -type f -name gradlew -not -path '*/.gradle/*' -not -path '*/build/*' | sort)
+
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "Could not find an Android project containing gradlew, settings.gradle(.kts), and app/build.gradle(.kts)." >&2
+            exit 1
+          fi
+
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$CM_ENV"
+          echo "Android project found at: $PROJECT_DIR"
+      - name: Prepare Gradle wrapper
+        script: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          chmod +x ./gradlew
+      - name: Configure memory-conscious Gradle defaults
+        script: |
+          set -euo pipefail
+          mkdir -p "$HOME/.gradle"
+          cat > "$HOME/.gradle/gradle.properties" <<'GRADLE_PROPERTIES'
+          org.gradle.daemon=false
+          org.gradle.parallel=false
+          org.gradle.workers.max=1
+          org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=768m -Dfile.encoding=UTF-8
+          kotlin.daemon.jvm.options=-Xmx1024m
+          kotlin.compiler.execution.strategy=in-process
+          GRADLE_PROPERTIES
+      - name: Build debug APK
+        script: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          ./gradlew --no-daemon --max-workers=1 :app:assembleDebug
+      - name: Export APK
+        script: |
+          set -euo pipefail
+          cd "$PROJECT_DIR"
+          mkdir -p "$CM_EXPORT_DIR"
+          find app/build/outputs/apk/debug -type f -name '*.apk' -exec cp {} "$CM_EXPORT_DIR" \;
+          find "$CM_EXPORT_DIR" -type f -name '*.apk' -print
+    artifacts:
+      - $CM_EXPORT_DIR/*.apk
