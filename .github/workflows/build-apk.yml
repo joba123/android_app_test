@@ -51,6 +51,7 @@ jobs:
           if [ -n "$apk_path" ] && [ -f "$apk_path" ]; then
             echo "path=$apk_path" >> "$GITHUB_OUTPUT"
             echo "Found debug APK: $apk_path"
+            echo "Debug APK size: $(du -h "$apk_path" | cut -f1)"
           else
             echo "No debug APK found."
           fi
@@ -65,9 +66,8 @@ jobs:
           set -euo pipefail
 
           if [ -z "${APPETIZE_API_TOKEN}" ]; then
-            echo "APPETIZE_API_TOKEN is not configured; Appetize.io upload cannot run." >&2
-            echo "Create an Appetize API token and save it as a repository secret or variable named APPETIZE_API_TOKEN." >&2
-            exit 1
+            echo "APPETIZE_API_TOKEN is not configured; skipping Appetize.io upload."
+            exit 0
           fi
 
           if [ ! -f "${APK_PATH}" ]; then
