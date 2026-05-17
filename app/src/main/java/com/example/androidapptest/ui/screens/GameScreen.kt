@@ -2,7 +2,6 @@ package com.example.androidapptest.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -12,7 +11,6 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.animation.using
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +21,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -57,13 +56,11 @@ import com.example.androidapptest.ui.theme.SuccessGreen
 @Composable
 fun GameScreen(
     state: GameUiState,
-    isRewardedAdReady: Boolean,
     hapticsEnabled: Boolean,
     onBack: () -> Unit,
     onGuess: (Guess) -> Unit,
     onNextRound: () -> Unit,
-    onRestart: () -> Unit,
-    onContinueWithAd: () -> Unit
+    onRestart: () -> Unit
 ) {
     val leftItem = state.leftItem ?: return
     val rightItem = state.rightItem ?: return
@@ -81,10 +78,7 @@ fun GameScreen(
     if (state.gameOver) {
         GameOverDialog(
             score = state.score,
-            isRewardedAdReady = isRewardedAdReady,
-            rewardedAdMessage = state.rewardedAdMessage,
-            onRestart = onRestart,
-            onContinueWithAd = onContinueWithAd
+            onRestart = onRestart
         )
     }
 
@@ -97,7 +91,7 @@ fun GameScreen(
         Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onBack) {
-                    Text("←", style = MaterialTheme.typography.titleLarge)
+                    Text("←", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 }
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = state.category.title, style = MaterialTheme.typography.titleMedium, color = GermanyGold)
@@ -109,35 +103,25 @@ fun GameScreen(
                         )
                     }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    repeat(3) { index ->
-                        Text(
-                            text = "♥",
-                            color = if (index < state.lives) GermanyRed else MaterialTheme.colorScheme.surfaceVariant,
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                    }
-                }
             }
 
             AnimatedContent(
-                targetState = leftItem.id to rightItem.id,
+                targetState = leftItem to rightItem,
                 transitionSpec = {
                     (fadeIn(tween(180)) + slideInVertically { it / 12 }) togetherWith
-                        (fadeOut(tween(140)) + slideOutVertically { -it / 12 }) using
-                        SizeTransform(clip = false)
+                        (fadeOut(tween(140)) + slideOutVertically { -it / 12 })
                 },
                 label = "question transition"
-            ) {
+            ) { (animatedLeftItem, animatedRightItem) ->
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     QuizCard(
-                        item = leftItem,
+                        item = animatedLeftItem,
                         revealValue = true,
                         modifier = Modifier.fillMaxWidth(),
                         feedbackCorrect = null
                     )
                     QuizCard(
-                        item = rightItem,
+                        item = animatedRightItem,
                         revealValue = state.isAnswerRevealed,
                         modifier = Modifier.fillMaxWidth(),
                         feedbackCorrect = state.lastAnswerCorrect
@@ -146,15 +130,22 @@ fun GameScreen(
             }
 
             AnimatedVisibility(
-                visible = state.isAnswerRevealed,
+                visible = state.isAnswerRevealed && state.lastAnswerCorrect != null,
                 enter = fadeIn(tween(160)) + scaleIn(initialScale = 0.96f),
                 exit = fadeOut(tween(120)) + scaleOut(targetScale = 0.96f)
             ) {
-                FeedbackPanel(isCorrect = state.lastAnswerCorrect == true, funFact = rightItem.funFact)
+                state.lastAnswerCorrect?.let { isCorrect ->
+                    FeedbackPanel(isCorrect = isCorrect, funFact = rightItem.funFact)
+                }
             }
         }
 
-        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier
+                .navigationBarsPadding()
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             if (state.gameOver) {
                 Text(
                     text = "Game Over · Endscore ${state.score}",
@@ -216,10 +207,7 @@ private fun FeedbackPanel(isCorrect: Boolean, funFact: String) {
 @Composable
 private fun GameOverDialog(
     score: Int,
-    isRewardedAdReady: Boolean,
-    rewardedAdMessage: String?,
-    onRestart: () -> Unit,
-    onContinueWithAd: () -> Unit
+    onRestart: () -> Unit
 ) {
     Dialog(onDismissRequest = {}) {
         Card(
@@ -243,17 +231,10 @@ private fun GameOverDialog(
                     Text("Game Over", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
                     Text("Endscore $score", color = GermanyGold, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
                     Text(
-                        "Starte direkt neu oder sieh dir eine Rewarded Ad an, um mit 1 Leben weiterzuspielen.",
+                        "Eine falsche Antwort beendet den Run. Starte neu und versuche, deine Serie zu schlagen.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
-                    if (!isRewardedAdReady) {
-                        Text("Werbung wird geladen …", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    rewardedAdMessage?.let { Text(it, color = GermanyGold, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center) }
-                    Button(onClick = onContinueWithAd, enabled = isRewardedAdReady, modifier = Modifier.fillMaxWidth()) {
-                        Text("Weiter mit Werbung")
-                    }
                     OutlinedButton(onClick = onRestart, modifier = Modifier.fillMaxWidth()) {
                         Text("Nochmal spielen")
                     }

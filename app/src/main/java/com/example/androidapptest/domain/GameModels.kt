@@ -21,7 +21,6 @@ data class GameUiState(
     val rightItem: QuizItem? = null,
     val score: Int = 0,
     val streak: Int = 0,
-    val lives: Int = 3,
     val isAnswerRevealed: Boolean = false,
     val lastAnswerCorrect: Boolean? = null,
     val gameOver: Boolean = false,

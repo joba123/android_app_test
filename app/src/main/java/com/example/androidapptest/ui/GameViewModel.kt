@@ -72,8 +72,7 @@ class GameViewModel(
         }
         val newScore = if (isCorrect) current.score + 1 else current.score
         val newStreak = if (isCorrect) current.streak + 1 else 0
-        val newLives = if (isCorrect) current.lives else current.lives - 1
-        val isGameOver = newLives <= 0
+        val isGameOver = !isCorrect
 
         if (isCorrect) {
             correctAnswersInCurrentGame += 1
@@ -86,7 +85,6 @@ class GameViewModel(
             it.copy(
                 score = newScore,
                 streak = newStreak,
-                lives = newLives,
                 isAnswerRevealed = true,
                 lastAnswerCorrect = isCorrect,
                 gameOver = isGameOver,
@@ -112,23 +110,6 @@ class GameViewModel(
                 rewardedAdMessage = null
             )
         }
-    }
-
-    fun continueAfterRewardedAd() {
-        val current = _uiState.value
-        if (!current.gameOver) return
-        _uiState.update {
-            it.copy(
-                lives = 1,
-                gameOver = false,
-                isAnswerRevealed = true,
-                rewardedAdMessage = "Du hast 1 Leben erhalten. Weiter geht's!"
-            )
-        }
-    }
-
-    fun markRewardedAdUnavailable() {
-        _uiState.update { it.copy(rewardedAdMessage = "Werbung ist gerade nicht verfügbar. Bitte versuche es später erneut.") }
     }
 
     fun finishGameFromNavigation() {

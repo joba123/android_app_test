@@ -25,6 +25,7 @@ import com.example.androidapptest.ui.theme.GermanyGold
 
 @Composable
 fun CategoryScreen(
+    title: String = "Kategorien",
     categories: List<QuizCategory>,
     onBack: () -> Unit,
     onCategorySelected: (QuizCategory) -> Unit
@@ -32,11 +33,12 @@ fun CategoryScreen(
     Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Text("←", style = MaterialTheme.typography.titleLarge)
+                Text("←", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
             }
             Text(
-                text = "Kategorien",
+                text = title,
                 style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.ExtraBold
             )
         }

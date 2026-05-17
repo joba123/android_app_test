@@ -25,11 +25,12 @@ fun StatsScreen(stats: Stats, onBack: () -> Unit) {
     Column(modifier = Modifier.fillMaxSize().padding(20.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) {
-                Text("←", style = MaterialTheme.typography.titleLarge)
+                Text("←", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
             }
             Text(
                 text = "Statistiken",
                 style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.ExtraBold
             )
         }

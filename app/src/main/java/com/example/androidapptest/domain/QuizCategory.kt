@@ -7,5 +7,5 @@ enum class QuizCategory(val title: String, val subtitle: String) {
     DailyLife("Preise & Alltag", "Mieten, Löhne und Konsum"),
     States("Bundesländer", "Fläche, Einwohner und Wirtschaft"),
     Companies("Unternehmen", "Umsatz, Standorte und Mitarbeitende"),
-    Mixed("Gemischt", "Alles quer durch Deutschland")
+    Mixed("Alle Kategorien", "Alles quer durch Deutschland")
 }

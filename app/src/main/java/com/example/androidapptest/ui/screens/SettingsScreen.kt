@@ -97,9 +97,14 @@ fun LegalInfoScreen(title: String, body: String, onBack: () -> Unit) {
 private fun Header(title: String, onBack: () -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack) {
-            Text("←", style = MaterialTheme.typography.titleLarge)
+            Text("←", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
         }
-        Text(text = title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+        Text(
+            text = title,
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.ExtraBold
+        )
     }
 }
 

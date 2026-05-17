@@ -1,6 +1,7 @@
 package com.example.androidapptest
 
 import android.os.Bundle
+import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
 private enum class AppScreen {
     Home,
     Game,
+    EndlessCategories,
     Categories,
     Stats,
     Settings,
@@ -67,7 +69,6 @@ private fun DeutschlandQuizApp(
     )
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    val isRewardedAdReady by adMobManager.isRewardedAdReady.collectAsStateWithLifecycle()
     var screen by remember { mutableStateOf(AppScreen.Home) }
     var interstitialShownForGameOver by remember { mutableStateOf(false) }
     var soundEnabled by rememberSaveable { mutableStateOf(false) }
@@ -89,6 +90,26 @@ private fun DeutschlandQuizApp(
         }
     }
 
+    fun navigateBack() {
+        when (screen) {
+            AppScreen.Home -> Unit
+            AppScreen.Game -> {
+                viewModel.finishGameFromNavigation()
+                screen = AppScreen.Home
+            }
+            AppScreen.EndlessCategories,
+            AppScreen.Categories,
+            AppScreen.Stats,
+            AppScreen.Settings -> screen = AppScreen.Home
+            AppScreen.Privacy,
+            AppScreen.Imprint -> screen = AppScreen.Settings
+        }
+    }
+
+    BackHandler(enabled = screen != AppScreen.Home) {
+        navigateBack()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -96,7 +117,7 @@ private fun DeutschlandQuizApp(
     ) {
         when (screen) {
             AppScreen.Home -> HomeScreen(
-                onStartEndless = { openGame(QuizCategory.Mixed) },
+                onStartEndless = { screen = AppScreen.EndlessCategories },
                 onOpenCategories = { screen = AppScreen.Categories },
                 onOpenStats = { screen = AppScreen.Stats },
                 onOpenSettings = { screen = AppScreen.Settings }
@@ -104,7 +125,6 @@ private fun DeutschlandQuizApp(
 
             AppScreen.Game -> GameScreen(
                 state = state,
-                isRewardedAdReady = isRewardedAdReady,
                 onBack = {
                     viewModel.finishGameFromNavigation()
                     screen = AppScreen.Home
@@ -112,17 +132,18 @@ private fun DeutschlandQuizApp(
                 hapticsEnabled = hapticsEnabled,
                 onGuess = viewModel::submitGuess,
                 onNextRound = viewModel::nextRound,
-                onRestart = { openGame(state.category) },
-                onContinueWithAd = {
-                    adMobManager.showRewardedAd(
-                        activity = activity,
-                        onRewardEarned = viewModel::continueAfterRewardedAd,
-                        onAdUnavailable = viewModel::markRewardedAdUnavailable
-                    )
-                }
+                onRestart = { openGame(state.category) }
+            )
+
+            AppScreen.EndlessCategories -> CategoryScreen(
+                title = "Endlosmodus",
+                categories = viewModel.categories,
+                onBack = { screen = AppScreen.Home },
+                onCategorySelected = { openGame(it) }
             )
 
             AppScreen.Categories -> CategoryScreen(
+                title = "Kategorien",
                 categories = viewModel.categories,
                 onBack = { screen = AppScreen.Home },
                 onCategorySelected = { openGame(it) }
