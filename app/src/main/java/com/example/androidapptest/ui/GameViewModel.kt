@@ -3,61 +3,99 @@ package com.example.androidapptest.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.androidapptest.data.QuestionRepository
+import com.example.androidapptest.data.ComparisonRepository
 import com.example.androidapptest.data.StatsRepository
-import com.example.androidapptest.domain.GameUiState
-import com.example.androidapptest.domain.Guess
-import com.example.androidapptest.domain.QuizCategory
-import com.example.androidapptest.domain.QuizItem
+import com.example.androidapptest.data.model.ComparisonItem
+import com.example.androidapptest.data.model.MainCategory
+import com.example.androidapptest.data.model.SubCategory
+import com.example.androidapptest.domain.game.GameMode
+import com.example.androidapptest.domain.game.GameUiState
+import com.example.androidapptest.domain.game.Guess
+import com.example.androidapptest.domain.stats.ModeStatSummary
+import com.example.androidapptest.domain.stats.Stats
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.random.Random
 
 class GameViewModel(
     private val statsRepository: StatsRepository,
-    private val repository: QuestionRepository = QuestionRepository()
+    private val repository: ComparisonRepository = ComparisonRepository()
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(GameUiState())
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
-    val categories: List<QuizCategory> = repository.categories
+    val mainCategories: List<MainCategory> = repository.mainCategories
 
-    private var pool: List<QuizItem> = repository.getQuestions(QuizCategory.Mixed)
-    private var lastItemId: Int? = null
+    private var gameOverRecorded = false
     private var correctAnswersInCurrentGame = 0
     private var wrongAnswersInCurrentGame = 0
     private var bestStreakInCurrentGame = 0
-    private var gameOverRecorded = false
+    private var lastPairIds: Set<Int> = emptySet()
 
     init {
         viewModelScope.launch {
             statsRepository.stats.collect { savedStats ->
-                _uiState.update { it.copy(stats = savedStats) }
+                _uiState.update { state ->
+                    state.copy(
+                        stats = savedStats,
+                        currentHighScore = maxOf(savedStats.highScoreFor(state.mode.statsKey), state.score)
+                    )
+                }
             }
         }
-        startGame(QuizCategory.Mixed)
     }
 
-    fun startGame(category: QuizCategory) {
-        pool = repository.getQuestions(category).ifEmpty { repository.getQuestions(QuizCategory.Mixed) }
-        val first = randomItem(excluding = null)
-        val second = randomItem(excluding = first.id)
-        lastItemId = second.id
-        correctAnswersInCurrentGame = 0
-        wrongAnswersInCurrentGame = 0
-        bestStreakInCurrentGame = 0
-        gameOverRecorded = false
-        _uiState.update { current ->
-            GameUiState(
-                category = category,
-                leftItem = first,
-                rightItem = second,
-                stats = current.stats.copy(selectedCategory = category)
+    fun subCategoriesFor(categoryId: String): List<SubCategory> =
+        repository.subCategoriesFor(categoryId)
+
+    fun itemCount(categoryId: String, subCategoryId: String): Int =
+        repository.itemCount(categoryId, subCategoryId)
+
+    fun highScoreForMainCategory(category: MainCategory, stats: Stats): Int {
+        if (category.isGeneral) return stats.generalHighScore
+        return repository.subCategoriesFor(category.id)
+            .maxOfOrNull { stats.highScoreFor(it.modeKey) }
+            ?: 0
+    }
+
+    fun subCategorySummaries(categoryId: String, stats: Stats): List<ModeStatSummary> =
+        repository.subCategoriesFor(categoryId).map { subCategory ->
+            ModeStatSummary(
+                key = subCategory.modeKey,
+                title = subCategory.name,
+                subtitle = subCategory.description,
+                highScore = stats.highScoreFor(subCategory.modeKey),
+                bestStreak = stats.bestStreakFor(subCategory.modeKey),
+                gamesPlayed = stats.modeGamesPlayed[subCategory.modeKey] ?: 0
             )
         }
-        viewModelScope.launch { statsRepository.saveSelectedCategory(category) }
+
+    fun topSubCategoryStats(stats: Stats): List<ModeStatSummary> =
+        repository.subCategories
+            .map { subCategory ->
+                val category = repository.mainCategory(subCategory.categoryId)
+                ModeStatSummary(
+                    key = subCategory.modeKey,
+                    title = "${category?.name.orEmpty()} · ${subCategory.name}",
+                    subtitle = subCategory.description,
+                    highScore = stats.highScoreFor(subCategory.modeKey),
+                    bestStreak = stats.bestStreakFor(subCategory.modeKey),
+                    gamesPlayed = stats.modeGamesPlayed[subCategory.modeKey] ?: 0
+                )
+            }
+            .filter { it.highScore > 0 || it.gamesPlayed > 0 }
+            .sortedByDescending { it.highScore }
+            .take(6)
+
+    fun startGeneralGame(): Boolean = startGame(GameMode.general())
+
+    fun startSubCategoryGame(categoryId: String, subCategoryId: String): Boolean {
+        val category = repository.mainCategory(categoryId) ?: return false
+        val subCategory = repository.subCategory(categoryId, subCategoryId) ?: return false
+        return startGame(GameMode.from(category, subCategory))
     }
 
     fun submitGuess(guess: Guess) {
@@ -72,7 +110,6 @@ class GameViewModel(
         }
         val newScore = if (isCorrect) current.score + 1 else current.score
         val newStreak = if (isCorrect) current.streak + 1 else 0
-        val isGameOver = !isCorrect
 
         if (isCorrect) {
             correctAnswersInCurrentGame += 1
@@ -85,29 +122,35 @@ class GameViewModel(
             it.copy(
                 score = newScore,
                 streak = newStreak,
+                currentHighScore = maxOf(current.currentHighScore, newScore),
                 isAnswerRevealed = true,
                 lastAnswerCorrect = isCorrect,
-                gameOver = isGameOver,
-                rewardedAdMessage = null
+                gameOver = !isCorrect,
+                errorMessage = null
             )
         }
 
-        if (isGameOver) recordGameOverOnce()
+        if (!isCorrect) recordGameOverOnce()
     }
 
     fun nextRound() {
         val current = _uiState.value
-        val right = current.rightItem ?: return
         if (current.gameOver) return
-        val next = randomItem(excluding = right.id, anchorValue = right.value, score = current.score)
-        lastItemId = next.id
+        val nextPair = nextPair(current.mode)
+        if (nextPair == null) {
+            _uiState.update {
+                it.copy(errorMessage = "Für diesen Modus gibt es noch nicht genug vergleichbare Items.")
+            }
+            return
+        }
+        lastPairIds = setOf(nextPair.first.id, nextPair.second.id)
         _uiState.update {
             it.copy(
-                leftItem = right,
-                rightItem = next,
+                leftItem = nextPair.first,
+                rightItem = nextPair.second,
                 isAnswerRevealed = false,
                 lastAnswerCorrect = null,
-                rewardedAdMessage = null
+                errorMessage = null
             )
         }
     }
@@ -116,6 +159,61 @@ class GameViewModel(
         val current = _uiState.value
         if (current.gameOver) {
             recordGameOverOnce()
+        }
+    }
+
+    private fun startGame(mode: GameMode): Boolean {
+        val firstPair = nextPair(mode, ignoreLastPair = true)
+        if (firstPair == null) {
+            _uiState.update {
+                it.copy(errorMessage = "Für diesen Modus gibt es noch nicht genug vergleichbare Items.")
+            }
+            return false
+        }
+
+        lastPairIds = setOf(firstPair.first.id, firstPair.second.id)
+        correctAnswersInCurrentGame = 0
+        wrongAnswersInCurrentGame = 0
+        bestStreakInCurrentGame = 0
+        gameOverRecorded = false
+
+        val stats = _uiState.value.stats
+        _uiState.update {
+            GameUiState(
+                mode = mode,
+                leftItem = firstPair.first,
+                rightItem = firstPair.second,
+                currentHighScore = stats.highScoreFor(mode.statsKey),
+                stats = stats
+            )
+        }
+        viewModelScope.launch { statsRepository.saveSelectedMode(mode) }
+        return true
+    }
+
+    private fun nextPair(mode: GameMode, ignoreLastPair: Boolean = false): Pair<ComparisonItem, ComparisonItem>? {
+        val groups = if (mode.isGeneralMode) {
+            repository.generalMetricGroups()
+        } else {
+            listOf(repository.itemsForSubCategory(mode.categoryId, mode.subcategoryId.orEmpty()))
+        }.filter { it.size >= 2 }
+
+        if (groups.isEmpty()) return null
+
+        repeat(24) {
+            val group = groups.random()
+            val first = group.random()
+            val second = group.filter { it.id != first.id }.random()
+            val pairIds = setOf(first.id, second.id)
+            if (ignoreLastPair || pairIds != lastPairIds || group.size <= 2) {
+                return first to second
+            }
+        }
+
+        val fallbackGroup = groups.first()
+        val shuffled = fallbackGroup.shuffled(Random.Default)
+        return shuffled.getOrNull(0)?.let { first ->
+            shuffled.firstOrNull { it.id != first.id }?.let { second -> first to second }
         }
     }
 
@@ -129,27 +227,9 @@ class GameViewModel(
                 bestStreakInGame = bestStreakInCurrentGame,
                 correctAnswersInGame = correctAnswersInCurrentGame,
                 wrongAnswersInGame = wrongAnswersInCurrentGame,
-                selectedCategory = current.category
+                selectedMode = current.mode
             )
         }
-    }
-
-    private fun randomItem(excluding: Int?, anchorValue: Int? = null, score: Int = 0): QuizItem {
-        val baseCandidates = pool.filter { it.id != excluding && it.id != lastItemId }
-            .ifEmpty { pool.filter { it.id != excluding } }
-            .ifEmpty { pool }
-        if (anchorValue == null || score < 2) return baseCandidates.random()
-
-        val similarityWindow = when {
-            score >= 14 -> 0.18f
-            score >= 9 -> 0.28f
-            score >= 5 -> 0.42f
-            else -> 0.65f
-        }
-        val lowerBound = (anchorValue * (1f - similarityWindow)).toInt()
-        val upperBound = (anchorValue * (1f + similarityWindow)).toInt()
-        val similarCandidates = baseCandidates.filter { it.value in lowerBound..upperBound }
-        return similarCandidates.ifEmpty { baseCandidates.sortedBy { kotlin.math.abs(it.value - anchorValue) }.take(3) }.random()
     }
 
     class Factory(private val statsRepository: StatsRepository) : ViewModelProvider.Factory {

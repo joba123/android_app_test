@@ -44,8 +44,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.androidapptest.domain.GameUiState
-import com.example.androidapptest.domain.Guess
+import com.example.androidapptest.domain.game.GameUiState
+import com.example.androidapptest.domain.game.Guess
 import com.example.androidapptest.ui.components.PrimaryMenuButton
 import com.example.androidapptest.ui.components.QuizCard
 import com.example.androidapptest.ui.theme.GermanyGold
@@ -94,14 +94,24 @@ fun GameScreen(
                     Text("←", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onBackground)
                 }
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = state.category.title, style = MaterialTheme.typography.titleMedium, color = GermanyGold)
+                    Text(text = state.mode.displayTitle, style = MaterialTheme.typography.titleMedium, color = GermanyGold)
+                    Text(
+                        text = state.mode.displaySubtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     AnimatedContent(targetState = animatedScore, label = "animated score") { score ->
                         Text(
-                            text = "Score $score · Streak ${state.streak}",
+                            text = "Score $score · Highscore ${state.currentHighScore}",
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
+                    Text(
+                        text = "Streak ${state.streak} · ${rightItem.categoryName} · ${rightItem.subcategoryName}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
 
@@ -176,7 +186,7 @@ fun GameScreen(
 }
 
 @Composable
-private fun FeedbackPanel(isCorrect: Boolean, funFact: String) {
+private fun FeedbackPanel(isCorrect: Boolean, funFact: String?) {
     val accent = if (isCorrect) SuccessGreen else GermanyRed
     Card(
         shape = RoundedCornerShape(22.dp),
@@ -194,7 +204,7 @@ private fun FeedbackPanel(isCorrect: Boolean, funFact: String) {
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = "Fun Fact: $funFact",
+                text = "Fun Fact: ${funFact.orEmpty()}",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,

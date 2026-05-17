@@ -28,7 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.androidapptest.domain.QuizItem
+import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.ui.theme.GermanyGold
 import com.example.androidapptest.ui.theme.GermanyRed
 import com.example.androidapptest.ui.theme.SoftGraphite
@@ -36,7 +36,7 @@ import com.example.androidapptest.ui.theme.SuccessGreen
 
 @Composable
 fun QuizCard(
-    item: QuizItem,
+    item: ComparisonItem,
     revealValue: Boolean,
     modifier: Modifier = Modifier,
     feedbackCorrect: Boolean? = null
@@ -90,14 +90,14 @@ fun QuizCard(
             )
             Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = item.detail,
+                text = item.subtitle,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = item.metric,
+                text = item.metricName,
                 style = MaterialTheme.typography.labelLarge,
                 color = accent,
                 fontWeight = FontWeight.SemiBold

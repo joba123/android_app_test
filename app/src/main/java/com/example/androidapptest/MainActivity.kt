@@ -1,11 +1,10 @@
 package com.example.androidapptest
 
 import android.os.Bundle
-import androidx.activity.compose.BackHandler
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,18 +17,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapptest.ads.AdMobManager
 import com.example.androidapptest.data.StatsRepository
-import com.example.androidapptest.domain.QuizCategory
 import com.example.androidapptest.ui.GameViewModel
-import com.example.androidapptest.ui.screens.CategoryScreen
 import com.example.androidapptest.ui.screens.GameScreen
 import com.example.androidapptest.ui.screens.HomeScreen
 import com.example.androidapptest.ui.screens.LegalInfoScreen
 import com.example.androidapptest.ui.screens.SettingsScreen
 import com.example.androidapptest.ui.screens.StatsScreen
+import com.example.androidapptest.ui.screens.SubCategoryScreen
 import com.example.androidapptest.ui.theme.DeutschlandQuizTheme
 
 class MainActivity : ComponentActivity() {
@@ -51,9 +50,8 @@ class MainActivity : ComponentActivity() {
 
 private enum class AppScreen {
     Home,
+    SubCategories,
     Game,
-    EndlessCategories,
-    Categories,
     Stats,
     Settings,
     Privacy,
@@ -70,14 +68,30 @@ private fun DeutschlandQuizApp(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var screen by remember { mutableStateOf(AppScreen.Home) }
+    var gameReturnScreen by rememberSaveable { mutableStateOf(AppScreen.Home) }
+    var selectedCategoryId by rememberSaveable { mutableStateOf<String?>(null) }
     var interstitialShownForGameOver by remember { mutableStateOf(false) }
     var soundEnabled by rememberSaveable { mutableStateOf(false) }
     var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
 
-    fun openGame(category: QuizCategory) {
-        interstitialShownForGameOver = false
-        viewModel.startGame(category)
-        screen = AppScreen.Game
+    fun openGeneralGame() {
+        if (viewModel.startGeneralGame()) {
+            gameReturnScreen = AppScreen.Home
+            interstitialShownForGameOver = false
+            screen = AppScreen.Game
+        }
+    }
+
+    fun restartCurrentGame() {
+        val mode = state.mode
+        val started = if (mode.isGeneralMode) {
+            viewModel.startGeneralGame()
+        } else {
+            viewModel.startSubCategoryGame(mode.categoryId, mode.subcategoryId.orEmpty())
+        }
+        if (started) {
+            interstitialShownForGameOver = false
+        }
     }
 
     LaunchedEffect(state.gameOver, screen) {
@@ -95,10 +109,9 @@ private fun DeutschlandQuizApp(
             AppScreen.Home -> Unit
             AppScreen.Game -> {
                 viewModel.finishGameFromNavigation()
-                screen = AppScreen.Home
+                screen = gameReturnScreen
             }
-            AppScreen.EndlessCategories,
-            AppScreen.Categories,
+            AppScreen.SubCategories,
             AppScreen.Stats,
             AppScreen.Settings -> screen = AppScreen.Home
             AppScreen.Privacy,
@@ -117,40 +130,60 @@ private fun DeutschlandQuizApp(
     ) {
         when (screen) {
             AppScreen.Home -> HomeScreen(
-                onStartEndless = { screen = AppScreen.EndlessCategories },
-                onOpenCategories = { screen = AppScreen.Categories },
+                categories = viewModel.mainCategories,
+                highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
+                onCategorySelected = { category ->
+                    if (category.isGeneral) {
+                        openGeneralGame()
+                    } else {
+                        selectedCategoryId = category.id
+                        screen = AppScreen.SubCategories
+                    }
+                },
                 onOpenStats = { screen = AppScreen.Stats },
                 onOpenSettings = { screen = AppScreen.Settings }
             )
+
+            AppScreen.SubCategories -> {
+                val selectedCategory = viewModel.mainCategories.firstOrNull { it.id == selectedCategoryId }
+                if (selectedCategory == null) {
+                    screen = AppScreen.Home
+                } else {
+                    SubCategoryScreen(
+                        category = selectedCategory,
+                        subCategories = viewModel.subCategoriesFor(selectedCategory.id),
+                        summaryFor = { subCategory ->
+                            viewModel.subCategorySummaries(selectedCategory.id, state.stats)
+                                .first { it.key == subCategory.modeKey }
+                        },
+                        itemCountFor = { viewModel.itemCount(it.categoryId, it.id) },
+                        onBack = { screen = AppScreen.Home },
+                        onSubCategorySelected = { subCategory ->
+                            if (viewModel.startSubCategoryGame(selectedCategory.id, subCategory.id)) {
+                                gameReturnScreen = AppScreen.SubCategories
+                                interstitialShownForGameOver = false
+                                screen = AppScreen.Game
+                            }
+                        }
+                    )
+                }
+            }
 
             AppScreen.Game -> GameScreen(
                 state = state,
                 onBack = {
                     viewModel.finishGameFromNavigation()
-                    screen = AppScreen.Home
+                    screen = gameReturnScreen
                 },
                 hapticsEnabled = hapticsEnabled,
                 onGuess = viewModel::submitGuess,
                 onNextRound = viewModel::nextRound,
-                onRestart = { openGame(state.category) }
-            )
-
-            AppScreen.EndlessCategories -> CategoryScreen(
-                title = "Endlosmodus",
-                categories = viewModel.categories,
-                onBack = { screen = AppScreen.Home },
-                onCategorySelected = { openGame(it) }
-            )
-
-            AppScreen.Categories -> CategoryScreen(
-                title = "Kategorien",
-                categories = viewModel.categories,
-                onBack = { screen = AppScreen.Home },
-                onCategorySelected = { openGame(it) }
+                onRestart = ::restartCurrentGame
             )
 
             AppScreen.Stats -> StatsScreen(
                 stats = state.stats,
+                topSubcategories = viewModel.topSubCategoryStats(state.stats),
                 onBack = { screen = AppScreen.Home }
             )
 
