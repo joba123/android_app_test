@@ -4,12 +4,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-upload-and-create-session:
-    name: Build APK, upload to Appetize, create session
+  build-and-upload:
+    name: Build APK and publish Appetize session link
     runs-on: ubuntu-latest
-    outputs:
-      appetize_app_url: ${{ steps.appetize.outputs.app_url }}
-      appetize_session_url: ${{ steps.appetize.outputs.session_url }}
 
     steps:
       - name: Checkout repository
@@ -57,7 +54,6 @@ jobs:
           fi
           echo "path=$apk_path" >> "$GITHUB_OUTPUT"
           echo "Found APK: $apk_path"
-          echo "APK size: $(du -h "$apk_path" | cut -f1)"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -66,113 +62,65 @@ jobs:
           path: ${{ steps.apk.outputs.path }}
           if-no-files-found: error
 
-      - name: Upload to Appetize and create session
+      - name: Upload APK to Appetize
         id: appetize
         env:
           APPETIZE_API_TOKEN: ${{ secrets.APPETIZE_API_TOKEN || vars.APPETIZE_API_TOKEN || secrets.APPETIZE_TOKEN || vars.APPETIZE_TOKEN }}
-          APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY || vars.APPETIZE_PUBLIC_KEY || secrets.APPETIZE_APP_PUBLIC_KEY || vars.APPETIZE_APP_PUBLIC_KEY }}
+          APPETIZE_PUBLIC_KEY: ${{ secrets.APPETIZE_PUBLIC_KEY || vars.APPETIZE_PUBLIC_KEY }}
           APK_PATH: ${{ steps.apk.outputs.path }}
         run: |
           set -euo pipefail
 
           if [ -z "${APPETIZE_API_TOKEN}" ]; then
-            echo "APPETIZE_API_TOKEN or APPETIZE_TOKEN is not configured." >&2
+            echo "APPETIZE_API_TOKEN is not configured." >&2
             exit 1
           fi
 
           upload_url="https://api.appetize.io/v1/apps"
           if [ -n "${APPETIZE_PUBLIC_KEY}" ]; then
             upload_url="${upload_url}/${APPETIZE_PUBLIC_KEY}"
-            echo "Updating existing Appetize app ${APPETIZE_PUBLIC_KEY}."
-          else
-            echo "Creating a new Appetize app."
           fi
 
-          upload_response="$(mktemp)"
-          upload_http_status="$(curl --silent --show-error --location \
-            --output "$upload_response" \
+          response_file="$(mktemp)"
+          http_status="$(curl --silent --show-error --location \
+            --output "$response_file" \
             --write-out "%{http_code}" \
             --request POST "$upload_url" \
             --header "X-API-KEY: ${APPETIZE_API_TOKEN}" \
             --form "file=@${APK_PATH}" \
             --form "platform=android" \
-            --form "fileType=apk" \
-            --form "note=android_app_test ${GITHUB_REF_NAME} ${GITHUB_SHA}")"
+            --form "fileType=apk")"
 
-          if [ "$upload_http_status" -lt 200 ] || [ "$upload_http_status" -ge 300 ]; then
-            echo "Appetize upload failed with HTTP ${upload_http_status}." >&2
-            cat "$upload_response" >&2
+          echo "HTTP status: $http_status"
+          cat "$response_file"
+          echo ""
+
+          if [ "$http_status" -lt 200 ] || [ "$http_status" -ge 300 ]; then
+            echo "Appetize upload failed." >&2
             exit 1
           fi
 
-          public_key="$(jq -r '.publicKey // .public_key // .app.publicKey // .app.public_key // empty' "$upload_response")"
-          build_id="$(jq -r '.buildId // .build_id // .build.id // .build.buildId // .build.build_id // empty' "$upload_response")"
-
+          public_key="$(jq -r '.publicKey // empty' "$response_file")"
           if [ -z "$public_key" ] && [ -n "${APPETIZE_PUBLIC_KEY}" ]; then
             public_key="${APPETIZE_PUBLIC_KEY}"
           fi
 
-          if [ -z "$public_key" ] && [ -z "$build_id" ]; then
-            echo "Appetize upload succeeded, but no publicKey/buildId was found in response." >&2
-            cat "$upload_response" >&2
+          if [ -z "$public_key" ]; then
+            echo "Could not determine Appetize publicKey from response." >&2
             exit 1
           fi
 
-          if [ -n "$public_key" ]; then
-            app_url="https://appetize.io/app/${public_key}"
-          else
-            app_url="https://appetize.io/app/${build_id}"
-          fi
-
-          session_url=""
-          session_response="$(mktemp)"
-
-          if [ -n "$public_key" ]; then
-            session_http_status="$(curl --silent --show-error --location \
-              --output "$session_response" \
-              --write-out "%{http_code}" \
-              --request POST "https://api.appetize.io/v1/sessions" \
-              --header "X-API-KEY: ${APPETIZE_API_TOKEN}" \
-              --header "Content-Type: application/json" \
-              --data "{\"app\":\"${public_key}\",\"platform\":\"android\",\"device\":\"pixel7\",\"osVersion\":\"13.0\"}")"
-
-            if [ "$session_http_status" -ge 200 ] && [ "$session_http_status" -lt 300 ]; then
-              session_url="$(jq -r '.sessionUrl // .url // .publicURL // .publicUrl // empty' "$session_response")"
-              if [ -z "$session_url" ]; then
-                session_id="$(jq -r '.id // .sessionId // .session_id // empty' "$session_response")"
-                if [ -n "$session_id" ]; then
-                  session_url="https://appetize.io/session/${session_id}"
-                fi
-              fi
-            else
-              echo "Creating Appetize session failed with HTTP ${session_http_status}. Falling back to app URL."
-              cat "$session_response"
-            fi
-          fi
-
-          if [ -z "$session_url" ]; then
-            session_url="$app_url"
-          fi
-
-          echo "app_url=$app_url" >> "$GITHUB_OUTPUT"
-          echo "session_url=$session_url" >> "$GITHUB_OUTPUT"
+          session_url="https://appetize.io/app/${public_key}"
+          echo "session_url=${session_url}" >> "$GITHUB_OUTPUT"
+          echo "public_key=${public_key}" >> "$GITHUB_OUTPUT"
 
           {
             echo "## Appetize Session"
             echo ""
-            echo "APK build + upload was successful."
-            echo ""
-            echo "App URL: ${app_url}"
             echo "Session URL: ${session_url}"
-            if [ -n "$public_key" ]; then
-              echo "Public key: ${public_key}"
-            fi
-            if [ -n "$build_id" ]; then
-              echo "Build ID: ${build_id}"
-            fi
+            echo ""
+            echo "Public key: ${public_key}"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Print links
-        run: |
-          echo "Appetize App URL: ${{ steps.appetize.outputs.app_url }}"
-          echo "Appetize Session URL: ${{ steps.appetize.outputs.session_url }}"
+      - name: Print session link
+        run: echo "Appetize session URL ${{ steps.appetize.outputs.session_url }}"
