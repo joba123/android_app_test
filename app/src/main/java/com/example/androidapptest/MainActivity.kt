@@ -25,6 +25,7 @@ import com.example.androidapptest.data.StatsRepository
 import com.example.androidapptest.ui.GameViewModel
 import com.example.androidapptest.ui.screens.GameScreen
 import com.example.androidapptest.ui.screens.HomeScreen
+import com.example.androidapptest.ui.screens.CategorySelectionScreen
 import com.example.androidapptest.ui.screens.LegalInfoScreen
 import com.example.androidapptest.ui.screens.SettingsScreen
 import com.example.androidapptest.ui.screens.StatsScreen
@@ -50,6 +51,7 @@ class MainActivity : ComponentActivity() {
 
 private enum class AppScreen {
     Home,
+    Categories,
     SubCategories,
     Game,
     Stats,
@@ -73,14 +75,6 @@ private fun DeutschlandQuizApp(
     var interstitialShownForGameOver by remember { mutableStateOf(false) }
     var soundEnabled by rememberSaveable { mutableStateOf(false) }
     var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
-
-    fun openGeneralGame() {
-        if (viewModel.startGeneralGame()) {
-            gameReturnScreen = AppScreen.Home
-            interstitialShownForGameOver = false
-            screen = AppScreen.Game
-        }
-    }
 
     fun restartCurrentGame() {
         val mode = state.mode
@@ -111,6 +105,7 @@ private fun DeutschlandQuizApp(
                 viewModel.finishGameFromNavigation()
                 screen = gameReturnScreen
             }
+            AppScreen.Categories,
             AppScreen.SubCategories,
             AppScreen.Stats,
             AppScreen.Settings -> screen = AppScreen.Home
@@ -130,18 +125,18 @@ private fun DeutschlandQuizApp(
     ) {
         when (screen) {
             AppScreen.Home -> HomeScreen(
-                categories = viewModel.mainCategories,
-                highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
-                onCategorySelected = { category ->
-                    if (category.isGeneral) {
-                        openGeneralGame()
-                    } else {
-                        selectedCategoryId = category.id
-                        screen = AppScreen.SubCategories
-                    }
-                },
+                onPlay = { screen = AppScreen.Categories },
                 onOpenStats = { screen = AppScreen.Stats },
                 onOpenSettings = { screen = AppScreen.Settings }
+            )
+            AppScreen.Categories -> CategorySelectionScreen(
+                categories = viewModel.mainCategories,
+                highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
+                onBack = { screen = AppScreen.Home },
+                onCategorySelected = {
+                    selectedCategoryId = it.id
+                    screen = AppScreen.SubCategories
+                }
             )
 
             AppScreen.SubCategories -> {
@@ -178,7 +173,15 @@ private fun DeutschlandQuizApp(
                 hapticsEnabled = hapticsEnabled,
                 onGuess = viewModel::submitGuess,
                 onNextRound = viewModel::nextRound,
-                onRestart = ::restartCurrentGame
+                onRestart = ::restartCurrentGame,
+                onRevealStats = viewModel::revealGameOverStats,
+                onRevive = {
+                    adMobManager.showRewardedAd(
+                        activity = activity,
+                        onRewardEarned = viewModel::continueAfterRevive,
+                        onAdUnavailable = {}
+                    )
+                }
             )
 
             AppScreen.Stats -> StatsScreen(

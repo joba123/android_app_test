@@ -64,7 +64,6 @@ fun StatsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 maxItemsInEachRow = 2
             ) {
-                StatTile("Highscore Allgemein", stats.generalHighScore.toString(), Modifier.weight(1f))
                 StatTile("Bester Run", stats.overallHighScore.toString(), Modifier.weight(1f))
                 StatTile("Spiele gespielt", stats.gamesPlayed.toString(), Modifier.weight(1f))
                 StatTile("Beste Streak", stats.bestStreak.toString(), Modifier.weight(1f))

@@ -60,7 +60,9 @@ fun GameScreen(
     onBack: () -> Unit,
     onGuess: (Guess) -> Unit,
     onNextRound: () -> Unit,
-    onRestart: () -> Unit
+    onRestart: () -> Unit,
+    onRevealStats: () -> Unit,
+    onRevive: () -> Unit
 ) {
     val leftItem = state.leftItem ?: return
     val rightItem = state.rightItem ?: return
@@ -78,7 +80,13 @@ fun GameScreen(
     if (state.gameOver) {
         GameOverDialog(
             score = state.score,
-            onRestart = onRestart
+            showStats = state.showGameOverStats,
+            isNewHighScore = state.isNewHighScore,
+            onRestart = {
+                onRevealStats()
+                onRestart()
+            },
+            onRevive = onRevive
         )
     }
 
@@ -217,7 +225,10 @@ private fun FeedbackPanel(isCorrect: Boolean, funFact: String?) {
 @Composable
 private fun GameOverDialog(
     score: Int,
-    onRestart: () -> Unit
+    showStats: Boolean,
+    isNewHighScore: Boolean,
+    onRestart: () -> Unit,
+    onRevive: () -> Unit
 ) {
     Dialog(onDismissRequest = {}) {
         Card(
@@ -240,13 +251,21 @@ private fun GameOverDialog(
                 ) {
                     Text("Game Over", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
                     Text("Endscore $score", color = GermanyGold, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
-                    Text(
-                        "Eine falsche Antwort beendet den Run. Starte neu und versuche, deine Serie zu schlagen.",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center
-                    )
+                    AnimatedVisibility(visible = isNewHighScore, enter = scaleIn(), exit = scaleOut()) {
+                        Text("Neuer Highscore! 🏆", color = SuccessGreen, fontWeight = FontWeight.ExtraBold)
+                    }
+                    if (showStats) {
+                        Text(
+                            "Eine falsche Antwort beendet den Run. Starte neu und versuche, deine Serie zu schlagen.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                     OutlinedButton(onClick = onRestart, modifier = Modifier.fillMaxWidth()) {
                         Text("Nochmal spielen")
+                    }
+                    OutlinedButton(onClick = onRevive, modifier = Modifier.fillMaxWidth()) {
+                        Text("Wiederbeleben")
                     }
                 }
             }

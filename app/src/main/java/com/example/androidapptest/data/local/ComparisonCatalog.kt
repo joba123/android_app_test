@@ -6,7 +6,6 @@ import com.example.androidapptest.data.model.SubCategory
 
 object ComparisonCatalog {
     val mainCategories = listOf(
-        MainCategory("general", "Allgemein", "Gemischte Fragen aus allen Bereichen", "★", isGeneral = true),
         MainCategory("football", "Fußball", "Vereine, Stadien, Werte und Reichweite", "⚽"),
         MainCategory("germany", "Deutschland", "Städte, Länder, Fläche und Alltag", "🇩🇪"),
         MainCategory("cars", "Autos", "Leistung, Preise und technische Daten", "🚗"),
