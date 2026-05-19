@@ -49,6 +49,7 @@ class MainActivity : ComponentActivity() {
 }
 
 private enum class AppScreen {
+    MainMenu,
     Home,
     Game,
     Categories,
@@ -68,7 +69,7 @@ private fun DeutschlandQuizApp(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val isRewardedAdReady by adMobManager.isRewardedAdReady.collectAsStateWithLifecycle()
-    var screen by remember { mutableStateOf(AppScreen.Home) }
+    var screen by remember { mutableStateOf(AppScreen.MainMenu) }
     var interstitialShownForGameOver by remember { mutableStateOf(false) }
     var soundEnabled by rememberSaveable { mutableStateOf(false) }
     var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
@@ -95,11 +96,16 @@ private fun DeutschlandQuizApp(
             .background(MaterialTheme.colorScheme.background)
     ) {
         when (screen) {
-            AppScreen.Home -> HomeScreen(
-                onStartEndless = { openGame(QuizCategory.Mixed) },
-                onOpenCategories = { screen = AppScreen.Categories },
+            AppScreen.MainMenu -> HomeScreen(
+                onPlay = { screen = AppScreen.Home },
                 onOpenStats = { screen = AppScreen.Stats },
                 onOpenSettings = { screen = AppScreen.Settings }
+            )
+
+            AppScreen.Home -> CategoryScreen(
+                categories = viewModel.categories,
+                onBack = { screen = AppScreen.MainMenu },
+                onCategorySelected = { openGame(it) }
             )
 
             AppScreen.Game -> GameScreen(
@@ -107,7 +113,7 @@ private fun DeutschlandQuizApp(
                 isRewardedAdReady = isRewardedAdReady,
                 onBack = {
                     viewModel.finishGameFromNavigation()
-                    screen = AppScreen.Home
+                    screen = AppScreen.MainMenu
                 },
                 hapticsEnabled = hapticsEnabled,
                 onGuess = viewModel::submitGuess,
@@ -119,18 +125,13 @@ private fun DeutschlandQuizApp(
                         onRewardEarned = viewModel::continueAfterRewardedAd,
                         onAdUnavailable = viewModel::markRewardedAdUnavailable
                     )
-                }
-            )
-
-            AppScreen.Categories -> CategoryScreen(
-                categories = viewModel.categories,
-                onBack = { screen = AppScreen.Home },
-                onCategorySelected = { openGame(it) }
+                },
+                onShowGameOverStats = viewModel::showGameOverStats
             )
 
             AppScreen.Stats -> StatsScreen(
                 stats = state.stats,
-                onBack = { screen = AppScreen.Home }
+                onBack = { screen = AppScreen.MainMenu }
             )
 
             AppScreen.Settings -> SettingsScreen(
@@ -140,7 +141,7 @@ private fun DeutschlandQuizApp(
                 onHapticsChanged = { hapticsEnabled = it },
                 onOpenPrivacy = { screen = AppScreen.Privacy },
                 onOpenImprint = { screen = AppScreen.Imprint },
-                onBack = { screen = AppScreen.Home }
+                onBack = { screen = AppScreen.MainMenu }
             )
 
             AppScreen.Privacy -> LegalInfoScreen(

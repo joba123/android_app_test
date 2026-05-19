@@ -54,7 +54,9 @@ class GameViewModel(
                 category = category,
                 leftItem = first,
                 rightItem = second,
-                stats = current.stats.copy(selectedCategory = category)
+                stats = current.stats.copy(selectedCategory = category),
+                isNewHighscore = false,
+                pendingGameOver = false
             )
         }
         viewModelScope.launch { statsRepository.saveSelectedCategory(category) }
@@ -74,6 +76,7 @@ class GameViewModel(
         val newStreak = if (isCorrect) current.streak + 1 else 0
         val newLives = if (isCorrect) current.lives else current.lives - 1
         val isGameOver = newLives <= 0
+        val isNewHighscore = isGameOver && newScore > current.stats.highScore
 
         if (isCorrect) {
             correctAnswersInCurrentGame += 1
@@ -90,6 +93,8 @@ class GameViewModel(
                 isAnswerRevealed = true,
                 lastAnswerCorrect = isCorrect,
                 gameOver = isGameOver,
+                pendingGameOver = isGameOver,
+                isNewHighscore = isNewHighscore,
                 rewardedAdMessage = null
             )
         }
@@ -121,6 +126,7 @@ class GameViewModel(
             it.copy(
                 lives = 1,
                 gameOver = false,
+                pendingGameOver = false,
                 isAnswerRevealed = true,
                 rewardedAdMessage = "Du hast 1 Leben erhalten. Weiter geht's!"
             )
@@ -129,6 +135,10 @@ class GameViewModel(
 
     fun markRewardedAdUnavailable() {
         _uiState.update { it.copy(rewardedAdMessage = "Werbung ist gerade nicht verfügbar. Bitte versuche es später erneut.") }
+    }
+
+    fun showGameOverStats() {
+        _uiState.update { it.copy(pendingGameOver = false) }
     }
 
     fun finishGameFromNavigation() {

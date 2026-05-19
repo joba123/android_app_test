@@ -24,8 +24,7 @@ import com.example.androidapptest.ui.theme.NightBlack
 
 @Composable
 fun HomeScreen(
-    onStartEndless: () -> Unit,
-    onOpenCategories: () -> Unit,
+    onPlay: () -> Unit,
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
@@ -64,9 +63,7 @@ fun HomeScreen(
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(20.dp))
-            PrimaryMenuButton(text = "Endlosmodus", onClick = onStartEndless)
-            PrimaryMenuButton(text = "Kategorien", onClick = onOpenCategories, outlined = true)
-            PrimaryMenuButton(text = "Daily Challenge · Coming soon", onClick = {}, enabled = false)
+            PrimaryMenuButton(text = "Spielen", onClick = onPlay)
             PrimaryMenuButton(text = "Statistiken", onClick = onOpenStats, outlined = true)
             PrimaryMenuButton(text = "Einstellungen", onClick = onOpenSettings, outlined = true)
         }
