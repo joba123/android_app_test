@@ -10,9 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -32,6 +30,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -40,6 +39,8 @@ import com.example.androidapptest.ui.theme.GermanyGold
 import com.example.androidapptest.ui.theme.GermanyRed
 import com.example.androidapptest.ui.theme.SoftGraphite
 import com.example.androidapptest.ui.theme.SuccessGreen
+
+private val QuizCardHeight = 236.dp
 
 @Composable
 fun QuizCard(
@@ -75,6 +76,7 @@ fun QuizCard(
 
     Card(
         modifier = modifier
+            .height(QuizCardHeight)
             .scale(scale)
             .graphicsLayer {
                 rotationY = rotation
@@ -87,13 +89,12 @@ fun QuizCard(
     ) {
         Box(
             modifier = Modifier
+                .fillMaxSize()
                 .background(
                     Brush.verticalGradient(
                         colors = listOf(accent.copy(alpha = 0.32f), SoftGraphite, Color.Black.copy(alpha = 0.88f))
                     )
                 )
-                .fillMaxWidth()
-                .defaultMinSize(minHeight = 236.dp)
         ) {
             if (imageUrl != null) {
                 AsyncImage(
@@ -125,7 +126,7 @@ fun QuizCard(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
@@ -135,44 +136,54 @@ fun QuizCard(
                         style = MaterialTheme.typography.labelLarge,
                         color = accent,
                         fontWeight = FontWeight.ExtraBold,
-                        textAlign = TextAlign.Center
+                        textAlign = TextAlign.Center,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                 }
                 Text(
                     text = item.title,
-                    style = MaterialTheme.typography.headlineSmall.copy(
+                    style = MaterialTheme.typography.titleLarge.copy(
                         shadow = readableTextStyle.shadow
                     ),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = item.subtitle,
                     style = readableTextStyle,
                     color = Color.White.copy(alpha = 0.88f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(18.dp))
                 Text(
                     text = item.metricName,
                     style = MaterialTheme.typography.labelLarge.copy(
                         shadow = readableTextStyle.shadow
                     ),
                     color = accent,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 AnimatedContent(targetState = revealValue, label = "value reveal") { revealed ->
                     Text(
                         text = if (revealed) item.displayValue else "?",
-                        fontSize = if (revealed) 34.sp else 54.sp,
-                        lineHeight = 58.sp,
+                        fontSize = if (revealed) 30.sp else 48.sp,
+                        lineHeight = if (revealed) 34.sp else 50.sp,
                         color = Color.White,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center,
+                        maxLines = if (revealed) 2 else 1,
+                        overflow = TextOverflow.Ellipsis,
                         style = MaterialTheme.typography.displaySmall.copy(
                             shadow = readableTextStyle.shadow
                         )

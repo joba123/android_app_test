@@ -6,11 +6,12 @@ import com.example.androidapptest.data.model.SubCategory
 
 object ComparisonCatalog {
     private const val PEXELS_LICENSE_URL = "https://www.pexels.com/license/"
+    private const val PIXABAY_LICENSE_URL = "https://pixabay.com/service/license-summary/"
 
     private data class ImageMetadata(
         val imageUrl: String,
         val imageSource: String,
-        val imageAuthor: String,
+        val imageAuthor: String?,
         val imageAttributionText: String,
         val imageLicenseUrl: String,
         val imageSearchQuery: String,
@@ -157,6 +158,116 @@ object ComparisonCatalog {
             description = "gaming controller"
         )
     )
+    private val imagesByTitle = mapOf(
+        "VW Golf GTI" to pexelsImage(
+            photoId = 28447308,
+            author = "Ertuğrul Tohma",
+            searchQuery = "VW Golf GTI red forest road Pexels",
+            description = "Volkswagen Golf GTI on a forest road"
+        ),
+        "BMW M3 Touring" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2017/11/22/16/44/bmw-m3-2970899_1280.jpg",
+            author = "Toby_Parsons",
+            searchQuery = "BMW M3 Pixabay",
+            description = "BMW M3 car"
+        ),
+        "Porsche 911 Carrera" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2020/12/01/18/06/porsche-911-gt2-5795128_1280.jpg",
+            author = "Ultra_Media",
+            searchQuery = "Porsche 911 Carrera sports car Pixabay",
+            description = "Porsche 911 sports car"
+        ),
+        "Mercedes-Benz G 500" to pexelsImage(
+            photoId = 17350681,
+            author = "Mike Bird",
+            searchQuery = "Mercedes G Class Pexels",
+            description = "Mercedes G-Class SUV"
+        ),
+        "Audi RS 6 Avant" to pexelsImage(
+            photoId = 1054211,
+            author = "Mike Bird",
+            searchQuery = "Audi RS 6 Avant Pexels",
+            description = "blue Audi RS 6 wagon"
+        ),
+        "Audi RS 6 Avant performance" to pexelsImage(
+            photoId = 1054211,
+            author = "Mike Bird",
+            searchQuery = "Audi RS 6 Avant performance Pexels",
+            description = "blue Audi RS 6 wagon"
+        ),
+        "Opel Astra" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2018/09/26/20/28/opel-3705545_1280.jpg",
+            author = "Arcaion",
+            searchQuery = "Opel Astra red hatchback Pixabay",
+            description = "red Opel Astra"
+        ),
+        "Opel Astra GSe" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2018/09/26/20/28/opel-3705545_1280.jpg",
+            author = "Arcaion",
+            searchQuery = "Opel Astra GSe red hatchback Pixabay",
+            description = "red Opel Astra"
+        ),
+        "VW ID.3 Pro" to pexelsImage(
+            photoId = 14209241,
+            author = "txomcs",
+            searchQuery = "Volkswagen ID.3 Pexels",
+            description = "Volkswagen ID.3 electric car"
+        ),
+        "BMW i5 M60" to pexelsImage(
+            photoId = 20200900,
+            author = "Esmihel Muhammed",
+            searchQuery = "BMW i5 Pexels",
+            description = "blue BMW i5"
+        ),
+        "Mercedes-AMG A 45 S" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2021/11/26/17/35/mercedes-amg-a45-6826323_1280.jpg",
+            author = "MelikHamdi",
+            searchQuery = "Mercedes AMG A45 Pixabay",
+            description = "Mercedes-AMG A45"
+        ),
+        "Porsche Taycan" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2022/12/01/21/34/porsche-taycan-7629824_1280.jpg",
+            author = "alandsmann",
+            searchQuery = "Porsche Taycan Pixabay",
+            description = "Porsche Taycan model"
+        ),
+        "Porsche Taycan Turbo GT" to pixabayImage(
+            imageUrl = "https://cdn.pixabay.com/photo/2022/12/01/21/34/porsche-taycan-7629824_1280.jpg",
+            author = "alandsmann",
+            searchQuery = "Porsche Taycan Turbo GT Pixabay",
+            description = "Porsche Taycan model"
+        ),
+        "Berlin" to pexelsImage(
+            photoId = 1057842,
+            author = "anna-m. w.",
+            searchQuery = "Berlin skyline Pexels",
+            description = "Berlin skyline"
+        ),
+        "Hamburg" to pexelsImage(
+            photoId = 30095370,
+            author = "Niklas Jeromin",
+            searchQuery = "Hamburg Elbphilharmonie Pexels",
+            description = "Elbphilharmonie facade in Hamburg"
+        ),
+        "München" to pexelsImage(
+            photoId = 21274213,
+            author = "Linda Gschwentner",
+            searchQuery = "Munich skyline Pexels",
+            description = "Munich skyline"
+        ),
+        "Köln" to pexelsImage(
+            photoId = 35384329,
+            author = "Oğuzhan Aşcıoğlu",
+            searchQuery = "Cologne Cathedral Hohenzollern Bridge Pexels",
+            description = "Cologne Cathedral and Hohenzollern Bridge"
+        ),
+        "Frankfurt am Main" to pexelsImage(
+            photoId = 13146197,
+            author = "Jose Vasquez",
+            searchQuery = "Frankfurt skyline Pexels",
+            description = "Frankfurt skyline"
+        )
+    )
 
     val items = listOf(
         item(1, "FC Bayern München", "München", "football", "market_value", 929_000_000, "929 Mio. €", "Rekordmeister mit internationalem Top-Kader"),
@@ -296,7 +407,7 @@ object ComparisonCatalog {
     ): ComparisonItem {
         val category = categoriesById.getValue(categoryId)
         val subCategory = subCategoriesByKey.getValue("${categoryId}_$subcategoryId")
-        val image = fallbackImagesBySubCategory[subCategory.metricId]
+        val image = imagesByTitle[title] ?: fallbackImagesBySubCategory[subCategory.metricId]
         return ComparisonItem(
             id = id,
             title = title,
@@ -331,6 +442,24 @@ object ComparisonCatalog {
         imageAuthor = author,
         imageAttributionText = "Photo by $author on Pexels ($description)",
         imageLicenseUrl = PEXELS_LICENSE_URL,
+        imageSearchQuery = searchQuery
+    )
+
+    private fun pixabayImage(
+        imageUrl: String,
+        author: String?,
+        searchQuery: String,
+        description: String
+    ) = ImageMetadata(
+        imageUrl = imageUrl,
+        imageSource = "Pixabay",
+        imageAuthor = author,
+        imageAttributionText = if (author != null) {
+            "Image by $author on Pixabay ($description)"
+        } else {
+            "Image on Pixabay ($description)"
+        },
+        imageLicenseUrl = PIXABAY_LICENSE_URL,
         imageSearchQuery = searchQuery
     )
 }

@@ -12,7 +12,12 @@ Each item can define:
 - `imageSearchQuery`
 - `imageVerified`
 
-The current catalog uses verified Pexels photo URLs grouped by safe, generic topics such as football stadiums, German city skylines, cars on roads, office buildings, smartphones, and game controllers. This avoids automatic use of club logos, brand logos, film posters, celebrity portraits, or other rights-sensitive imagery.
+The catalog uses two layers:
+
+- item-specific images in `imagesByTitle`, for example concrete car and city photos
+- fallback images in `fallbackImagesBySubCategory`, so every category still works if an item has no dedicated image
+
+This avoids automatic use of club logos, film posters, celebrity portraits, or other rights-sensitive imagery. Brand-specific car photos should only be added from a page with a clear license and stored with source, author, license URL, and search query.
 
 ## Adding Images
 
@@ -24,6 +29,7 @@ The current catalog uses verified Pexels photo URLs grouped by safe, generic top
 6. Leave image fields empty if no safe image is available; the card automatically falls back to its gradient background.
 
 Pexels license page: https://www.pexels.com/license/
+Pixabay license summary: https://pixabay.com/service/license-summary/
 
 Example direct image URL format:
 
