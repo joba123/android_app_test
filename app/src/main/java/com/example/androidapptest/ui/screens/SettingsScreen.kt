@@ -52,21 +52,6 @@ fun SettingsScreen(
             onCheckedChange = onHapticsChanged
         )
         SettingsActionRow(title = "Datenschutz", subtitle = "Platzhalter für die Datenschutzerklärung.", onClick = onOpenPrivacy)
-        SettingsActionRow(title = "Impressum", subtitle = "Platzhalter für Anbieterkennzeichnung und Kontakt.", onClick = onOpenImprint)
-        Card(
-            shape = RoundedCornerShape(22.dp),
-            border = BorderStroke(1.dp, GermanyGold.copy(alpha = 0.32f)),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Werbung entfernen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(
-                    "In-App-Kauf-Platzhalter für eine spätere werbefreie Version.",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                OutlinedButton(onClick = {}, enabled = false) { Text("Coming soon") }
-            }
-        }
     }
 }
 

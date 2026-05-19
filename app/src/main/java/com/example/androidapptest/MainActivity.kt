@@ -8,7 +8,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,6 +79,8 @@ private fun DeutschlandQuizApp(
     var endingRun by remember { mutableStateOf(false) }
     var soundEnabled by rememberSaveable { mutableStateOf(false) }
     var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
+    var finishedRunCount by rememberSaveable { mutableStateOf(0) }
+    var showExitGameDialog by remember { mutableStateOf(false) }
 
     fun restartCurrentGame() {
         val mode = state.mode
@@ -104,19 +109,29 @@ private fun DeutschlandQuizApp(
             return
         }
 
-        interstitialShownForGameOver = true
-        adMobManager.showInterstitialAfterGameOver(activity, onFinished = { finishRun() })
+        finishedRunCount += 1
+        // Interstitial nur jede zweite Runde und nur wenn der Score über 3 war.
+        val shouldShowInterstitial = state.score > 3 && finishedRunCount % 2 == 0
+        if (shouldShowInterstitial) {
+            interstitialShownForGameOver = true
+            adMobManager.showInterstitialAfterGameOver(activity, onFinished = { finishRun() })
+        } else {
+            finishRun()
+        }
     }
 
     fun navigateBack() {
         when (screen) {
             AppScreen.Home -> Unit
             AppScreen.Game -> {
-                if (state.runStatus == RunStatus.LostButCanRevive || state.runStatus == RunStatus.Reviving) {
-                    finishRunAfterInterstitial()
-                } else {
-                    viewModel.finishGameFromNavigation()
-                    screen = gameReturnScreen
+                when (state.runStatus) {
+                    RunStatus.LostButCanRevive,
+                    RunStatus.Reviving -> finishRunAfterInterstitial()
+                    RunStatus.GameOver -> {
+                        viewModel.finishGameFromNavigation()
+                        screen = gameReturnScreen
+                    }
+                    RunStatus.Playing -> showExitGameDialog = true
                 }
             }
             AppScreen.Categories,
@@ -179,7 +194,7 @@ private fun DeutschlandQuizApp(
                         },
                         itemCountFor = { viewModel.itemCount(it.categoryId, it.id) },
                         sampleItemFor = viewModel::sampleItemForSubCategory,
-                        onBack = { screen = AppScreen.Home },
+                        onBack = { screen = AppScreen.Categories },
                         onSubCategorySelected = { subCategory ->
                             if (viewModel.startSubCategoryGame(selectedCategory.id, subCategory.id)) {
                                 gameReturnScreen = AppScreen.SubCategories
@@ -242,6 +257,24 @@ private fun DeutschlandQuizApp(
                 title = "Impressum",
                 body = "Platzhalter: Anbietername, Anschrift, Kontakt-E-Mail und vertretungsberechtigte Person vor dem Play-Store-Release ergänzen.",
                 onBack = { screen = AppScreen.Settings }
+            )
+        }
+
+        if (showExitGameDialog) {
+            AlertDialog(
+                onDismissRequest = { showExitGameDialog = false },
+                title = { Text("Runde beenden?") },
+                text = { Text("Wenn du jetzt zurückgehst, wird die laufende Runde abgebrochen und dein aktueller Score geht verloren.") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        showExitGameDialog = false
+                        viewModel.finishGameFromNavigation()
+                        screen = gameReturnScreen
+                    }) { Text("Runde beenden") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showExitGameDialog = false }) { Text("Weiterspielen") }
+                }
             )
         }
     }

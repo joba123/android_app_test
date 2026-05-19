@@ -38,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -133,6 +134,7 @@ fun GameScreen(
                         Text(
                             text = "Score $score · Highscore ${state.currentHighScore}",
                             style = MaterialTheme.typography.headlineSmall,
+                            color = Color.White,
                             fontWeight = FontWeight.ExtraBold
                         )
                     }
