@@ -33,5 +33,12 @@ data class ComparisonItem(
     val displayValue: String,
     val unit: String? = null,
     val funFact: String? = null,
-    val imageName: String? = null
+    val imageName: String? = null,
+    val imageUrl: String? = null,
+    val imageSource: String? = null,
+    val imageAuthor: String? = null,
+    val imageAttributionText: String? = null,
+    val imageLicenseUrl: String? = null,
+    val imageSearchQuery: String? = null,
+    val imageVerified: Boolean = false
 )

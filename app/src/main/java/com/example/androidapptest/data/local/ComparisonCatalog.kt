@@ -5,6 +5,18 @@ import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.data.model.SubCategory
 
 object ComparisonCatalog {
+    private const val PEXELS_LICENSE_URL = "https://www.pexels.com/license/"
+
+    private data class ImageMetadata(
+        val imageUrl: String,
+        val imageSource: String,
+        val imageAuthor: String,
+        val imageAttributionText: String,
+        val imageLicenseUrl: String,
+        val imageSearchQuery: String,
+        val imageVerified: Boolean = true
+    )
+
     val mainCategories = listOf(
         MainCategory("football", "Fußball", "Vereine, Stadien, Werte und Reichweite", "⚽"),
         MainCategory("germany", "Deutschland", "Städte, Länder, Fläche und Alltag", "🇩🇪"),
@@ -59,6 +71,92 @@ object ComparisonCatalog {
 
     private val categoriesById = mainCategories.associateBy { it.id }
     private val subCategoriesByKey = subCategories.associateBy { "${it.categoryId}_${it.id}" }
+    private val fallbackImagesBySubCategory = mapOf(
+        "football_market_value" to pexelsImage(
+            photoId = 9946854,
+            author = "Rockwell branding agency",
+            searchQuery = "generic football stadium no logo",
+            description = "generic football stadium"
+        ),
+        "football_stadium_capacity" to pexelsImage(
+            photoId = 9946854,
+            author = "Rockwell branding agency",
+            searchQuery = "football stadium seating no logo",
+            description = "generic football stadium"
+        ),
+        "football_club_members" to pexelsImage(
+            photoId = 31847342,
+            author = "Nur Andi Ravsanjani Gusma",
+            searchQuery = "football stadium seats supporters no logo",
+            description = "football stadium atmosphere"
+        ),
+        "germany_population" to pexelsImage(
+            photoId = 13146197,
+            author = "Jose Vasquez",
+            searchQuery = "germany city skyline",
+            description = "Frankfurt skyline"
+        ),
+        "germany_area" to pexelsImage(
+            photoId = 21274213,
+            author = "Linda Gschwentner",
+            searchQuery = "germany skyline landscape",
+            description = "Munich skyline"
+        ),
+        "germany_rent" to pexelsImage(
+            photoId = 13146197,
+            author = "Jose Vasquez",
+            searchQuery = "germany apartment city skyline",
+            description = "German city skyline"
+        ),
+        "cars_price" to pexelsImage(
+            photoId = 11827611,
+            author = "Ali Kazal",
+            searchQuery = "generic car road no logo",
+            description = "generic car on road"
+        ),
+        "cars_horsepower" to pexelsImage(
+            photoId = 14782133,
+            author = "David Guerrero",
+            searchQuery = "generic cars road no logo",
+            description = "generic cars on road"
+        ),
+        "companies_employees" to pexelsImage(
+            photoId = 13038579,
+            author = "Boys in Bristol Photography",
+            searchQuery = "modern office building no logo",
+            description = "modern office building"
+        ),
+        "social_media_instagram_followers" to pexelsImage(
+            photoId = 30470952,
+            author = "Esra Afşar",
+            searchQuery = "person using smartphone social media",
+            description = "smartphone social media"
+        ),
+        "gaming_sales" to pexelsImage(
+            photoId = 8652319,
+            author = "Max Bonda",
+            searchQuery = "video game controller generic",
+            description = "gaming controller"
+        ),
+        "gaming_players" to pexelsImage(
+            photoId = 7774033,
+            author = "Artem Podrez",
+            searchQuery = "person playing video game controller",
+            description = "gaming controller"
+        ),
+        "gaming_release_year" to pexelsImage(
+            photoId = 7774033,
+            author = "Artem Podrez",
+            searchQuery = "video game controller neon",
+            description = "gaming controller"
+        ),
+        "gaming_rating" to pexelsImage(
+            photoId = 8652319,
+            author = "Max Bonda",
+            searchQuery = "video game controller",
+            description = "gaming controller"
+        )
+    )
 
     val items = listOf(
         item(1, "FC Bayern München", "München", "football", "market_value", 929_000_000, "929 Mio. €", "Rekordmeister mit internationalem Top-Kader"),
@@ -198,6 +296,7 @@ object ComparisonCatalog {
     ): ComparisonItem {
         val category = categoriesById.getValue(categoryId)
         val subCategory = subCategoriesByKey.getValue("${categoryId}_$subcategoryId")
+        val image = fallbackImagesBySubCategory[subCategory.metricId]
         return ComparisonItem(
             id = id,
             title = title,
@@ -210,7 +309,28 @@ object ComparisonCatalog {
             metricName = subCategory.metricName,
             value = value,
             displayValue = displayValue,
-            funFact = funFact
+            funFact = funFact,
+            imageUrl = image?.imageUrl,
+            imageSource = image?.imageSource,
+            imageAuthor = image?.imageAuthor,
+            imageAttributionText = image?.imageAttributionText,
+            imageLicenseUrl = image?.imageLicenseUrl,
+            imageSearchQuery = image?.imageSearchQuery,
+            imageVerified = image?.imageVerified ?: false
         )
     }
+
+    private fun pexelsImage(
+        photoId: Int,
+        author: String,
+        searchQuery: String,
+        description: String
+    ) = ImageMetadata(
+        imageUrl = "https://images.pexels.com/photos/$photoId/pexels-photo-$photoId.jpeg?auto=compress&cs=tinysrgb&w=1200",
+        imageSource = "Pexels",
+        imageAuthor = author,
+        imageAttributionText = "Photo by $author on Pexels ($description)",
+        imageLicenseUrl = PEXELS_LICENSE_URL,
+        imageSearchQuery = searchQuery
+    )
 }
