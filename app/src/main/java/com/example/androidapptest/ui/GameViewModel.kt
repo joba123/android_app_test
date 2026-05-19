@@ -118,6 +118,7 @@ class GameViewModel(
         }
         bestStreakInCurrentGame = maxOf(bestStreakInCurrentGame, newStreak)
 
+        val previousHighScore = current.stats.highScoreFor(current.mode.statsKey)
         _uiState.update {
             it.copy(
                 score = newScore,
@@ -126,6 +127,7 @@ class GameViewModel(
                 isAnswerRevealed = true,
                 lastAnswerCorrect = isCorrect,
                 gameOver = !isCorrect,
+                isNewHighScore = !isCorrect && newScore > previousHighScore,
                 errorMessage = null
             )
         }
@@ -162,6 +164,15 @@ class GameViewModel(
         }
     }
 
+    fun revealGameOverStats() {
+        _uiState.update { it.copy(showGameOverStats = true) }
+    }
+
+    fun continueAfterRevive() {
+        _uiState.update { it.copy(gameOver = false, isAnswerRevealed = false, lastAnswerCorrect = null, showGameOverStats = false) }
+        nextRound()
+    }
+
     private fun startGame(mode: GameMode): Boolean {
         val firstPair = nextPair(mode, ignoreLastPair = true)
         if (firstPair == null) {
@@ -184,6 +195,7 @@ class GameViewModel(
                 leftItem = firstPair.first,
                 rightItem = firstPair.second,
                 currentHighScore = stats.highScoreFor(mode.statsKey),
+                showGameOverStats = false,
                 stats = stats
             )
         }
