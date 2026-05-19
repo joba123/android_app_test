@@ -28,6 +28,10 @@ class GameViewModel(
     val uiState: StateFlow<GameUiState> = _uiState.asStateFlow()
 
     val mainCategories: List<MainCategory> = repository.mainCategories
+    val featuredMenuItems: List<ComparisonItem> = repository.allItems
+        .filter { it.imageVerified && !it.imageUrl.isNullOrBlank() }
+        .distinctBy { it.title }
+        .take(12)
 
     private var gameOverRecorded = false
     private var correctAnswersInCurrentGame = 0
@@ -53,6 +57,19 @@ class GameViewModel(
 
     fun itemCount(categoryId: String, subCategoryId: String): Int =
         repository.itemCount(categoryId, subCategoryId)
+
+    fun itemCountForMainCategory(category: MainCategory): Int =
+        repository.allItems.count { it.categoryId == category.id }
+
+    fun sampleItemForMainCategory(category: MainCategory): ComparisonItem? =
+        repository.allItems.firstOrNull {
+            it.categoryId == category.id && it.imageVerified && !it.imageUrl.isNullOrBlank()
+        } ?: repository.allItems.firstOrNull { it.categoryId == category.id }
+
+    fun sampleItemForSubCategory(subCategory: SubCategory): ComparisonItem? =
+        repository.itemsForSubCategory(subCategory.categoryId, subCategory.id).firstOrNull {
+            it.imageVerified && !it.imageUrl.isNullOrBlank()
+        } ?: repository.itemsForSubCategory(subCategory.categoryId, subCategory.id).firstOrNull()
 
     fun highScoreForMainCategory(category: MainCategory, stats: Stats): Int {
         if (category.isGeneral) return stats.generalHighScore

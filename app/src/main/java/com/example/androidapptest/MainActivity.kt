@@ -139,13 +139,26 @@ private fun DeutschlandQuizApp(
     ) {
         when (screen) {
             AppScreen.Home -> HomeScreen(
+                categories = viewModel.mainCategories,
+                featuredItems = viewModel.featuredMenuItems,
+                overallHighScore = state.stats.overallHighScore,
+                lastModeLabel = state.stats.selectedModeLabel,
+                highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
+                itemCountForCategory = viewModel::itemCountForMainCategory,
+                sampleItemForCategory = viewModel::sampleItemForMainCategory,
                 onPlay = { screen = AppScreen.Categories },
+                onCategorySelected = {
+                    selectedCategoryId = it.id
+                    screen = AppScreen.SubCategories
+                },
                 onOpenStats = { screen = AppScreen.Stats },
                 onOpenSettings = { screen = AppScreen.Settings }
             )
             AppScreen.Categories -> CategorySelectionScreen(
                 categories = viewModel.mainCategories,
                 highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
+                itemCountForCategory = viewModel::itemCountForMainCategory,
+                sampleItemForCategory = viewModel::sampleItemForMainCategory,
                 onBack = { screen = AppScreen.Home },
                 onCategorySelected = {
                     selectedCategoryId = it.id
@@ -166,6 +179,7 @@ private fun DeutschlandQuizApp(
                                 .first { it.key == subCategory.modeKey }
                         },
                         itemCountFor = { viewModel.itemCount(it.categoryId, it.id) },
+                        sampleItemFor = viewModel::sampleItemForSubCategory,
                         onBack = { screen = AppScreen.Home },
                         onSubCategorySelected = { subCategory ->
                             if (viewModel.startSubCategoryGame(selectedCategory.id, subCategory.id)) {
