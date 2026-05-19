@@ -140,7 +140,6 @@ private fun DeutschlandQuizApp(
         when (screen) {
             AppScreen.Home -> HomeScreen(
                 categories = viewModel.mainCategories,
-                featuredItems = viewModel.featuredMenuItems,
                 overallHighScore = state.stats.overallHighScore,
                 lastModeLabel = state.stats.selectedModeLabel,
                 highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },

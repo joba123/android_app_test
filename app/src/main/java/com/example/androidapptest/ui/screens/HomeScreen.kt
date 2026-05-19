@@ -2,6 +2,8 @@ package com.example.androidapptest.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,19 +18,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.example.androidapptest.R
 import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.ui.components.MenuImageCard
@@ -41,7 +47,6 @@ import com.example.androidapptest.ui.theme.NightBlack
 @Composable
 fun HomeScreen(
     categories: List<MainCategory>,
-    featuredItems: List<ComparisonItem>,
     overallHighScore: Int,
     lastModeLabel: String?,
     highScoreForCategory: (MainCategory) -> Int,
@@ -52,25 +57,27 @@ fun HomeScreen(
     onOpenStats: () -> Unit,
     onOpenSettings: () -> Unit
 ) {
-    val heroItem = remember(featuredItems) { featuredItems.firstOrNull() }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Brush.verticalGradient(colors = listOf(NightBlack, GermanyRed.copy(alpha = 0.18f), NightBlack)))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        NightBlack,
+                        GermanyRed.copy(alpha = 0.18f),
+                        NightBlack
+                    )
+                )
+            )
     ) {
         AnimatedVisibility(visible = true, enter = fadeIn()) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 20.dp, top = 42.dp, end = 20.dp, bottom = 28.dp),
-                verticalArrangement = Arrangement.spacedBy(22.dp)
+                contentPadding = PaddingValues(start = 20.dp, top = 34.dp, end = 20.dp, bottom = 28.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 item {
-                    HomeHeroCard(
-                        item = heroItem,
-                        overallHighScore = overallHighScore,
-                        lastModeLabel = lastModeLabel
-                    )
+                    HomeHeader()
                 }
 
                 item {
@@ -89,6 +96,18 @@ fun HomeScreen(
                                 outlined = true,
                                 modifier = Modifier.weight(1f)
                             )
+                        }
+                    }
+                }
+
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        MenuStatPill(label = "Highscore", value = overallHighScore.toString())
+                        if (!lastModeLabel.isNullOrBlank()) {
+                            MenuStatPill(label = "Zuletzt", value = lastModeLabel, modifier = Modifier.weight(1f))
                         }
                     }
                 }
@@ -116,50 +135,62 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeHeroCard(
-    item: ComparisonItem?,
-    overallHighScore: Int,
-    lastModeLabel: String?
-) {
-    val shadow = Shadow(
-        color = Color.Black.copy(alpha = 0.85f),
-        offset = Offset(0f, 3f),
-        blurRadius = 12f
-    )
-
-    MenuImageCard(
-        item = item,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(312.dp),
-        borderColor = GermanyGold.copy(alpha = 0.46f),
-        contentPadding = PaddingValues(24.dp)
+private fun HomeHeader() {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        Card(
+            modifier = Modifier
+                .width(164.dp)
+                .height(136.dp),
+            shape = RoundedCornerShape(26.dp),
+            border = BorderStroke(1.dp, GermanyGold.copy(alpha = 0.44f)),
+            colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.96f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.higher_lower_logo),
+                    contentDescription = "Higher Lower Deutschland Logo",
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
         Column(
-            modifier = Modifier.align(Alignment.BottomStart),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             Text(
-                text = "Higher Lower",
-                style = MaterialTheme.typography.displaySmall.copy(shadow = shadow),
+                text = "Higher Lower Deutschland",
+                style = MaterialTheme.typography.headlineMedium,
                 color = Color.White,
-                fontWeight = FontWeight.ExtraBold
+                fontWeight = FontWeight.ExtraBold,
+                textAlign = TextAlign.Center
             )
             Text(
-                text = "Schätze höher oder niedriger und knacke deinen Highscore!",
-                style = MaterialTheme.typography.titleMedium.copy(shadow = shadow),
-                color = Color.White.copy(alpha = 0.92f),
-                fontWeight = FontWeight.SemiBold
+                text = "Teste dein Wissen über Deutschland",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color.White.copy(alpha = 0.88f),
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
             )
-            Row(
+            Text(
+                text = "Städte, Fußball, Bevölkerung, Rekorde & mehr",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                MenuStatPill(label = "Highscore", value = overallHighScore.toString())
-                if (!lastModeLabel.isNullOrBlank()) {
-                    MenuStatPill(label = "Zuletzt", value = lastModeLabel, modifier = Modifier.weight(1f))
-                }
-            }
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }
