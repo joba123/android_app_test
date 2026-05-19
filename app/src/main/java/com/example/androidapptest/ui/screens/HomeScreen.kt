@@ -36,7 +36,7 @@ fun HomeScreen(
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Text("Mehr oder Weniger", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.ExtraBold)
+            Text("Higher Lower", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.ExtraBold)
             Text("Deutschland", style = MaterialTheme.typography.headlineMedium, color = GermanyGold, fontWeight = FontWeight.Bold)
             Text(
                 "Teste dein Wissen in verschiedenen Kategorien.",
