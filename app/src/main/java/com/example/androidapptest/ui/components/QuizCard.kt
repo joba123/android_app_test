@@ -39,7 +39,8 @@ fun QuizCard(
     item: ComparisonItem,
     revealValue: Boolean,
     modifier: Modifier = Modifier,
-    feedbackCorrect: Boolean? = null
+    feedbackCorrect: Boolean? = null,
+    roleLabel: String? = null
 ) {
     val accent = when (feedbackCorrect) {
         true -> SuccessGreen
@@ -81,6 +82,16 @@ fun QuizCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            if (roleLabel != null) {
+                Text(
+                    text = roleLabel,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = accent,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
             Text(
                 text = item.title,
                 style = MaterialTheme.typography.headlineSmall,

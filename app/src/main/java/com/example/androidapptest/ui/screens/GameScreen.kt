@@ -44,6 +44,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.domain.game.GameUiState
 import com.example.androidapptest.domain.game.Guess
 import com.example.androidapptest.ui.components.PrimaryMenuButton
@@ -52,6 +53,7 @@ import com.example.androidapptest.ui.theme.GermanyGold
 import com.example.androidapptest.ui.theme.GermanyRed
 import com.example.androidapptest.ui.theme.NightBlack
 import com.example.androidapptest.ui.theme.SuccessGreen
+import kotlinx.coroutines.delay
 
 @Composable
 fun GameScreen(
@@ -64,8 +66,8 @@ fun GameScreen(
     onRevealStats: () -> Unit,
     onRevive: () -> Unit
 ) {
-    val leftItem = state.leftItem ?: return
-    val rightItem = state.rightItem ?: return
+    val referenceItem = state.referenceItem ?: return
+    val comparisonItem = state.comparisonItem ?: return
     val haptic = LocalHapticFeedback.current
     val animatedScore by animateIntAsState(targetValue = state.score, label = "score counter")
 
@@ -77,9 +79,17 @@ fun GameScreen(
         }
     }
 
+    LaunchedEffect(state.isAnswerRevealed, state.lastAnswerCorrect, state.gameOver, comparisonItem.id) {
+        if (state.isAnswerRevealed && state.lastAnswerCorrect == true && !state.gameOver) {
+            delay(850)
+            onNextRound()
+        }
+    }
+
     if (state.gameOver) {
         GameOverDialog(
             score = state.score,
+            answerText = "${comparisonItem.title}: ${comparisonItem.displayValue}",
             showStats = state.showGameOverStats,
             isNewHighScore = state.isNewHighScore,
             onRestart = {
@@ -116,7 +126,7 @@ fun GameScreen(
                         )
                     }
                     Text(
-                        text = "Streak ${state.streak} · ${rightItem.categoryName} · ${rightItem.subcategoryName}",
+                        text = "Streak ${state.streak} · ${comparisonItem.categoryName} · ${comparisonItem.subcategoryName}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -124,22 +134,24 @@ fun GameScreen(
             }
 
             AnimatedContent(
-                targetState = leftItem to rightItem,
+                targetState = referenceItem to comparisonItem,
                 transitionSpec = {
-                    (fadeIn(tween(180)) + slideInVertically { it / 12 }) togetherWith
-                        (fadeOut(tween(140)) + slideOutVertically { -it / 12 })
+                    (fadeIn(tween(220)) + slideInVertically { it / 5 }) togetherWith
+                        (fadeOut(tween(180)) + slideOutVertically { -it / 4 })
                 },
                 label = "question transition"
-            ) { (animatedLeftItem, animatedRightItem) ->
+            ) { (animatedReferenceItem, animatedComparisonItem) ->
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     QuizCard(
-                        item = animatedLeftItem,
+                        item = animatedReferenceItem,
+                        roleLabel = "Referenz",
                         revealValue = true,
                         modifier = Modifier.fillMaxWidth(),
                         feedbackCorrect = null
                     )
                     QuizCard(
-                        item = animatedRightItem,
+                        item = animatedComparisonItem,
+                        roleLabel = "Vergleich",
                         revealValue = state.isAnswerRevealed,
                         modifier = Modifier.fillMaxWidth(),
                         feedbackCorrect = state.lastAnswerCorrect
@@ -153,7 +165,7 @@ fun GameScreen(
                 exit = fadeOut(tween(120)) + scaleOut(targetScale = 0.96f)
             ) {
                 state.lastAnswerCorrect?.let { isCorrect ->
-                    FeedbackPanel(isCorrect = isCorrect, funFact = rightItem.funFact)
+                    FeedbackPanel(isCorrect = isCorrect, item = comparisonItem)
                 }
             }
         }
@@ -173,8 +185,15 @@ fun GameScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
                 PrimaryMenuButton(text = "Nochmal spielen", onClick = onRestart)
-            } else if (state.isAnswerRevealed) {
-                PrimaryMenuButton(text = "Nächste Frage", onClick = onNextRound)
+            } else if (state.isAnswerRevealed && state.lastAnswerCorrect == true) {
+                Text(
+                    text = "Richtig! Nächste Karte kommt...",
+                    color = SuccessGreen,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             } else {
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Button(
@@ -185,7 +204,7 @@ fun GameScreen(
                     OutlinedButton(
                         onClick = { onGuess(Guess.Lower) },
                         modifier = Modifier.weight(1f)
-                    ) { Text("Weniger", fontWeight = FontWeight.Bold) }
+                    ) { Text("Niedriger", fontWeight = FontWeight.Bold) }
                 }
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -194,7 +213,7 @@ fun GameScreen(
 }
 
 @Composable
-private fun FeedbackPanel(isCorrect: Boolean, funFact: String?) {
+private fun FeedbackPanel(isCorrect: Boolean, item: ComparisonItem) {
     val accent = if (isCorrect) SuccessGreen else GermanyRed
     Card(
         shape = RoundedCornerShape(22.dp),
@@ -212,7 +231,11 @@ private fun FeedbackPanel(isCorrect: Boolean, funFact: String?) {
                 modifier = Modifier.fillMaxWidth()
             )
             Text(
-                text = "Fun Fact: ${funFact.orEmpty()}",
+                text = if (isCorrect) {
+                    "Fun Fact: ${item.funFact.orEmpty()}"
+                } else {
+                    "Richtige Lösung: ${item.title} · ${item.displayValue}"
+                },
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
                 textAlign = TextAlign.Center,
@@ -225,6 +248,7 @@ private fun FeedbackPanel(isCorrect: Boolean, funFact: String?) {
 @Composable
 private fun GameOverDialog(
     score: Int,
+    answerText: String,
     showStats: Boolean,
     isNewHighScore: Boolean,
     onRestart: () -> Unit,
@@ -251,6 +275,11 @@ private fun GameOverDialog(
                 ) {
                     Text("Game Over", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
                     Text("Endscore $score", color = GermanyGold, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+                    Text(
+                        "Richtige Lösung: $answerText",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
                     AnimatedVisibility(visible = isNewHighScore, enter = scaleIn(), exit = scaleOut()) {
                         Text("Neuer Highscore! 🏆", color = SuccessGreen, fontWeight = FontWeight.ExtraBold)
                     }

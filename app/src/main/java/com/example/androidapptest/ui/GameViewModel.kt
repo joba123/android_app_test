@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.random.Random
 
 class GameViewModel(
     private val statsRepository: StatsRepository,
@@ -33,7 +32,7 @@ class GameViewModel(
     private var correctAnswersInCurrentGame = 0
     private var wrongAnswersInCurrentGame = 0
     private var bestStreakInCurrentGame = 0
-    private var lastPairIds: Set<Int> = emptySet()
+    private var lastVisibleItemIds: Set<Int> = emptySet()
 
     init {
         viewModelScope.launch {
@@ -100,13 +99,13 @@ class GameViewModel(
 
     fun submitGuess(guess: Guess) {
         val current = _uiState.value
-        val left = current.leftItem ?: return
-        val right = current.rightItem ?: return
+        val reference = current.referenceItem ?: return
+        val comparison = current.comparisonItem ?: return
         if (current.isAnswerRevealed || current.gameOver) return
 
         val isCorrect = when (guess) {
-            Guess.Higher -> right.value >= left.value
-            Guess.Lower -> right.value <= left.value
+            Guess.Higher -> comparison.value >= reference.value
+            Guess.Lower -> comparison.value <= reference.value
         }
         val newScore = if (isCorrect) current.score + 1 else current.score
         val newStreak = if (isCorrect) current.streak + 1 else 0
@@ -138,18 +137,29 @@ class GameViewModel(
     fun nextRound() {
         val current = _uiState.value
         if (current.gameOver) return
-        val nextPair = nextPair(current.mode)
-        if (nextPair == null) {
+        val currentReference = current.referenceItem ?: return
+        val currentComparison = current.comparisonItem ?: return
+        val nextReference = if (current.isAnswerRevealed && current.lastAnswerCorrect == true) {
+            currentComparison
+        } else {
+            currentReference
+        }
+        val nextComparison = nextComparisonFor(
+            mode = current.mode,
+            reference = nextReference,
+            excludedIds = setOf(currentReference.id, currentComparison.id) + lastVisibleItemIds
+        )
+        if (nextComparison == null) {
             _uiState.update {
                 it.copy(errorMessage = "Für diesen Modus gibt es noch nicht genug vergleichbare Items.")
             }
             return
         }
-        lastPairIds = setOf(nextPair.first.id, nextPair.second.id)
+        lastVisibleItemIds = setOf(nextReference.id, nextComparison.id)
         _uiState.update {
             it.copy(
-                leftItem = nextPair.first,
-                rightItem = nextPair.second,
+                referenceItem = nextReference,
+                comparisonItem = nextComparison,
                 isAnswerRevealed = false,
                 lastAnswerCorrect = null,
                 errorMessage = null
@@ -169,12 +179,35 @@ class GameViewModel(
     }
 
     fun continueAfterRevive() {
-        _uiState.update { it.copy(gameOver = false, isAnswerRevealed = false, lastAnswerCorrect = null, showGameOverStats = false) }
-        nextRound()
+        val current = _uiState.value
+        val reference = current.referenceItem ?: return
+        val currentComparison = current.comparisonItem
+        val nextComparison = nextComparisonFor(
+            mode = current.mode,
+            reference = reference,
+            excludedIds = setOfNotNull(reference.id, currentComparison?.id) + lastVisibleItemIds
+        )
+        if (nextComparison == null) {
+            _uiState.update {
+                it.copy(errorMessage = "Für diesen Modus gibt es noch nicht genug unterschiedliche Items.")
+            }
+            return
+        }
+        lastVisibleItemIds = setOf(reference.id, nextComparison.id)
+        _uiState.update {
+            it.copy(
+                comparisonItem = nextComparison,
+                gameOver = false,
+                isAnswerRevealed = false,
+                lastAnswerCorrect = null,
+                showGameOverStats = false,
+                errorMessage = null
+            )
+        }
     }
 
     private fun startGame(mode: GameMode): Boolean {
-        val firstPair = nextPair(mode, ignoreLastPair = true)
+        val firstPair = initialPair(mode)
         if (firstPair == null) {
             _uiState.update {
                 it.copy(errorMessage = "Für diesen Modus gibt es noch nicht genug vergleichbare Items.")
@@ -182,7 +215,7 @@ class GameViewModel(
             return false
         }
 
-        lastPairIds = setOf(firstPair.first.id, firstPair.second.id)
+        lastVisibleItemIds = setOf(firstPair.first.id, firstPair.second.id)
         correctAnswersInCurrentGame = 0
         wrongAnswersInCurrentGame = 0
         bestStreakInCurrentGame = 0
@@ -192,8 +225,8 @@ class GameViewModel(
         _uiState.update {
             GameUiState(
                 mode = mode,
-                leftItem = firstPair.first,
-                rightItem = firstPair.second,
+                referenceItem = firstPair.first,
+                comparisonItem = firstPair.second,
                 currentHighScore = stats.highScoreFor(mode.statsKey),
                 showGameOverStats = false,
                 stats = stats
@@ -203,31 +236,44 @@ class GameViewModel(
         return true
     }
 
-    private fun nextPair(mode: GameMode, ignoreLastPair: Boolean = false): Pair<ComparisonItem, ComparisonItem>? {
-        val groups = if (mode.isGeneralMode) {
+    private fun initialPair(mode: GameMode): Pair<ComparisonItem, ComparisonItem>? {
+        val groups = comparableGroups(mode)
+        if (groups.isEmpty()) return null
+
+        repeat(24) {
+            val group = groups.random()
+            val reference = group.random()
+            val comparison = group.filter { it.id != reference.id }.randomOrNull()
+            if (comparison != null) return reference to comparison
+        }
+
+        val fallbackGroup = groups.first()
+        val reference = fallbackGroup.first()
+        return fallbackGroup.firstOrNull { it.id != reference.id }?.let { reference to it }
+    }
+
+    private fun nextComparisonFor(
+        mode: GameMode,
+        reference: ComparisonItem,
+        excludedIds: Set<Int>
+    ): ComparisonItem? =
+        itemsComparableWith(mode, reference)
+            .filter { it.id != reference.id && it.id !in excludedIds }
+            .randomOrNull()
+
+    private fun comparableGroups(mode: GameMode): List<List<ComparisonItem>> =
+        if (mode.isGeneralMode) {
             repository.generalMetricGroups()
         } else {
             listOf(repository.itemsForSubCategory(mode.categoryId, mode.subcategoryId.orEmpty()))
         }.filter { it.size >= 2 }
 
-        if (groups.isEmpty()) return null
-
-        repeat(24) {
-            val group = groups.random()
-            val first = group.random()
-            val second = group.filter { it.id != first.id }.random()
-            val pairIds = setOf(first.id, second.id)
-            if (ignoreLastPair || pairIds != lastPairIds || group.size <= 2) {
-                return first to second
-            }
+    private fun itemsComparableWith(mode: GameMode, reference: ComparisonItem): List<ComparisonItem> =
+        if (mode.isGeneralMode) {
+            repository.allItems.filter { it.metricId == reference.metricId }
+        } else {
+            repository.itemsForSubCategory(mode.categoryId, mode.subcategoryId.orEmpty())
         }
-
-        val fallbackGroup = groups.first()
-        val shuffled = fallbackGroup.shuffled(Random.Default)
-        return shuffled.getOrNull(0)?.let { first ->
-            shuffled.firstOrNull { it.id != first.id }?.let { second -> first to second }
-        }
-    }
 
     private fun recordGameOverOnce() {
         if (gameOverRecorded) return

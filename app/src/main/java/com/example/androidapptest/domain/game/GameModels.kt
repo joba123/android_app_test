@@ -5,8 +5,8 @@ import com.example.androidapptest.domain.stats.Stats
 
 data class GameUiState(
     val mode: GameMode = GameMode.general(),
-    val leftItem: ComparisonItem? = null,
-    val rightItem: ComparisonItem? = null,
+    val referenceItem: ComparisonItem? = null,
+    val comparisonItem: ComparisonItem? = null,
     val score: Int = 0,
     val streak: Int = 0,
     val currentHighScore: Int = 0,
