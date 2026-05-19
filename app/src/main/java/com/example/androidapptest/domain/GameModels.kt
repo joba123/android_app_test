@@ -26,7 +26,9 @@ data class GameUiState(
     val lastAnswerCorrect: Boolean? = null,
     val gameOver: Boolean = false,
     val stats: Stats = Stats(),
-    val rewardedAdMessage: String? = null
+    val rewardedAdMessage: String? = null,
+    val isNewHighscore: Boolean = false,
+    val pendingGameOver: Boolean = false
 )
 
 enum class Guess {

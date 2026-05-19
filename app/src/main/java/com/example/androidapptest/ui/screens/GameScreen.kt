@@ -63,7 +63,8 @@ fun GameScreen(
     onGuess: (Guess) -> Unit,
     onNextRound: () -> Unit,
     onRestart: () -> Unit,
-    onContinueWithAd: () -> Unit
+    onContinueWithAd: () -> Unit,
+    onShowGameOverStats: () -> Unit
 ) {
     val leftItem = state.leftItem ?: return
     val rightItem = state.rightItem ?: return
@@ -78,15 +79,6 @@ fun GameScreen(
         }
     }
 
-    if (state.gameOver) {
-        GameOverDialog(
-            score = state.score,
-            isRewardedAdReady = isRewardedAdReady,
-            rewardedAdMessage = state.rewardedAdMessage,
-            onRestart = onRestart,
-            onContinueWithAd = onContinueWithAd
-        )
-    }
 
     Column(
         modifier = Modifier
@@ -155,15 +147,21 @@ fun GameScreen(
         }
 
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            if (state.gameOver) {
-                Text(
-                    text = "Game Over · Endscore ${state.score}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.ExtraBold,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
+            if (state.gameOver && !state.pendingGameOver) {
+                GameOverDialog(
+                    score = state.score,
+                    isRewardedAdReady = isRewardedAdReady,
+                    rewardedAdMessage = state.rewardedAdMessage,
+                    isNewHighscore = state.isNewHighscore,
+                    onRestart = onRestart,
+                    onContinueWithAd = onContinueWithAd
                 )
-                PrimaryMenuButton(text = "Nochmal spielen", onClick = onRestart)
+            }
+            if (state.gameOver && state.pendingGameOver) {
+                PrimaryMenuButton(text = "Nochmal spielen", onClick = onShowGameOverStats)
+                OutlinedButton(onClick = onContinueWithAd, enabled = isRewardedAdReady, modifier = Modifier.fillMaxWidth()) {
+                    Text("Wiederbeleben")
+                }
             } else if (state.isAnswerRevealed) {
                 PrimaryMenuButton(text = "Nächste Frage", onClick = onNextRound)
             } else {
@@ -218,6 +216,7 @@ private fun GameOverDialog(
     score: Int,
     isRewardedAdReady: Boolean,
     rewardedAdMessage: String?,
+    isNewHighscore: Boolean,
     onRestart: () -> Unit,
     onContinueWithAd: () -> Unit
 ) {
@@ -240,8 +239,10 @@ private fun GameOverDialog(
                     verticalArrangement = Arrangement.spacedBy(14.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("Game Over", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
-                    Text("Endscore $score", color = GermanyGold, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+                    Text(if (isNewHighscore) "Neuer Highscore!" else "Game Over", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
+                    AnimatedContent(targetState = score, label = "score_anim") {
+                        Text("Endscore $it", color = GermanyGold, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+                    }
                     Text(
                         "Starte direkt neu oder sieh dir eine Rewarded Ad an, um mit 1 Leben weiterzuspielen.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
