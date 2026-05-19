@@ -31,16 +31,23 @@ class AdMobManager(private val context: Context) {
         }
     }
 
-    fun showInterstitialAfterGameOver(activity: Activity) {
+    fun showInterstitialAfterGameOver(activity: Activity, onFinished: () -> Unit) {
         val ad = interstitialAd ?: run {
             loadInterstitialAd()
+            onFinished()
             return
         }
         interstitialAd = null
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() = loadInterstitialAd()
+            override fun onAdDismissedFullScreenContent() {
+                loadInterstitialAd()
+                onFinished()
+            }
 
-            override fun onAdFailedToShowFullScreenContent(adError: AdError) = loadInterstitialAd()
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                loadInterstitialAd()
+                onFinished()
+            }
         }
         ad.show(activity)
     }
@@ -53,12 +60,22 @@ class AdMobManager(private val context: Context) {
         }
         rewardedAd = null
         _isRewardedAdReady.value = false
+        var rewardEarned = false
         ad.fullScreenContentCallback = object : FullScreenContentCallback() {
-            override fun onAdDismissedFullScreenContent() = loadRewardedAd()
+            override fun onAdDismissedFullScreenContent() {
+                loadRewardedAd()
+                if (!rewardEarned) onAdUnavailable()
+            }
 
-            override fun onAdFailedToShowFullScreenContent(adError: AdError) = loadRewardedAd()
+            override fun onAdFailedToShowFullScreenContent(adError: AdError) {
+                loadRewardedAd()
+                onAdUnavailable()
+            }
         }
-        ad.show(activity) { onRewardEarned() }
+        ad.show(activity) {
+            rewardEarned = true
+            onRewardEarned()
+        }
     }
 
     fun loadInterstitialAd() {

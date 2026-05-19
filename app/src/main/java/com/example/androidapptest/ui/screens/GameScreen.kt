@@ -47,7 +47,7 @@ import androidx.compose.ui.window.Dialog
 import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.domain.game.GameUiState
 import com.example.androidapptest.domain.game.Guess
-import com.example.androidapptest.ui.components.PrimaryMenuButton
+import com.example.androidapptest.domain.game.RunStatus
 import com.example.androidapptest.ui.components.QuizCard
 import com.example.androidapptest.ui.theme.GermanyGold
 import com.example.androidapptest.ui.theme.GermanyRed
@@ -63,8 +63,9 @@ fun GameScreen(
     onGuess: (Guess) -> Unit,
     onNextRound: () -> Unit,
     onRestart: () -> Unit,
-    onRevealStats: () -> Unit,
-    onRevive: () -> Unit
+    onRevive: () -> Unit,
+    onEndRun: () -> Unit,
+    onExit: () -> Unit
 ) {
     val referenceItem = state.referenceItem ?: return
     val comparisonItem = state.comparisonItem ?: return
@@ -79,25 +80,35 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(state.isAnswerRevealed, state.lastAnswerCorrect, state.gameOver, comparisonItem.id) {
-        if (state.isAnswerRevealed && state.lastAnswerCorrect == true && !state.gameOver) {
+    LaunchedEffect(state.isAnswerRevealed, state.lastAnswerCorrect, state.runStatus, comparisonItem.id) {
+        if (state.isAnswerRevealed && state.lastAnswerCorrect == true && state.runStatus == RunStatus.Playing) {
             delay(850)
             onNextRound()
         }
     }
 
-    if (state.gameOver) {
-        GameOverDialog(
+    when (state.runStatus) {
+        RunStatus.LostButCanRevive,
+        RunStatus.Reviving -> ReviveDialog(
             score = state.score,
             answerText = "${comparisonItem.title}: ${comparisonItem.displayValue}",
-            showStats = state.showGameOverStats,
-            isNewHighScore = state.isNewHighScore,
-            onRestart = {
-                onRevealStats()
-                onRestart()
-            },
-            onRevive = onRevive
+            errorMessage = state.reviveErrorMessage,
+            isReviving = state.runStatus == RunStatus.Reviving,
+            onRevive = onRevive,
+            onEndRun = onEndRun
         )
+
+        RunStatus.GameOver -> GameOverDialog(
+            score = state.score,
+            previousHighScore = state.previousHighScore,
+            currentHighScore = state.currentHighScore,
+            answerText = "${comparisonItem.title}: ${comparisonItem.displayValue}",
+            isNewHighScore = state.isNewHighScore,
+            onRestart = onRestart,
+            onExit = onExit
+        )
+
+        RunStatus.Playing -> Unit
     }
 
     Column(
@@ -176,7 +187,7 @@ fun GameScreen(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            if (state.gameOver) {
+            if (state.runStatus == RunStatus.GameOver) {
                 Text(
                     text = "Game Over · Endscore ${state.score}",
                     style = MaterialTheme.typography.headlineSmall,
@@ -184,7 +195,19 @@ fun GameScreen(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
-                PrimaryMenuButton(text = "Nochmal spielen", onClick = onRestart)
+            } else if (state.runStatus == RunStatus.LostButCanRevive || state.runStatus == RunStatus.Reviving) {
+                Text(
+                    text = if (state.runStatus == RunStatus.Reviving) {
+                        "Wiederbelebung läuft..."
+                    } else {
+                        "Run pausiert"
+                    },
+                    color = GermanyGold,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
             } else if (state.isAnswerRevealed && state.lastAnswerCorrect == true) {
                 Text(
                     text = "Richtig! Nächste Karte kommt...",
@@ -246,13 +269,82 @@ private fun FeedbackPanel(isCorrect: Boolean, item: ComparisonItem) {
 }
 
 @Composable
-private fun GameOverDialog(
+private fun ReviveDialog(
     score: Int,
     answerText: String,
-    showStats: Boolean,
+    errorMessage: String?,
+    isReviving: Boolean,
+    onRevive: () -> Unit,
+    onEndRun: () -> Unit
+) {
+    Dialog(onDismissRequest = {}) {
+        Card(
+            shape = RoundedCornerShape(30.dp),
+            border = BorderStroke(1.dp, GermanyRed.copy(alpha = 0.42f)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 18.dp)
+        ) {
+            Box(
+                modifier = Modifier.background(
+                    Brush.verticalGradient(
+                        listOf(GermanyRed.copy(alpha = 0.16f), NightBlack.copy(alpha = 0.08f))
+                    )
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text("Du hast verloren.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.ExtraBold)
+                    Text(
+                        "Möchtest du dich wiederbeleben?",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    Text("Score $score", color = GermanyGold, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(
+                        "Richtige Lösung: $answerText",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center
+                    )
+                    if (errorMessage != null) {
+                        Text(
+                            errorMessage,
+                            color = GermanyRed,
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Button(
+                        onClick = onRevive,
+                        enabled = !isReviving,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GermanyGold,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text(if (isReviving) "Ad läuft..." else "Wiederbeleben")
+                    }
+                    OutlinedButton(onClick = onEndRun, enabled = !isReviving, modifier = Modifier.fillMaxWidth()) {
+                        Text("Nein, beenden")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GameOverDialog(
+    score: Int,
+    previousHighScore: Int,
+    currentHighScore: Int,
+    answerText: String,
     isNewHighScore: Boolean,
     onRestart: () -> Unit,
-    onRevive: () -> Unit
+    onExit: () -> Unit
 ) {
     Dialog(onDismissRequest = {}) {
         Card(
@@ -276,25 +368,36 @@ private fun GameOverDialog(
                     Text("Game Over", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold)
                     Text("Endscore $score", color = GermanyGold, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
                     Text(
+                        if (isNewHighScore) {
+                            "Neuer Highscore: $currentHighScore"
+                        } else {
+                            "Highscore: $currentHighScore"
+                        },
+                        color = if (isNewHighScore) SuccessGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center
+                    )
+                    if (isNewHighScore) {
+                        Text(
+                            "Bisheriger Highscore: $previousHighScore",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                    Text(
                         "Richtige Lösung: $answerText",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center
                     )
                     AnimatedVisibility(visible = isNewHighScore, enter = scaleIn(), exit = scaleOut()) {
-                        Text("Neuer Highscore! 🏆", color = SuccessGreen, fontWeight = FontWeight.ExtraBold)
-                    }
-                    if (showStats) {
-                        Text(
-                            "Eine falsche Antwort beendet den Run. Starte neu und versuche, deine Serie zu schlagen.",
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
+                        Text("Neuer Highscore!", color = SuccessGreen, fontWeight = FontWeight.ExtraBold)
                     }
                     OutlinedButton(onClick = onRestart, modifier = Modifier.fillMaxWidth()) {
                         Text("Nochmal spielen")
                     }
-                    OutlinedButton(onClick = onRevive, modifier = Modifier.fillMaxWidth()) {
-                        Text("Wiederbeleben")
+                    OutlinedButton(onClick = onExit, modifier = Modifier.fillMaxWidth()) {
+                        Text("Zurück zum Menü")
                     }
                 }
             }

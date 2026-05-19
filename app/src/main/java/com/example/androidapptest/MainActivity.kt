@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -22,6 +21,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.androidapptest.ads.AdMobManager
 import com.example.androidapptest.data.StatsRepository
+import com.example.androidapptest.domain.game.RunStatus
 import com.example.androidapptest.ui.GameViewModel
 import com.example.androidapptest.ui.screens.GameScreen
 import com.example.androidapptest.ui.screens.HomeScreen
@@ -73,6 +73,7 @@ private fun DeutschlandQuizApp(
     var gameReturnScreen by rememberSaveable { mutableStateOf(AppScreen.Home) }
     var selectedCategoryId by rememberSaveable { mutableStateOf<String?>(null) }
     var interstitialShownForGameOver by remember { mutableStateOf(false) }
+    var endingRun by remember { mutableStateOf(false) }
     var soundEnabled by rememberSaveable { mutableStateOf(false) }
     var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
 
@@ -85,25 +86,38 @@ private fun DeutschlandQuizApp(
         }
         if (started) {
             interstitialShownForGameOver = false
+            endingRun = false
         }
     }
 
-    LaunchedEffect(state.gameOver, screen) {
-        if (screen == AppScreen.Game && state.gameOver && !interstitialShownForGameOver) {
-            interstitialShownForGameOver = true
-            adMobManager.showInterstitialAfterGameOver(activity)
+    fun finishRunAfterInterstitial() {
+        if (endingRun || state.gameOver) return
+        endingRun = true
+
+        fun finishRun() {
+            endingRun = false
+            viewModel.finishRun()
         }
-        if (!state.gameOver) {
-            interstitialShownForGameOver = false
+
+        if (interstitialShownForGameOver) {
+            finishRun()
+            return
         }
+
+        interstitialShownForGameOver = true
+        adMobManager.showInterstitialAfterGameOver(activity, onFinished = { finishRun() })
     }
 
     fun navigateBack() {
         when (screen) {
             AppScreen.Home -> Unit
             AppScreen.Game -> {
-                viewModel.finishGameFromNavigation()
-                screen = gameReturnScreen
+                if (state.runStatus == RunStatus.LostButCanRevive || state.runStatus == RunStatus.Reviving) {
+                    finishRunAfterInterstitial()
+                } else {
+                    viewModel.finishGameFromNavigation()
+                    screen = gameReturnScreen
+                }
             }
             AppScreen.Categories,
             AppScreen.SubCategories,
@@ -157,6 +171,7 @@ private fun DeutschlandQuizApp(
                             if (viewModel.startSubCategoryGame(selectedCategory.id, subCategory.id)) {
                                 gameReturnScreen = AppScreen.SubCategories
                                 interstitialShownForGameOver = false
+                                endingRun = false
                                 screen = AppScreen.Game
                             }
                         }
@@ -166,21 +181,25 @@ private fun DeutschlandQuizApp(
 
             AppScreen.Game -> GameScreen(
                 state = state,
-                onBack = {
-                    viewModel.finishGameFromNavigation()
-                    screen = gameReturnScreen
-                },
+                onBack = { navigateBack() },
                 hapticsEnabled = hapticsEnabled,
                 onGuess = viewModel::submitGuess,
                 onNextRound = viewModel::nextRound,
                 onRestart = ::restartCurrentGame,
-                onRevealStats = viewModel::revealGameOverStats,
                 onRevive = {
-                    adMobManager.showRewardedAd(
-                        activity = activity,
-                        onRewardEarned = viewModel::continueAfterRevive,
-                        onAdUnavailable = {}
-                    )
+                    if (viewModel.beginReviveAttempt()) {
+                        adMobManager.showRewardedAd(
+                            activity = activity,
+                            onRewardEarned = viewModel::continueAfterRevive,
+                            onAdUnavailable = {
+                                viewModel.reviveFailed("Wiederbeleben hat nicht geklappt. Bitte versuche es erneut oder beende den Run.")
+                            }
+                        )
+                    }
+                },
+                onEndRun = ::finishRunAfterInterstitial,
+                onExit = {
+                    screen = AppScreen.Home
                 }
             )
 

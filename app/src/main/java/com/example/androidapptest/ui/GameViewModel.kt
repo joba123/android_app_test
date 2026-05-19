@@ -11,6 +11,7 @@ import com.example.androidapptest.data.model.SubCategory
 import com.example.androidapptest.domain.game.GameMode
 import com.example.androidapptest.domain.game.GameUiState
 import com.example.androidapptest.domain.game.Guess
+import com.example.androidapptest.domain.game.RunStatus
 import com.example.androidapptest.domain.stats.ModeStatSummary
 import com.example.androidapptest.domain.stats.Stats
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -101,14 +102,14 @@ class GameViewModel(
         val current = _uiState.value
         val reference = current.referenceItem ?: return
         val comparison = current.comparisonItem ?: return
-        if (current.isAnswerRevealed || current.gameOver) return
+        if (current.isAnswerRevealed || current.runStatus != RunStatus.Playing) return
 
         val isCorrect = when (guess) {
             Guess.Higher -> comparison.value >= reference.value
             Guess.Lower -> comparison.value <= reference.value
         }
         val newScore = if (isCorrect) current.score + 1 else current.score
-        val newStreak = if (isCorrect) current.streak + 1 else 0
+        val newStreak = if (isCorrect) current.streak + 1 else current.streak
 
         if (isCorrect) {
             correctAnswersInCurrentGame += 1
@@ -117,7 +118,6 @@ class GameViewModel(
         }
         bestStreakInCurrentGame = maxOf(bestStreakInCurrentGame, newStreak)
 
-        val previousHighScore = current.stats.highScoreFor(current.mode.statsKey)
         _uiState.update {
             it.copy(
                 score = newScore,
@@ -125,18 +125,17 @@ class GameViewModel(
                 currentHighScore = maxOf(current.currentHighScore, newScore),
                 isAnswerRevealed = true,
                 lastAnswerCorrect = isCorrect,
-                gameOver = !isCorrect,
-                isNewHighScore = !isCorrect && newScore > previousHighScore,
-                errorMessage = null
+                runStatus = if (isCorrect) RunStatus.Playing else RunStatus.LostButCanRevive,
+                isNewHighScore = false,
+                errorMessage = null,
+                reviveErrorMessage = null
             )
         }
-
-        if (!isCorrect) recordGameOverOnce()
     }
 
     fun nextRound() {
         val current = _uiState.value
-        if (current.gameOver) return
+        if (current.runStatus != RunStatus.Playing) return
         val currentReference = current.referenceItem ?: return
         val currentComparison = current.comparisonItem ?: return
         val nextReference = if (current.isAnswerRevealed && current.lastAnswerCorrect == true) {
@@ -169,17 +168,55 @@ class GameViewModel(
 
     fun finishGameFromNavigation() {
         val current = _uiState.value
-        if (current.gameOver) {
-            recordGameOverOnce()
+        if (current.runStatus == RunStatus.LostButCanRevive || current.runStatus == RunStatus.Reviving) {
+            finishRun()
         }
     }
 
-    fun revealGameOverStats() {
-        _uiState.update { it.copy(showGameOverStats = true) }
+    fun beginReviveAttempt(): Boolean {
+        if (_uiState.value.runStatus != RunStatus.LostButCanRevive) return false
+        _uiState.update {
+            it.copy(
+                runStatus = RunStatus.Reviving,
+                reviveErrorMessage = null,
+                errorMessage = null
+            )
+        }
+        return true
+    }
+
+    fun reviveFailed(message: String) {
+        if (_uiState.value.runStatus != RunStatus.Reviving) return
+        _uiState.update {
+            it.copy(
+                runStatus = RunStatus.LostButCanRevive,
+                reviveErrorMessage = message
+            )
+        }
+    }
+
+    fun finishRun() {
+        val current = _uiState.value
+        if (current.runStatus == RunStatus.GameOver) return
+
+        val previousHighScore = current.previousHighScore
+        _uiState.update {
+            it.copy(
+                runStatus = RunStatus.GameOver,
+                isAnswerRevealed = true,
+                lastAnswerCorrect = false,
+                currentHighScore = maxOf(previousHighScore, current.score),
+                isNewHighScore = current.score > previousHighScore,
+                reviveErrorMessage = null,
+                errorMessage = null
+            )
+        }
+        recordGameOverOnce()
     }
 
     fun continueAfterRevive() {
         val current = _uiState.value
+        if (current.runStatus != RunStatus.Reviving) return
         val reference = current.referenceItem ?: return
         val currentComparison = current.comparisonItem
         val nextComparison = nextComparisonFor(
@@ -189,7 +226,11 @@ class GameViewModel(
         )
         if (nextComparison == null) {
             _uiState.update {
-                it.copy(errorMessage = "Für diesen Modus gibt es noch nicht genug unterschiedliche Items.")
+                it.copy(
+                    runStatus = RunStatus.LostButCanRevive,
+                    reviveErrorMessage = "Wiederbeleben ist gerade nicht möglich. Es gibt keine passende neue Karte.",
+                    errorMessage = null
+                )
             }
             return
         }
@@ -197,11 +238,12 @@ class GameViewModel(
         _uiState.update {
             it.copy(
                 comparisonItem = nextComparison,
-                gameOver = false,
+                runStatus = RunStatus.Playing,
                 isAnswerRevealed = false,
                 lastAnswerCorrect = null,
-                showGameOverStats = false,
-                errorMessage = null
+                isNewHighScore = false,
+                errorMessage = null,
+                reviveErrorMessage = null
             )
         }
     }
@@ -222,13 +264,14 @@ class GameViewModel(
         gameOverRecorded = false
 
         val stats = _uiState.value.stats
+        val previousHighScore = stats.highScoreFor(mode.statsKey)
         _uiState.update {
             GameUiState(
                 mode = mode,
                 referenceItem = firstPair.first,
                 comparisonItem = firstPair.second,
-                currentHighScore = stats.highScoreFor(mode.statsKey),
-                showGameOverStats = false,
+                currentHighScore = previousHighScore,
+                previousHighScore = previousHighScore,
                 stats = stats
             )
         }
