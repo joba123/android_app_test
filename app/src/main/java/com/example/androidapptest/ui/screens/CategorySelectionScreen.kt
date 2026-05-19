@@ -43,7 +43,7 @@ fun CategorySelectionScreen(
         LazyColumn(modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp), contentPadding = PaddingValues(top = 20.dp, bottom = 20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Text("←") }
+                    IconButton(onClick = onBack) { Text("←", color = Color.White) }
                     Text("Kategorien", style = MaterialTheme.typography.headlineMedium, color = Color.White, fontWeight = FontWeight.ExtraBold)
                 }
             }
