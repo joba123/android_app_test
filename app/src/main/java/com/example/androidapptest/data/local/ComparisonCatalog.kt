@@ -89,22 +89,22 @@ object ComparisonCatalog {
             description = "generic football stadium"
         ),
         "football_club_members" to pexelsImage(
-            photoId = 31847342,
-            author = "Nur Andi Ravsanjani Gusma",
-            searchQuery = "football stadium seats supporters no logo",
-            description = "football stadium atmosphere"
+            photoId = 19191521,
+            author = "Gergely Badacsonyi",
+            searchQuery = "football fans cheering supporters Pexels",
+            description = "football supporters cheering"
         ),
         "football_instagram_followers" to pexelsImage(
-            photoId = 31847342,
-            author = "Nur Andi Ravsanjani Gusma",
-            searchQuery = "football fans crowd no logo",
-            description = "football fans"
+            photoId = 8886104,
+            author = "Brian Ramirez",
+            searchQuery = "smartphone Instagram profile followers Pexels",
+            description = "smartphone showing an Instagram profile"
         ),
-        "football_titles" to pexelsImage(
-            photoId = 9946854,
-            author = "Rockwell branding agency",
-            searchQuery = "trophy football stadium no logo",
-            description = "football stadium"
+        "football_titles" to wikimediaPhoto(
+            fileName = "Trophy of Fußball-Bundesliga in Singapore, 2023.jpg",
+            author = "Pangalau",
+            description = "Bundesliga Meisterschale",
+            license = "CC BY-SA 4.0"
         ),
         "football_attendance" to pexelsImage(
             photoId = 31847342,
@@ -161,28 +161,28 @@ object ComparisonCatalog {
             description = "generic cars on road"
         ),
         "cars_top_speed" to pexelsImage(
-            photoId = 11827611,
-            author = "Ali Kazal",
-            searchQuery = "sports car speed motion",
-            description = "car in motion"
+            photoId = 19754775,
+            author = "Abdulvahap Demir",
+            searchQuery = "car tachometer speedometer needle Pexels",
+            description = "tachometer needle in a car"
         ),
         "cars_consumption" to pexelsImage(
-            photoId = 9968347,
+            photoId = 6075510,
             author = "Erik Mclean",
-            searchQuery = "fuel pump gas station",
-            description = "fuel pump"
+            searchQuery = "car dashboard fuel gauge Pexels",
+            description = "car dashboard fuel gauge"
         ),
         "cars_production" to pexelsImage(
-            photoId = 13038579,
-            author = "Boys in Bristol Photography",
-            searchQuery = "car factory assembly line",
-            description = "industrial production"
+            photoId = 6289026,
+            author = "Monstera Production",
+            searchQuery = "rising chart graph growth Pexels",
+            description = "rising growth chart"
         ),
         "daily_doner_prices" to pexelsImage(
-            photoId = 18330009,
-            author = "Valeria Boltneva",
-            searchQuery = "doner kebab wrap vegetables Pexels",
-            description = "fresh doner kebab wrap"
+            photoId = 18062062,
+            author = "Oben Kural",
+            searchQuery = "appetizing doner kebab plate Pexels",
+            description = "doner kebab plate"
         ),
         "daily_food_prices" to pexelsImage(
             photoId = 4199043,
@@ -275,10 +275,10 @@ object ComparisonCatalog {
             description = "retro console with cartridge and controller"
         ),
         "gaming_rating" to wikimediaPhoto(
-            fileName = "Rating stars 5.0.svg",
-            author = "Muhammad Rafizeldi",
-            description = "five star rating",
-            license = "CC BY-SA 4.0"
+            fileName = "FiveStars2.svg",
+            author = "McSush",
+            description = "five golden rating stars",
+            license = "CC0"
         ),
         "geography_area" to pexelsImage(
             photoId = 269633,
@@ -287,10 +287,10 @@ object ComparisonCatalog {
             description = "world map"
         ),
         "geography_population" to pexelsImage(
-            photoId = 1486974,
-            author = "Henri Mathieu-Saint-Laurent",
-            searchQuery = "city crowd people streets",
-            description = "city crowd"
+            photoId = 13146197,
+            author = "Jose Vasquez",
+            searchQuery = "city skyline population Pexels",
+            description = "city skyline"
         ),
         "geography_height" to pexelsImage(
             photoId = 417173,
@@ -299,10 +299,10 @@ object ComparisonCatalog {
             description = "mountain summit"
         ),
         "geography_distance" to pexelsImage(
-            photoId = 2422915,
-            author = "Andrea Piacquadio",
-            searchQuery = "world map compass travel",
-            description = "world map and compass"
+            photoId = 27103750,
+            author = "Alexis Leandro Jeria Bocca",
+            searchQuery = "road sign in the distance Pexels",
+            description = "road leading into the distance"
         )
     )
 
@@ -329,6 +329,15 @@ object ComparisonCatalog {
         "Frankfurt am Main" to pexelsImage(13146197, "Jose Vasquez", "Frankfurt skyline Pexels", "Frankfurt skyline"),
         "Kölner Dom" to wikimediaPhoto("Kölner Dom.jpg", "Tobi 87", "Cologne Cathedral", "CC BY 3.0 / GFDL"),
         "Brocken" to wikimediaPhoto("0 2010 3224 Gipfelregion Brocken im Harz.jpg", "W. Bulach", "Brocken summit region", "CC BY-SA 4.0")
+    )
+
+    private val geographyPopulationImagesByTitle = mapOf(
+        "Hamburg" to localImage("geo_population_hamburg", "Hamburg city view from local Städte folder"),
+        "Köln" to localImage("geo_population_koeln", "Cologne city view from local Städte folder"),
+        "Frankfurt am Main" to localImage("geo_population_frankfurt", "Frankfurt city view from local Städte folder"),
+        "Stuttgart" to localImage("geo_population_stuttgart", "Stuttgart city view from local Städte folder"),
+        "Düsseldorf" to localImage("geo_population_duesseldorf", "Düsseldorf city view from local Städte folder"),
+        "Dortmund" to localImage("geo_population_dortmund", "Dortmund city view from local Städte folder")
     )
 
     private val footballStadiumImagesByTitle = mapOf(
@@ -1469,7 +1478,8 @@ object ComparisonCatalog {
     ): ComparisonItem {
         val category = categoriesById.getValue(categoryId)
         val subCategory = subCategoriesByKey.getValue("${categoryId}_$subcategoryId")
-        val image = imagesByTitle[title]
+        val image = geographyPopulationImageFor(title, categoryId, subcategoryId)
+            ?: imagesByTitle[title]
             ?: footballImageFor(title, categoryId, subcategoryId)
             ?: fallbackImagesBySubCategory[subCategory.metricId]
         return ComparisonItem(
@@ -1504,6 +1514,11 @@ object ComparisonCatalog {
                 ?: footballClubImagesByTitle[title]
             else -> footballClubImagesByTitle[title]
         }
+    }
+
+    private fun geographyPopulationImageFor(title: String, categoryId: String, subcategoryId: String): ImageMetadata? {
+        if (categoryId != "geography" || subcategoryId != "population") return null
+        return geographyPopulationImagesByTitle[title]
     }
 
     private fun pexelsImage(
