@@ -179,16 +179,16 @@ object ComparisonCatalog {
             description = "industrial production"
         ),
         "daily_doner_prices" to pexelsImage(
-            photoId = 6896379,
-            author = "Engin Akyurt",
-            searchQuery = "doner kebab street food",
-            description = "doner kebab"
+            photoId = 18330009,
+            author = "Valeria Boltneva",
+            searchQuery = "doner kebab wrap vegetables Pexels",
+            description = "fresh doner kebab wrap"
         ),
         "daily_food_prices" to pexelsImage(
-            photoId = 1542252,
-            author = "Oleg Magni",
-            searchQuery = "groceries supermarket food shopping",
-            description = "groceries"
+            photoId = 4199043,
+            author = "Jack Sparrow",
+            searchQuery = "supermarket groceries fresh vegetables Pexels",
+            description = "supermarket groceries"
         ),
         "daily_electricity_costs" to pexelsImage(
             photoId = 414837,
@@ -203,10 +203,10 @@ object ComparisonCatalog {
             description = "apartment building"
         ),
         "daily_fuel_prices" to pexelsImage(
-            photoId = 9968347,
-            author = "Erik Mclean",
-            searchQuery = "gas station fuel pump",
-            description = "fuel pump"
+            photoId = 14437598,
+            author = "Jedidiah-Jordan O.",
+            searchQuery = "gas station fuel pump Pexels",
+            description = "fuel pump at a gas station"
         ),
         "companies_employees" to pexelsImage(
             photoId = 13038579,
@@ -227,16 +227,16 @@ object ComparisonCatalog {
             description = "stock market chart"
         ),
         "companies_founding_year" to pexelsImage(
-            photoId = 1083823,
-            author = "David Bartus",
-            searchQuery = "historic building old factory",
-            description = "historic industrial building"
+            photoId = 11177238,
+            author = "Hatice Baran",
+            searchQuery = "old calendar handwritten notes Pexels",
+            description = "old paper calendar"
         ),
         "social_instagram_followers" to pexelsImage(
-            photoId = 30470952,
-            author = "Esra Afşar",
-            searchQuery = "person using smartphone social media",
-            description = "smartphone social media"
+            photoId = 8886104,
+            author = "Brian Ramirez",
+            searchQuery = "smartphone Instagram profile followers Pexels",
+            description = "smartphone showing an Instagram profile"
         ),
         "social_tiktok_followers" to pexelsImage(
             photoId = 4549408,
@@ -245,10 +245,10 @@ object ComparisonCatalog {
             description = "smartphone content creation"
         ),
         "social_youtube_subscribers" to pexelsImage(
-            photoId = 1162964,
-            author = "Donald Tong",
-            searchQuery = "youtube camera streaming setup",
-            description = "video streaming setup"
+            photoId = 3227986,
+            author = "Szabó Viktor",
+            searchQuery = "smartphone YouTube app subscribers Pexels",
+            description = "smartphone showing YouTube app"
         ),
         "social_twitch_followers" to pexelsImage(
             photoId = 7915437,
@@ -257,28 +257,28 @@ object ComparisonCatalog {
             description = "gaming streamer setup"
         ),
         "gaming_sales" to pexelsImage(
-            photoId = 8652319,
-            author = "Max Bonda",
-            searchQuery = "video game controller generic",
-            description = "gaming controller"
+            photoId = 5795423,
+            author = "Erik Mclean",
+            searchQuery = "video games collectibles store shelves Pexels",
+            description = "pop culture collectibles and game store shelves"
         ),
         "gaming_players" to pexelsImage(
-            photoId = 7774033,
-            author = "Artem Podrez",
-            searchQuery = "person playing video game controller",
-            description = "gaming controller"
+            photoId = 7915243,
+            author = "RDNE Stock project",
+            searchQuery = "multiplayer gaming computers esports Pexels",
+            description = "people playing computer games"
         ),
         "gaming_release_year" to pexelsImage(
-            photoId = 7774033,
-            author = "Artem Podrez",
-            searchQuery = "video game controller neon",
-            description = "gaming controller"
+            photoId = 4502978,
+            author = "Mateusz Dach",
+            searchQuery = "retro video game console cartridge Pexels",
+            description = "retro console with cartridge and controller"
         ),
-        "gaming_rating" to pexelsImage(
-            photoId = 8652319,
-            author = "Max Bonda",
-            searchQuery = "video game controller",
-            description = "gaming controller"
+        "gaming_rating" to wikimediaPhoto(
+            fileName = "Rating stars 5.0.svg",
+            author = "Muhammad Rafizeldi",
+            description = "five star rating",
+            license = "CC BY-SA 4.0"
         ),
         "geography_area" to pexelsImage(
             photoId = 269633,
@@ -326,7 +326,9 @@ object ComparisonCatalog {
         "Hamburg" to pexelsImage(30095370, "Niklas Jeromin", "Hamburg Elbphilharmonie Pexels", "Elbphilharmonie facade in Hamburg"),
         "München" to pexelsImage(21274213, "Linda Gschwentner", "Munich skyline Pexels", "Munich skyline"),
         "Köln" to pexelsImage(35384329, "Oğuzhan Aşcıoğlu", "Cologne Cathedral Hohenzollern Bridge Pexels", "Cologne Cathedral and Hohenzollern Bridge"),
-        "Frankfurt am Main" to pexelsImage(13146197, "Jose Vasquez", "Frankfurt skyline Pexels", "Frankfurt skyline")
+        "Frankfurt am Main" to pexelsImage(13146197, "Jose Vasquez", "Frankfurt skyline Pexels", "Frankfurt skyline"),
+        "Kölner Dom" to wikimediaPhoto("Kölner Dom.jpg", "Tobi 87", "Cologne Cathedral", "CC BY 3.0 / GFDL"),
+        "Brocken" to wikimediaPhoto("0 2010 3224 Gipfelregion Brocken im Harz.jpg", "W. Bulach", "Brocken summit region", "CC BY-SA 4.0")
     )
 
     private val footballStadiumImagesByTitle = mapOf(
