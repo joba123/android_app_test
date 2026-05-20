@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.androidapptest.data.model.ComparisonItem
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.ui.components.MenuImageCard
 import com.example.androidapptest.ui.components.MenuStatPill
@@ -37,7 +37,7 @@ fun CategorySelectionScreen(
     categories: List<MainCategory>,
     highScoreForCategory: (MainCategory) -> Int,
     itemCountForCategory: (MainCategory) -> Int,
-    sampleItemForCategory: (MainCategory) -> ComparisonItem?,
+    previewImagesByCategoryId: Map<String, CatalogImage?>,
     onBack: () -> Unit,
     onCategorySelected: (MainCategory) -> Unit
 ) {
@@ -75,7 +75,7 @@ fun CategorySelectionScreen(
             items(categories, key = { it.id }) { category ->
                 CategoryCard(
                     category = category,
-                    item = sampleItemForCategory(category),
+                    image = previewImagesByCategoryId[category.id],
                     itemCount = itemCountForCategory(category),
                     highScore = highScoreForCategory(category),
                     onClick = { onCategorySelected(category) }
@@ -88,13 +88,13 @@ fun CategorySelectionScreen(
 @Composable
 private fun CategoryCard(
     category: MainCategory,
-    item: ComparisonItem?,
+    image: CatalogImage?,
     itemCount: Int,
     highScore: Int,
     onClick: () -> Unit
 ) {
     MenuImageCard(
-        item = item,
+        image = image,
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()

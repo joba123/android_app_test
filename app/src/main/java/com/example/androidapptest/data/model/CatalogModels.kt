@@ -42,3 +42,10 @@ data class ComparisonItem(
     val imageSearchQuery: String? = null,
     val imageVerified: Boolean = false
 )
+
+data class CatalogImage(
+    val imageUrl: String,
+    val imageAttributionText: String,
+    val imageSearchQuery: String,
+    val imageVerified: Boolean = true
+)

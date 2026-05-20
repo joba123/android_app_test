@@ -1,6 +1,7 @@
 package com.example.androidapptest.data
 
 import com.example.androidapptest.data.local.ComparisonCatalog
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.data.model.SubCategory
@@ -23,6 +24,9 @@ class ComparisonRepository {
 
     fun itemCount(categoryId: String, subCategoryId: String): Int =
         ComparisonCatalog.itemCount(categoryId, subCategoryId)
+
+    fun fallbackImageForSubCategory(categoryId: String, subCategoryId: String): CatalogImage? =
+        ComparisonCatalog.fallbackImageForSubCategory(categoryId, subCategoryId)
 
     fun generalMetricGroups(): List<List<ComparisonItem>> =
         allItems.groupBy { it.metricId }.values.filter { it.size >= 2 }

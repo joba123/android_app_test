@@ -5,20 +5,35 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +49,9 @@ import com.example.androidapptest.ui.screens.SettingsScreen
 import com.example.androidapptest.ui.screens.StatsScreen
 import com.example.androidapptest.ui.screens.SubCategoryScreen
 import com.example.androidapptest.ui.theme.DeutschlandQuizTheme
+import com.example.androidapptest.ui.theme.GermanyGold
+import com.example.androidapptest.ui.theme.GermanyRed
+import com.example.androidapptest.ui.theme.NightBlack
 
 class MainActivity : ComponentActivity() {
     private lateinit var adMobManager: AdMobManager
@@ -47,6 +65,70 @@ class MainActivity : ComponentActivity() {
         setContent {
             DeutschlandQuizTheme {
                 DeutschlandQuizApp(activity = this, adMobManager = adMobManager)
+            }
+        }
+    }
+}
+
+@Composable
+private fun ExitGameDialog(
+    onContinue: () -> Unit,
+    onEndRun: () -> Unit
+) {
+    Dialog(onDismissRequest = onContinue) {
+        Card(
+            shape = RoundedCornerShape(30.dp),
+            border = BorderStroke(1.dp, GermanyGold.copy(alpha = 0.42f)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 18.dp)
+        ) {
+            Box(
+                modifier = Modifier.background(
+                    Brush.verticalGradient(
+                        listOf(
+                            GermanyGold.copy(alpha = 0.16f),
+                            GermanyRed.copy(alpha = 0.08f),
+                            NightBlack.copy(alpha = 0.10f)
+                        )
+                    )
+                )
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(14.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Runde beenden?",
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.ExtraBold,
+                        textAlign = TextAlign.Center
+                    )
+                    Text(
+                        text = "Wenn du jetzt zurückgehst, wird die laufende Runde abgebrochen und dein aktueller Score geht verloren.",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                    Button(
+                        onClick = onContinue,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = GermanyGold,
+                            contentColor = MaterialTheme.colorScheme.onPrimary
+                        )
+                    ) {
+                        Text("Weiterspielen", fontWeight = FontWeight.Bold)
+                    }
+                    OutlinedButton(
+                        onClick = onEndRun,
+                        modifier = Modifier.fillMaxWidth(),
+                        border = BorderStroke(1.dp, GermanyRed.copy(alpha = 0.62f)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = GermanyRed)
+                    ) {
+                        Text("Runde beenden", fontWeight = FontWeight.Bold)
+                    }
+                }
             }
         }
     }
@@ -81,6 +163,7 @@ private fun DeutschlandQuizApp(
     var hapticsEnabled by rememberSaveable { mutableStateOf(true) }
     var finishedRunCount by rememberSaveable { mutableStateOf(0) }
     var showExitGameDialog by remember { mutableStateOf(false) }
+    val categoryPreviewImages = remember(viewModel) { viewModel.previewImagesForMainCategories() }
 
     fun restartCurrentGame() {
         val mode = state.mode
@@ -159,7 +242,7 @@ private fun DeutschlandQuizApp(
                 lastModeLabel = state.stats.selectedModeLabel,
                 highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
                 itemCountForCategory = viewModel::itemCountForMainCategory,
-                sampleItemForCategory = viewModel::sampleItemForMainCategory,
+                previewImagesByCategoryId = categoryPreviewImages,
                 onPlay = { screen = AppScreen.Categories },
                 onCategorySelected = {
                     selectedCategoryId = it.id
@@ -172,7 +255,7 @@ private fun DeutschlandQuizApp(
                 categories = viewModel.mainCategories,
                 highScoreForCategory = { viewModel.highScoreForMainCategory(it, state.stats) },
                 itemCountForCategory = viewModel::itemCountForMainCategory,
-                sampleItemForCategory = viewModel::sampleItemForMainCategory,
+                previewImagesByCategoryId = categoryPreviewImages,
                 onBack = { screen = AppScreen.Home },
                 onCategorySelected = {
                     selectedCategoryId = it.id
@@ -185,15 +268,19 @@ private fun DeutschlandQuizApp(
                 if (selectedCategory == null) {
                     screen = AppScreen.Home
                 } else {
+                    val subCategories = viewModel.subCategoriesFor(selectedCategory.id)
+                    val subCategoryPreviewImages = remember(selectedCategory.id) {
+                        viewModel.previewImagesForSubCategories(selectedCategory.id)
+                    }
                     SubCategoryScreen(
                         category = selectedCategory,
-                        subCategories = viewModel.subCategoriesFor(selectedCategory.id),
+                        subCategories = subCategories,
                         summaryFor = { subCategory ->
                             viewModel.subCategorySummaries(selectedCategory.id, state.stats)
                                 .first { it.key == subCategory.modeKey }
                         },
                         itemCountFor = { viewModel.itemCount(it.categoryId, it.id) },
-                        sampleItemFor = viewModel::sampleItemForSubCategory,
+                        previewImagesByModeKey = subCategoryPreviewImages,
                         onBack = { screen = AppScreen.Categories },
                         onSubCategorySelected = { subCategory ->
                             if (viewModel.startSubCategoryGame(selectedCategory.id, subCategory.id)) {
@@ -261,19 +348,14 @@ private fun DeutschlandQuizApp(
         }
 
         if (showExitGameDialog) {
-            AlertDialog(
-                onDismissRequest = { showExitGameDialog = false },
-                title = { Text("Runde beenden?") },
-                text = { Text("Wenn du jetzt zurückgehst, wird die laufende Runde abgebrochen und dein aktueller Score geht verloren.") },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showExitGameDialog = false
-                        viewModel.finishGameFromNavigation()
-                        screen = gameReturnScreen
-                    }) { Text("Runde beenden") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showExitGameDialog = false }) { Text("Weiterspielen") }
+            ExitGameDialog(
+                onContinue = { showExitGameDialog = false },
+                onEndRun = {
+                    showExitGameDialog = false
+                    interstitialShownForGameOver = false
+                    endingRun = false
+                    viewModel.abandonRunFromNavigation()
+                    screen = gameReturnScreen
                 }
             )
         }

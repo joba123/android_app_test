@@ -35,7 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.androidapptest.R
-import com.example.androidapptest.data.model.ComparisonItem
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.ui.components.MenuImageCard
 import com.example.androidapptest.ui.components.MenuStatPill
@@ -51,7 +51,7 @@ fun HomeScreen(
     lastModeLabel: String?,
     highScoreForCategory: (MainCategory) -> Int,
     itemCountForCategory: (MainCategory) -> Int,
-    sampleItemForCategory: (MainCategory) -> ComparisonItem?,
+    previewImagesByCategoryId: Map<String, CatalogImage?>,
     onPlay: () -> Unit,
     onCategorySelected: (MainCategory) -> Unit,
     onOpenStats: () -> Unit,
@@ -121,7 +121,7 @@ fun HomeScreen(
                         items(categories, key = { it.id }) { category ->
                             HomeCategoryCard(
                                 category = category,
-                                item = sampleItemForCategory(category),
+                                image = previewImagesByCategoryId[category.id],
                                 itemCount = itemCountForCategory(category),
                                 highScore = highScoreForCategory(category),
                                 onClick = { onCategorySelected(category) }
@@ -198,13 +198,13 @@ private fun HomeHeader() {
 @Composable
 private fun HomeCategoryCard(
     category: MainCategory,
-    item: ComparisonItem?,
+    image: CatalogImage?,
     itemCount: Int,
     highScore: Int,
     onClick: () -> Unit
 ) {
     MenuImageCard(
-        item = item,
+        image = image,
         onClick = onClick,
         modifier = Modifier
             .width(260.dp)

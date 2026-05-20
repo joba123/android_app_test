@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.androidapptest.data.model.ComparisonItem
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.data.model.SubCategory
 import com.example.androidapptest.domain.stats.ModeStatSummary
@@ -40,7 +40,7 @@ fun SubCategoryScreen(
     subCategories: List<SubCategory>,
     summaryFor: (SubCategory) -> ModeStatSummary,
     itemCountFor: (SubCategory) -> Int,
-    sampleItemFor: (SubCategory) -> ComparisonItem?,
+    previewImagesByModeKey: Map<String, CatalogImage?>,
     onBack: () -> Unit,
     onSubCategorySelected: (SubCategory) -> Unit
 ) {
@@ -82,7 +82,7 @@ fun SubCategoryScreen(
                     subCategory = subCategory,
                     summary = summary,
                     itemCount = itemCount,
-                    item = sampleItemFor(subCategory),
+                    image = previewImagesByModeKey[subCategory.modeKey],
                     onClick = { onSubCategorySelected(subCategory) }
                 )
             }
@@ -95,12 +95,12 @@ private fun SubCategoryCard(
     subCategory: SubCategory,
     summary: ModeStatSummary,
     itemCount: Int,
-    item: ComparisonItem?,
+    image: CatalogImage?,
     onClick: () -> Unit
 ) {
     val isAvailable = itemCount >= 2
     MenuImageCard(
-        item = item,
+        image = image,
         onClick = if (isAvailable) onClick else null,
         modifier = Modifier
             .fillMaxWidth()

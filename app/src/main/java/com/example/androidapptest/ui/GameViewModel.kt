@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.androidapptest.data.ComparisonRepository
 import com.example.androidapptest.data.StatsRepository
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.data.model.SubCategory
@@ -38,6 +39,7 @@ class GameViewModel(
     private var wrongAnswersInCurrentGame = 0
     private var bestStreakInCurrentGame = 0
     private var lastVisibleItemIds: Set<Int> = emptySet()
+    private val safeItemPreviewCategoryIds = setOf("football", "germany", "geography", "daily_life")
 
     init {
         viewModelScope.launch {
@@ -60,6 +62,20 @@ class GameViewModel(
 
     fun itemCountForMainCategory(category: MainCategory): Int =
         repository.allItems.count { it.categoryId == category.id }
+
+    fun previewImagesForMainCategories(): Map<String, CatalogImage?> {
+        val usedImageUrls = mutableSetOf<String>()
+        return mainCategories.associate { category ->
+            category.id to previewCandidatesForCategory(category).firstUnusedImage(usedImageUrls)
+        }
+    }
+
+    fun previewImagesForSubCategories(categoryId: String): Map<String, CatalogImage?> {
+        val usedImageUrls = mutableSetOf<String>()
+        return repository.subCategoriesFor(categoryId).associate { subCategory ->
+            subCategory.modeKey to previewCandidatesForSubCategory(subCategory).firstUnusedImage(usedImageUrls)
+        }
+    }
 
     fun sampleItemForMainCategory(category: MainCategory): ComparisonItem? =
         repository.allItems.firstOrNull {
@@ -187,6 +203,27 @@ class GameViewModel(
         val current = _uiState.value
         if (current.runStatus == RunStatus.LostButCanRevive || current.runStatus == RunStatus.Reviving) {
             finishRun()
+        }
+    }
+
+    fun abandonRunFromNavigation() {
+        val current = _uiState.value
+        if (current.runStatus == RunStatus.GameOver) return
+
+        lastVisibleItemIds = emptySet()
+        correctAnswersInCurrentGame = 0
+        wrongAnswersInCurrentGame = 0
+        bestStreakInCurrentGame = 0
+        gameOverRecorded = false
+
+        val previousHighScore = current.stats.highScoreFor(current.mode.statsKey)
+        _uiState.update {
+            GameUiState(
+                mode = current.mode,
+                currentHighScore = previousHighScore,
+                previousHighScore = previousHighScore,
+                stats = current.stats
+            )
         }
     }
 
@@ -334,6 +371,52 @@ class GameViewModel(
         } else {
             repository.itemsForSubCategory(mode.categoryId, mode.subcategoryId.orEmpty())
         }
+
+    private fun previewCandidatesForCategory(category: MainCategory): List<CatalogImage> {
+        val fallbackImages = repository.subCategoriesFor(category.id)
+            .mapNotNull { repository.fallbackImageForSubCategory(it.categoryId, it.id) }
+        val itemImages = repository.allItems
+            .filter { it.categoryId == category.id }
+            .mapNotNull { it.safeMenuPreviewImage() }
+
+        return if (category.id == "football") {
+            (itemImages + fallbackImages).distinctBy { it.imageUrl }
+        } else {
+            (fallbackImages + itemImages).distinctBy { it.imageUrl }
+        }
+    }
+
+    private fun previewCandidatesForSubCategory(subCategory: SubCategory): List<CatalogImage> {
+        val fallbackImages = listOfNotNull(
+            repository.fallbackImageForSubCategory(subCategory.categoryId, subCategory.id)
+        )
+        val itemImages = repository.itemsForSubCategory(subCategory.categoryId, subCategory.id)
+            .mapNotNull { it.safeMenuPreviewImage() }
+
+        return if (subCategory.categoryId == "football") {
+            (itemImages + fallbackImages).distinctBy { it.imageUrl }
+        } else {
+            (fallbackImages + itemImages).distinctBy { it.imageUrl }
+        }
+    }
+
+    private fun ComparisonItem.safeMenuPreviewImage(): CatalogImage? {
+        if (categoryId !in safeItemPreviewCategoryIds) return null
+        val safeImageUrl = imageUrl?.takeIf { imageVerified && it.isNotBlank() } ?: return null
+        return CatalogImage(
+            imageUrl = safeImageUrl,
+            imageAttributionText = imageAttributionText ?: title,
+            imageSearchQuery = imageSearchQuery.orEmpty(),
+            imageVerified = true
+        )
+    }
+
+    private fun List<CatalogImage>.firstUnusedImage(usedImageUrls: MutableSet<String>): CatalogImage? {
+        val image = firstOrNull { it.imageVerified && it.imageUrl.isNotBlank() && it.imageUrl !in usedImageUrls }
+            ?: return null
+        usedImageUrls += image.imageUrl
+        return image
+    }
 
     private fun recordGameOverOnce() {
         if (gameOverRecorded) return

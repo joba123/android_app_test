@@ -1,14 +1,14 @@
 package com.example.androidapptest.data.local
 
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.data.model.ComparisonItem
 import com.example.androidapptest.data.model.MainCategory
 import com.example.androidapptest.data.model.SubCategory
+import java.net.URLEncoder
 
 object ComparisonCatalog {
     private const val PEXELS_LICENSE_URL = "https://www.pexels.com/license/"
     private const val PIXABAY_LICENSE_URL = "https://pixabay.com/service/license-summary/"
-    private const val WIKIMEDIA_LICENSE_URL =
-        "https://commons.wikimedia.org/wiki/Commons:Reusing_content_outside_Wikimedia"
 
     private data class ImageMetadata(
         val imageUrl: String,
@@ -118,23 +118,23 @@ object ComparisonCatalog {
             searchQuery = "germany city skyline",
             description = "Frankfurt skyline"
         ),
-        "germany_area" to pexelsImage(
-            photoId = 21274213,
-            author = "Linda Gschwentner",
-            searchQuery = "germany skyline landscape",
-            description = "Munich skyline"
+        "germany_area" to wikimediaPhoto(
+            fileName = "Germany location map.svg",
+            author = "NordNordWest",
+            description = "Germany location map",
+            license = "CC BY-SA 3.0"
         ),
         "germany_rent" to pexelsImage(
-            photoId = 13146197,
-            author = "Jose Vasquez",
-            searchQuery = "germany apartment city skyline",
-            description = "German city skyline"
+            photoId = 2408230,
+            author = "Mihar kathiriya",
+            searchQuery = "apartment buildings residential buildings",
+            description = "two apartment buildings"
         ),
         "germany_salary" to pexelsImage(
-            photoId = 13038579,
-            author = "Boys in Bristol Photography",
-            searchQuery = "german office workplace",
-            description = "modern office workplace"
+            photoId = 7352057,
+            author = "Lukasz Radziejewski",
+            searchQuery = "euro money cash salary",
+            description = "close-up of euro money"
         ),
         "germany_tourists" to pexelsImage(
             photoId = 21274213,
@@ -329,6 +329,113 @@ object ComparisonCatalog {
         "Frankfurt am Main" to pexelsImage(13146197, "Jose Vasquez", "Frankfurt skyline Pexels", "Frankfurt skyline")
     )
 
+    private val footballStadiumImagesByTitle = mapOf(
+        "Signal Iduna Park" to localImage("football_borussia_dortmund", "Dortmund stadium crowd"),
+        "Allianz Arena" to localImage("football_allianz_arena", "Allianz Arena exterior"),
+        "Olympiastadion Berlin" to localImage("football_hertha_bsc", "Olympiastadion Berlin interior"),
+        "VELTINS-Arena" to wikimediaPhoto("Veltins-Arena Panorama.jpg", null, "Veltins-Arena panorama", "Wikimedia Commons license"),
+        "MHPArena" to localImage("football_vfb_stuttgart", "Stuttgart football context"),
+        "Deutsche Bank Park" to localImage("football_frankfurt", "Frankfurt skyline"),
+        "Volksparkstadion" to localImage("football_hamburg", "Hamburg city and football context"),
+        "Merkur Spiel-Arena" to wikimediaPhoto("Merkur-Spiel-Arena.jpg", null, "Merkur Spiel-Arena", "Wikimedia Commons license"),
+        "Borussia-Park" to localImage("football_moenchengladbach", "Mönchengladbach football context"),
+        "RheinEnergieStadion" to localImage("football_koeln", "Cologne stadium view"),
+        "Red Bull Arena" to localImage("football_rb_leipzig", "Leipzig football context"),
+        "Weserstadion" to localImage("football_werder_bremen", "Bremen football context"),
+        "BayArena" to localImage("football_bayer_leverkusen", "Bayer tower in Leverkusen"),
+        "Europa-Park Stadion" to localImage("football_sc_freiburg", "Freiburg football context"),
+        "MEWA ARENA" to localImage("football_fsv_mainz_05", "Mainz football context"),
+        "MEWA ARENA Mainz" to localImage("football_fsv_mainz_05", "Mainz football context"),
+        "Volkswagen Arena" to localImage("football_vfl_wolfsburg", "Volkswagen Arena exterior"),
+        "WWK Arena" to localImage("football_fc_augsburg", "Augsburg football context"),
+        "Stadion An der Alten Försterei" to wikimediaPhoto("19-08-17-Stadion-an-der-alten-Foersterei-DJI 0272.jpg", "Ralf Roletschek", "Stadion An der Alten Försterei", "CC BY-SA"),
+        "Millerntor-Stadion" to localImage("football_st_pauli", "Millerntor and St. Pauli context"),
+        "Voith-Arena" to localImage("football_heidenheim", "Heidenheim football context"),
+        "PreZero Arena" to localImage("football_tsg_hoffenheim", "Hoffenheim football context"),
+        "HDI-Arena" to wikimediaPhoto("2013-08-28 HDI-Arena Hannover.jpg", "Tim Rademacher", "HDI-Arena Hannover", "CC BY-SA 4.0"),
+        "Max-Morlock-Stadion" to wikimediaPhoto("Das Max-Morlock-Stadion im Sommer 2025.jpg", null, "Max-Morlock-Stadion Nürnberg", "CC BY 4.0"),
+        "Wildparkstadion" to wikimediaPhoto("Wildparkstadion.jpg", "Sven Scharr", "Wildparkstadion Karlsruhe", "CC BY 3.0"),
+        "Eintracht-Stadion" to wikimediaPhoto("EintrachtStadionAußen.jpg", "Kassandro", "Eintracht-Stadion Braunschweig", "Wikimedia Commons license"),
+        "Fritz-Walter-Stadion" to wikimediaPhoto("FIFA-Fritz-Walter-Stadion07.JPG", null, "Fritz-Walter-Stadion Kaiserslautern", "Wikimedia Commons license"),
+        "Holstein-Stadion" to wikimediaPhoto("Holsteinstadion-Kiel.jpg", null, "Holstein-Stadion Kiel", "Wikimedia Commons license"),
+        "Merck-Stadion am Böllenfalltor" to wikimediaPhoto("Merck-Stadion am Böllenfalltor.jpg", "Twine333", "Merck-Stadion am Böllenfalltor", "CC BY-SA 4.0"),
+        "Home Deluxe Arena" to wikimediaPhoto("Benteler Arena innen.jpg", null, "Home Deluxe Arena Paderborn", "Wikimedia Commons license"),
+        "Avnet Arena" to wikimediaPhoto("MDCC-Arena.jpg", null, "Avnet Arena Magdeburg", "Wikimedia Commons license"),
+        "Waldstadion Kaiserlinde" to localImage("football_elversberg", "SV Elversberg match scene"),
+        "SchücoArena" to localImage("football_bielefeld", "Bielefeld city sign"),
+        "Sportpark Ronhof" to localImage("football_spvgg_fuerth", "Fürth football context"),
+        "Donaustadion" to localImage("football_ssv_ulm", "Ulm football context")
+    )
+
+    private val footballClubImagesByTitle = mapOf(
+        "FC Bayern München" to footballStadiumImagesByTitle.getValue("Allianz Arena"),
+        "Bayer 04 Leverkusen" to localImage("football_bayer_leverkusen", "Bayer tower in Leverkusen"),
+        "Borussia Dortmund" to footballStadiumImagesByTitle.getValue("Signal Iduna Park"),
+        "RB Leipzig" to footballStadiumImagesByTitle.getValue("Red Bull Arena"),
+        "VfB Stuttgart" to footballStadiumImagesByTitle.getValue("MHPArena"),
+        "Eintracht Frankfurt" to footballStadiumImagesByTitle.getValue("Deutsche Bank Park"),
+        "TSG 1899 Hoffenheim" to footballStadiumImagesByTitle.getValue("PreZero Arena"),
+        "VfL Wolfsburg" to localImage("football_vfl_wolfsburg", "Wolfsburg stadium context"),
+        "SC Freiburg" to footballStadiumImagesByTitle.getValue("Europa-Park Stadion"),
+        "Borussia Mönchengladbach" to footballStadiumImagesByTitle.getValue("Borussia-Park"),
+        "1. FSV Mainz 05" to footballStadiumImagesByTitle.getValue("MEWA ARENA"),
+        "Werder Bremen" to footballStadiumImagesByTitle.getValue("Weserstadion"),
+        "1. FC Union Berlin" to footballStadiumImagesByTitle.getValue("Stadion An der Alten Försterei"),
+        "FC Augsburg" to footballStadiumImagesByTitle.getValue("WWK Arena"),
+        "1. FC Köln" to footballStadiumImagesByTitle.getValue("RheinEnergieStadion"),
+        "VfL Bochum" to localImage("football_bochum", "Bochum city sign"),
+        "FC St. Pauli" to footballStadiumImagesByTitle.getValue("Millerntor-Stadion"),
+        "Hamburger SV" to localImage("football_hamburg", "Hamburg city context"),
+        "Hertha BSC" to footballStadiumImagesByTitle.getValue("Olympiastadion Berlin"),
+        "Hannover 96" to footballStadiumImagesByTitle.getValue("HDI-Arena"),
+        "FC Schalke 04" to footballStadiumImagesByTitle.getValue("VELTINS-Arena"),
+        "1. FC Nürnberg" to footballStadiumImagesByTitle.getValue("Max-Morlock-Stadion"),
+        "Fortuna Düsseldorf" to footballStadiumImagesByTitle.getValue("Merkur Spiel-Arena"),
+        "Karlsruher SC" to footballStadiumImagesByTitle.getValue("Wildparkstadion"),
+        "Eintracht Braunschweig" to footballStadiumImagesByTitle.getValue("Eintracht-Stadion"),
+        "1. FC Kaiserslautern" to footballStadiumImagesByTitle.getValue("Fritz-Walter-Stadion"),
+        "DFB-Team" to localImage("football_deutschland_flagge", "Germany flag"),
+        "1. FC Heidenheim" to footballStadiumImagesByTitle.getValue("Voith-Arena"),
+        "Holstein Kiel" to footballStadiumImagesByTitle.getValue("Holstein-Stadion"),
+        "SV Darmstadt 98" to footballStadiumImagesByTitle.getValue("Merck-Stadion am Böllenfalltor"),
+        "SC Paderborn 07" to footballStadiumImagesByTitle.getValue("Home Deluxe Arena"),
+        "1. FC Magdeburg" to footballStadiumImagesByTitle.getValue("Avnet Arena"),
+        "SV Elversberg" to footballStadiumImagesByTitle.getValue("Waldstadion Kaiserlinde"),
+        "Arminia Bielefeld" to footballStadiumImagesByTitle.getValue("SchücoArena"),
+        "SpVgg Greuther Fürth" to footballStadiumImagesByTitle.getValue("Sportpark Ronhof"),
+        "SSV Ulm 1846" to footballStadiumImagesByTitle.getValue("Donaustadion")
+    )
+
+    private val footballAttendanceImagesByTitle = mapOf(
+        "Borussia Dortmund" to footballStadiumImagesByTitle.getValue("Signal Iduna Park"),
+        "FC Bayern München" to footballStadiumImagesByTitle.getValue("Allianz Arena"),
+        "FC Schalke 04" to footballStadiumImagesByTitle.getValue("VELTINS-Arena"),
+        "VfB Stuttgart" to footballStadiumImagesByTitle.getValue("MHPArena"),
+        "Eintracht Frankfurt" to footballStadiumImagesByTitle.getValue("Deutsche Bank Park"),
+        "Hamburger SV" to footballStadiumImagesByTitle.getValue("Volksparkstadion"),
+        "Borussia Mönchengladbach" to footballStadiumImagesByTitle.getValue("Borussia-Park"),
+        "Hertha BSC" to footballStadiumImagesByTitle.getValue("Olympiastadion Berlin"),
+        "1. FC Köln" to footballStadiumImagesByTitle.getValue("RheinEnergieStadion"),
+        "RB Leipzig" to footballStadiumImagesByTitle.getValue("Red Bull Arena"),
+        "Werder Bremen" to footballStadiumImagesByTitle.getValue("Weserstadion"),
+        "SC Freiburg" to footballStadiumImagesByTitle.getValue("Europa-Park Stadion"),
+        "MEWA ARENA Mainz" to footballStadiumImagesByTitle.getValue("MEWA ARENA"),
+        "Bayer 04 Leverkusen" to footballStadiumImagesByTitle.getValue("BayArena"),
+        "1. FC Union Berlin" to footballStadiumImagesByTitle.getValue("Stadion An der Alten Försterei"),
+        "VfL Wolfsburg" to footballStadiumImagesByTitle.getValue("Volkswagen Arena"),
+        "FC Augsburg" to footballStadiumImagesByTitle.getValue("WWK Arena"),
+        "FC St. Pauli" to footballStadiumImagesByTitle.getValue("Millerntor-Stadion"),
+        "1. FC Heidenheim" to footballStadiumImagesByTitle.getValue("Voith-Arena"),
+        "Holstein Kiel" to footballStadiumImagesByTitle.getValue("Holstein-Stadion"),
+        "SV Darmstadt 98" to footballStadiumImagesByTitle.getValue("Merck-Stadion am Böllenfalltor"),
+        "SC Paderborn 07" to footballStadiumImagesByTitle.getValue("Home Deluxe Arena"),
+        "1. FC Magdeburg" to footballStadiumImagesByTitle.getValue("Avnet Arena"),
+        "SV Elversberg" to footballStadiumImagesByTitle.getValue("Waldstadion Kaiserlinde"),
+        "Arminia Bielefeld" to footballStadiumImagesByTitle.getValue("SchücoArena"),
+        "SpVgg Greuther Fürth" to footballStadiumImagesByTitle.getValue("Sportpark Ronhof"),
+        "SSV Ulm 1846" to footballStadiumImagesByTitle.getValue("Donaustadion")
+    )
+
     val items: List<ComparisonItem> = buildItems()
 
     private fun buildItems(): List<ComparisonItem> {
@@ -370,6 +477,14 @@ object ComparisonCatalog {
         add("Hamburger SV", "Hamburg", "football", "market_value", 75_000_000, "75 Mio. €", "Bundesliga-Dino in der 2. Liga")
         add("Hertha BSC", "Berlin", "football", "market_value", 60_000_000, "60 Mio. €", "Hauptstadtclub aus Charlottenburg")
         add("Hannover 96", "Hannover", "football", "market_value", 45_000_000, "45 Mio. €", "Roter Traditionsclub aus Niedersachsen")
+        add("Holstein Kiel", "Kiel", "football", "market_value", 41_000_000, "41 Mio. €", "Nordclub mit jüngerer Bundesliga-Erfahrung")
+        add("SV Darmstadt 98", "Darmstadt", "football", "market_value", 31_000_000, "31 Mio. €", "Traditionsclub vom Böllenfalltor")
+        add("SC Paderborn 07", "Paderborn", "football", "market_value", 30_000_000, "30 Mio. €", "OWL-Club mit schnellem Umschaltspiel")
+        add("1. FC Magdeburg", "Magdeburg", "football", "market_value", 25_000_000, "25 Mio. €", "Ostclub mit großer Heimkulisse")
+        add("SV Elversberg", "Spiesen-Elversberg", "football", "market_value", 21_000_000, "21 Mio. €", "Kleiner Standort mit starkem Zweitliga-Auftritt")
+        add("Arminia Bielefeld", "Bielefeld", "football", "market_value", 19_000_000, "19 Mio. €", "Traditionsclub aus Ostwestfalen")
+        add("SpVgg Greuther Fürth", "Fürth", "football", "market_value", 27_000_000, "27 Mio. €", "Fränkischer Traditionsverein")
+        add("SSV Ulm 1846", "Ulm", "football", "market_value", 8_000_000, "8 Mio. €", "Aufsteiger mit markanter Stadtidentität")
 
         // ============================================================
         // FOOTBALL — Stadionkapazität (Plätze)
@@ -394,6 +509,14 @@ object ComparisonCatalog {
         add("Stadion An der Alten Försterei", "Berlin", "football", "stadium_capacity", 22_012, "22.012 Plätze", "Heimat des 1. FC Union Berlin")
         add("Millerntor-Stadion", "Hamburg", "football", "stadium_capacity", 29_546, "29.546 Plätze", "Kultstätte des FC St. Pauli")
         add("Voith-Arena", "Heidenheim", "football", "stadium_capacity", 15_000, "15.000 Plätze", "Kleines Stadion mit Bundesliga-Charme")
+        add("Holstein-Stadion", "Kiel", "football", "stadium_capacity", 15_034, "15.034 Plätze", "Kompaktes Stadion im Kieler Norden")
+        add("Merck-Stadion am Böllenfalltor", "Darmstadt", "football", "stadium_capacity", 17_650, "17.650 Plätze", "Traditionsspielstätte im Stadtwald")
+        add("Home Deluxe Arena", "Paderborn", "football", "stadium_capacity", 15_000, "15.000 Plätze", "Kompakte Arena in Ostwestfalen")
+        add("Avnet Arena", "Magdeburg", "football", "stadium_capacity", 30_098, "30.098 Plätze", "Große Bühne des 1. FC Magdeburg")
+        add("Waldstadion Kaiserlinde", "Spiesen-Elversberg", "football", "stadium_capacity", 10_000, "10.000 Plätze", "Kleine, enge Zweitliga-Spielstätte")
+        add("SchücoArena", "Bielefeld", "football", "stadium_capacity", 26_515, "26.515 Plätze", "Traditionsstadion auf der Alm")
+        add("Sportpark Ronhof", "Fürth", "football", "stadium_capacity", 16_626, "16.626 Plätze", "Heimspielstätte der Kleeblätter")
+        add("Donaustadion", "Ulm", "football", "stadium_capacity", 19_500, "19.500 Plätze", "Leichtathletik- und Fußballstadion an der Donau")
 
         // ============================================================
         // FOOTBALL — Vereinsmitglieder
@@ -490,6 +613,14 @@ object ComparisonCatalog {
         add("FC St. Pauli", "Hamburg", "football", "attendance", 29_500, "29.500 Zuschauer", "Millerntor immer ausverkauft")
         add("VfL Bochum", "Bochum", "football", "attendance", 25_500, "25.500 Zuschauer", "Vonovia Ruhrstadion gut besucht")
         add("1. FC Heidenheim", "Heidenheim", "football", "attendance", 14_500, "14.500 Zuschauer", "Kleine Voith-Arena maximal genutzt")
+        add("Holstein Kiel", "Kiel", "football", "attendance", 14_900, "14.900 Zuschauer", "Holstein-Stadion nahe an der Kapazitätsgrenze")
+        add("SV Darmstadt 98", "Darmstadt", "football", "attendance", 17_500, "17.500 Zuschauer", "Das Böllenfalltor ist oft sehr gut gefüllt")
+        add("SC Paderborn 07", "Paderborn", "football", "attendance", 14_400, "14.400 Zuschauer", "Kompakte Arena mit hoher Auslastung")
+        add("1. FC Magdeburg", "Magdeburg", "football", "attendance", 25_300, "25.300 Zuschauer", "Sehr starke Heimkulisse in der Avnet Arena")
+        add("SV Elversberg", "Spiesen-Elversberg", "football", "attendance", 9_300, "9.300 Zuschauer", "Kleine Arena mit hoher Auslastung")
+        add("Arminia Bielefeld", "Bielefeld", "football", "attendance", 20_000, "20.000 Zuschauer", "Die Alm bringt auch unterhalb der Bundesliga viele Fans")
+        add("SpVgg Greuther Fürth", "Fürth", "football", "attendance", 11_500, "11.500 Zuschauer", "Der Ronhof bleibt eng und traditionsreich")
+        add("SSV Ulm 1846", "Ulm", "football", "attendance", 13_000, "13.000 Zuschauer", "Donaustadion mit wachsender Zweitliga-Kulisse")
 
         // ============================================================
         // GERMANY — Einwohnerzahlen (Städte)
@@ -1319,6 +1450,11 @@ object ComparisonCatalog {
     fun itemCount(categoryId: String, subCategoryId: String): Int =
         itemsForSubCategory(categoryId, subCategoryId).size
 
+    fun fallbackImageForSubCategory(categoryId: String, subCategoryId: String): CatalogImage? {
+        val subCategory = subCategory(categoryId, subCategoryId) ?: return null
+        return fallbackImagesBySubCategory[subCategory.metricId]?.toCatalogImage()
+    }
+
     private fun buildItem(
         id: Int,
         title: String,
@@ -1331,7 +1467,9 @@ object ComparisonCatalog {
     ): ComparisonItem {
         val category = categoriesById.getValue(categoryId)
         val subCategory = subCategoriesByKey.getValue("${categoryId}_$subcategoryId")
-        val image = imagesByTitle[title] ?: fallbackImagesBySubCategory[subCategory.metricId]
+        val image = imagesByTitle[title]
+            ?: footballImageFor(title, categoryId, subcategoryId)
+            ?: fallbackImagesBySubCategory[subCategory.metricId]
         return ComparisonItem(
             id = id,
             title = title,
@@ -1355,6 +1493,17 @@ object ComparisonCatalog {
         )
     }
 
+    private fun footballImageFor(title: String, categoryId: String, subcategoryId: String): ImageMetadata? {
+        if (categoryId != "football") return null
+        return when (subcategoryId) {
+            "stadium_capacity" -> footballStadiumImagesByTitle[title]
+            "attendance" -> footballAttendanceImagesByTitle[title]
+                ?: footballStadiumImagesByTitle[title]
+                ?: footballClubImagesByTitle[title]
+            else -> footballClubImagesByTitle[title]
+        }
+    }
+
     private fun pexelsImage(
         photoId: Int,
         author: String,
@@ -1367,6 +1516,57 @@ object ComparisonCatalog {
         imageAttributionText = "Photo by $author on Pexels ($description)",
         imageLicenseUrl = PEXELS_LICENSE_URL,
         imageSearchQuery = searchQuery
+    )
+
+    private fun localImage(
+        resourceName: String,
+        description: String
+    ) = ImageMetadata(
+        imageUrl = "android.resource://com.example.androidapptest/drawable/$resourceName",
+        imageSource = "Local asset",
+        imageAuthor = null,
+        imageAttributionText = "Local image ($description)",
+        imageLicenseUrl = "",
+        imageSearchQuery = description
+    )
+
+    private fun wikimediaPhoto(
+        fileName: String,
+        author: String?,
+        description: String,
+        license: String
+    ) = wikimediaImage(
+        fileName = fileName,
+        author = author,
+        searchQuery = "$description Wikimedia Commons",
+        description = description,
+        license = license
+    )
+
+    private fun wikimediaImage(
+        fileName: String,
+        author: String?,
+        searchQuery: String,
+        description: String,
+        license: String
+    ) = ImageMetadata(
+        imageUrl = wikimediaThumbnailUrl(fileName),
+        imageSource = "Wikimedia Commons",
+        imageAuthor = author,
+        imageAttributionText = if (author != null) {
+            "Image by $author on Wikimedia Commons ($description, $license)"
+        } else {
+            "Image on Wikimedia Commons ($description, $license)"
+        },
+        imageLicenseUrl = wikimediaFilePageUrl(fileName),
+        imageSearchQuery = searchQuery
+    )
+
+    private fun ImageMetadata.toCatalogImage() = CatalogImage(
+        imageUrl = imageUrl,
+        imageAttributionText = imageAttributionText,
+        imageSearchQuery = imageSearchQuery,
+        imageVerified = imageVerified
     )
 
     private fun pixabayImage(
@@ -1386,4 +1586,15 @@ object ComparisonCatalog {
         imageLicenseUrl = PIXABAY_LICENSE_URL,
         imageSearchQuery = searchQuery
     )
+
+    private fun wikimediaThumbnailUrl(fileName: String, width: Int = 1200): String {
+        val encodedFileName = fileName.replace(' ', '_').urlEncode()
+        return "https://commons.wikimedia.org/wiki/Special:Redirect/file/$encodedFileName?width=$width"
+    }
+
+    private fun wikimediaFilePageUrl(fileName: String): String =
+        "https://commons.wikimedia.org/wiki/File:${fileName.replace(' ', '_').urlEncode()}"
+
+    private fun String.urlEncode(): String =
+        URLEncoder.encode(this, Charsets.UTF_8.name()).replace("+", "_")
 }

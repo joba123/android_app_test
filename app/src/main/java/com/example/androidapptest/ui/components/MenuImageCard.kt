@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.androidapptest.data.model.ComparisonItem
+import com.example.androidapptest.data.model.CatalogImage
 import com.example.androidapptest.ui.theme.GermanyGold
 import com.example.androidapptest.ui.theme.GermanyRed
 import com.example.androidapptest.ui.theme.NightBlack
@@ -31,14 +31,14 @@ import com.example.androidapptest.ui.theme.SoftGraphite
 
 @Composable
 fun MenuImageCard(
-    item: ComparisonItem?,
+    image: CatalogImage?,
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     borderColor: Color = GermanyGold.copy(alpha = 0.28f),
     contentPadding: PaddingValues = PaddingValues(20.dp),
     content: @Composable BoxScope.() -> Unit
 ) {
-    val imageUrl = item.verifiedImageUrl()
+    val imageUrl = image.verifiedImageUrl()
     val clickableModifier = if (onClick != null) {
         modifier.clickable(onClick = onClick)
     } else {
@@ -57,18 +57,27 @@ fun MenuImageCard(
                 .fillMaxSize()
                 .background(
                     Brush.linearGradient(
-                        colors = listOf(
-                            GermanyRed.copy(alpha = 0.48f),
-                            SoftGraphite,
-                            NightBlack
-                        )
+                        colors = if (imageUrl == null) {
+                            listOf(
+                                GermanyGold.copy(alpha = 0.22f),
+                                GermanyRed.copy(alpha = 0.34f),
+                                SoftGraphite,
+                                NightBlack
+                            )
+                        } else {
+                            listOf(
+                                GermanyRed.copy(alpha = 0.48f),
+                                SoftGraphite,
+                                NightBlack
+                            )
+                        }
                     )
                 )
         ) {
             if (imageUrl != null) {
                 AsyncImage(
                     model = imageUrl,
-                    contentDescription = item?.imageAttributionText ?: item?.title,
+                    contentDescription = image?.imageAttributionText,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
@@ -124,7 +133,7 @@ fun MenuStatPill(
     }
 }
 
-fun ComparisonItem?.verifiedImageUrl(): String? {
-    val item = this ?: return null
-    return item.imageUrl?.takeIf { item.imageVerified && it.isNotBlank() }
+fun CatalogImage?.verifiedImageUrl(): String? {
+    val image = this ?: return null
+    return image.imageUrl.takeIf { image.imageVerified && it.isNotBlank() }
 }
