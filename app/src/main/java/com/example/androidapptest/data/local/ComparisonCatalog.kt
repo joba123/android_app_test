@@ -9,6 +9,7 @@ import java.net.URLEncoder
 object ComparisonCatalog {
     private const val PEXELS_LICENSE_URL = "https://www.pexels.com/license/"
     private const val PIXABAY_LICENSE_URL = "https://pixabay.com/service/license-summary/"
+    private const val GENERATED_ITEMS_PER_SUBCATEGORY = 100
 
     private data class ImageMetadata(
         val imageUrl: String,
@@ -20,6 +21,11 @@ object ComparisonCatalog {
         val imageVerified: Boolean = true
     )
 
+    private data class GermanyThemePlace(
+        val name: String,
+        val state: String
+    )
+
     val mainCategories = listOf(
         MainCategory("football", "Fußball", "Vereine, Stadien, Werte und Reichweite", "⚽"),
         MainCategory("germany", "Deutschland", "Städte, Länder, Fläche und Alltag", "🇩🇪"),
@@ -28,7 +34,12 @@ object ComparisonCatalog {
         MainCategory("companies", "Unternehmen", "Mitarbeitende, Umsatz und Marktwerte", "🏢"),
         MainCategory("social_media", "Social Media", "Follower, Abos und Reichweiten", "📱"),
         MainCategory("gaming", "Gaming", "Verkäufe, Spielerzahlen und Bewertungen", "🎮"),
-        MainCategory("geography", "Geografie", "Fläche, Höhe, Einwohner und Distanzen", "🗺️")
+        MainCategory("geography", "Geografie", "Fläche, Höhe, Einwohner und Distanzen", "🗺️"),
+        MainCategory("transport", "Verkehr", "Bahnhöfe, Straßen, Flughäfen und Pendeln", "🚆"),
+        MainCategory("culture", "Kultur", "Museen, Feste und Wahrzeichen in Deutschland", "🎭"),
+        MainCategory("education", "Bildung", "Hochschulen, Bibliotheken und Forschung", "🎓"),
+        MainCategory("nature", "Natur", "Grünflächen, Wasser und Höhen in Deutschland", "🌲"),
+        MainCategory("politics", "Politik", "Wahlkreise, Rathäuser und Stadtparlamente", "🏛️")
     )
 
     val subCategories = listOf(
@@ -69,7 +80,22 @@ object ComparisonCatalog {
         SubCategory("area", "geography", "Fläche", "Flächen geografischer Orte", "geography_area", "Fläche"),
         SubCategory("population", "geography", "Einwohner", "Einwohner von Regionen und Orten", "geography_population", "Einwohner"),
         SubCategory("height", "geography", "Höhe", "Berge und Bauwerke", "geography_height", "Höhe"),
-        SubCategory("distance", "geography", "Entfernung", "Distanzen zwischen Orten", "geography_distance", "Entfernung")
+        SubCategory("distance", "geography", "Entfernung", "Distanzen zwischen Orten", "geography_distance", "Entfernung"),
+        SubCategory("train_passengers", "transport", "Bahnhöfe", "Reisende an deutschen Bahnstandorten", "transport_train_passengers", "Reisende"),
+        SubCategory("road_network", "transport", "Straßennetz", "Straßen- und Pendelachsen deutscher Städte", "transport_road_network", "Straßenkilometer"),
+        SubCategory("airport_reach", "transport", "Flughafenregion", "Passagier- und Einzugswerte deutscher Flughafenräume", "transport_airport_reach", "Passagiere"),
+        SubCategory("museum_visits", "culture", "Museen", "Besuche in Museumslandschaften deutscher Städte", "culture_museum_visits", "Museumsbesuche"),
+        SubCategory("festival_visits", "culture", "Feste", "Besucherzahlen großer Stadt- und Kulturfeste", "culture_festival_visits", "Festbesuche"),
+        SubCategory("landmark_age", "culture", "Wahrzeichen", "Alter bekannter Bauwerke und Wahrzeichen", "culture_landmark_age", "Alter"),
+        SubCategory("university_students", "education", "Studierende", "Studierendenzahlen an Hochschulstandorten", "education_university_students", "Studierende"),
+        SubCategory("library_media", "education", "Bibliotheken", "Medienbestände und Ausleihen in Stadtbibliotheken", "education_library_media", "Medien"),
+        SubCategory("research_budget", "education", "Forschung", "Forschungs- und Innovationsbudgets deutscher Standorte", "education_research_budget", "Budget"),
+        SubCategory("green_area", "nature", "Grünflächen", "Parks, Wälder und Grünräume im Stadtumland", "nature_green_area", "Grünfläche"),
+        SubCategory("water_area", "nature", "Wasserflächen", "Seen, Flüsse und Wasserflächen rund um deutsche Orte", "nature_water_area", "Wasserfläche"),
+        SubCategory("elevation", "nature", "Höhenlage", "Höhenlagen deutscher Städte und Regionen", "nature_elevation", "Höhenlage"),
+        SubCategory("voters", "politics", "Wahlkreise", "Wahlberechtigte in deutschen Wahlkreisräumen", "politics_voters", "Wahlberechtigte"),
+        SubCategory("council_seats", "politics", "Stadträte", "Sitze in Stadt- und Kommunalparlamenten", "politics_council_seats", "Sitze"),
+        SubCategory("town_hall_age", "politics", "Rathäuser", "Alter prägender Rathäuser und Verwaltungsbauten", "politics_town_hall_age", "Alter")
     )
 
     private val categoriesById = mainCategories.associateBy { it.id }
@@ -89,10 +115,10 @@ object ComparisonCatalog {
             description = "generic football stadium"
         ),
         "football_club_members" to pexelsImage(
-            photoId = 19191521,
-            author = "Gergely Badacsonyi",
-            searchQuery = "football fans cheering supporters Pexels",
-            description = "football supporters cheering"
+            photoId = 14460275,
+            author = "George Zografidis",
+            searchQuery = "football fans cheering stadium Pexels",
+            description = "cheering football fans in a stadium"
         ),
         "football_instagram_followers" to pexelsImage(
             photoId = 8886104,
@@ -118,11 +144,11 @@ object ComparisonCatalog {
             searchQuery = "germany city skyline",
             description = "Frankfurt skyline"
         ),
-        "germany_area" to wikimediaPhoto(
-            fileName = "Germany location map.svg",
-            author = "NordNordWest",
-            description = "Germany location map",
-            license = "CC BY-SA 3.0"
+        "germany_area" to pexelsImage(
+            photoId = 269790,
+            author = "Pixabay",
+            searchQuery = "Germany map close up Pexels",
+            description = "close-up of Germany on a map"
         ),
         "germany_rent" to pexelsImage(
             photoId = 2408230,
@@ -137,10 +163,10 @@ object ComparisonCatalog {
             description = "close-up of euro money"
         ),
         "germany_tourists" to pexelsImage(
-            photoId = 21274213,
-            author = "Linda Gschwentner",
-            searchQuery = "germany travel tourism skyline",
-            description = "Munich skyline"
+            photoId = 16722366,
+            author = "Tony Wu",
+            searchQuery = "tourists Checkpoint Charlie Berlin Pexels",
+            description = "tourists at Checkpoint Charlie in Berlin"
         ),
         "germany_beer_consumption" to pexelsImage(
             photoId = 1267360,
@@ -149,16 +175,16 @@ object ComparisonCatalog {
             description = "beer glasses"
         ),
         "cars_price" to pexelsImage(
-            photoId = 11827611,
-            author = "Ali Kazal",
-            searchQuery = "generic car road no logo",
-            description = "generic car on road"
+            photoId = 28447308,
+            author = "Ertuğrul Tohma",
+            searchQuery = "VW Golf GTI red forest road Pexels",
+            description = "red car on a forest road"
         ),
         "cars_horsepower" to pexelsImage(
-            photoId = 14782133,
-            author = "David Guerrero",
-            searchQuery = "generic cars road no logo",
-            description = "generic cars on road"
+            photoId = 18491926,
+            author = "Abdullah Alsaibaie",
+            searchQuery = "car speedometer horsepower Pexels",
+            description = "digital car speedometer"
         ),
         "cars_top_speed" to pexelsImage(
             photoId = 19754775,
@@ -275,10 +301,10 @@ object ComparisonCatalog {
             description = "retro console with cartridge and controller"
         ),
         "gaming_rating" to wikimediaPhoto(
-            fileName = "FiveStars2.svg",
-            author = "McSush",
+            fileName = "Rating stars 5.0.svg",
+            author = null,
             description = "five golden rating stars",
-            license = "CC0"
+            license = "Wikimedia Commons license"
         ),
         "geography_area" to pexelsImage(
             photoId = 269633,
@@ -299,10 +325,100 @@ object ComparisonCatalog {
             description = "mountain summit"
         ),
         "geography_distance" to pexelsImage(
-            photoId = 27103750,
-            author = "Alexis Leandro Jeria Bocca",
-            searchQuery = "road sign in the distance Pexels",
-            description = "road leading into the distance"
+            photoId = 17721413,
+            author = "Orhan Pergel",
+            searchQuery = "car road sign open road Pexels",
+            description = "car driving along an open road with a road sign"
+        ),
+        "transport_train_passengers" to pexelsImage(
+            photoId = 18709656,
+            author = "Jasmin kaemmerer",
+            searchQuery = "Berlin Hauptbahnhof train station Pexels",
+            description = "train at a modern station in Berlin"
+        ),
+        "transport_road_network" to pexelsImage(
+            photoId = 10802569,
+            author = "Alexas Fotos",
+            searchQuery = "German autobahn aerial view Pexels",
+            description = "aerial view of a German autobahn"
+        ),
+        "transport_airport_reach" to pexelsImage(
+            photoId = 11089180,
+            author = "Markus Winkler",
+            searchQuery = "Frankfurt airport airplane Pexels",
+            description = "airplane at Frankfurt Airport"
+        ),
+        "culture_museum_visits" to pexelsImage(
+            photoId = 18250527,
+            author = "Alina Chernii",
+            searchQuery = "art museum Munich Pexels",
+            description = "visitor looking at paintings in a Munich museum"
+        ),
+        "culture_festival_visits" to pexelsImage(
+            photoId = 27396763,
+            author = "Darku",
+            searchQuery = "festival crowd Leverkusen Germany Pexels",
+            description = "festival crowd in Leverkusen"
+        ),
+        "culture_landmark_age" to pexelsImage(
+            photoId = 35319634,
+            author = "selcuk sarikoz",
+            searchQuery = "Völkerschlachtdenkmal Leipzig Pexels",
+            description = "monument reflected in water in Leipzig"
+        ),
+        "education_university_students" to pexelsImage(
+            photoId = 31192300,
+            author = "Ramon Karolan",
+            searchQuery = "Münster university building Pexels",
+            description = "historic university building in Münster"
+        ),
+        "education_library_media" to pexelsImage(
+            photoId = 19965435,
+            author = "Eddson Lens",
+            searchQuery = "Stuttgart library student Pexels",
+            description = "student browsing books in a Stuttgart library"
+        ),
+        "education_research_budget" to pexelsImage(
+            photoId = 8533020,
+            author = "Artem Podrez",
+            searchQuery = "research laboratory team Pexels",
+            description = "researchers in a laboratory"
+        ),
+        "nature_green_area" to pexelsImage(
+            photoId = 16947574,
+            author = "Line Knipst",
+            searchQuery = "German forest path Pexels",
+            description = "sunlit forest scene in Germany"
+        ),
+        "nature_water_area" to pexelsImage(
+            photoId = 3933480,
+            author = "Tatiana Syrikova",
+            searchQuery = "Berchtesgaden lake Germany Pexels",
+            description = "alpine lake in Berchtesgaden"
+        ),
+        "nature_elevation" to pexelsImage(
+            photoId = 13429364,
+            author = "Sabrina So",
+            searchQuery = "Bavarian Alps Kempten Germany Pexels",
+            description = "green Bavarian Alps near Kempten"
+        ),
+        "politics_voters" to pexelsImage(
+            photoId = 754943,
+            author = "Alex Tim",
+            searchQuery = "Reichstag Berlin politics Pexels",
+            description = "Reichstag building in Berlin"
+        ),
+        "politics_council_seats" to pexelsImage(
+            photoId = 1128413,
+            author = "Niki Nagy",
+            searchQuery = "Reichstag German flag Pexels",
+            description = "Reichstag with German flag"
+        ),
+        "politics_town_hall_age" to pexelsImage(
+            photoId = 29833532,
+            author = "Amani Allan",
+            searchQuery = "Munich New Town Hall Pexels",
+            description = "New Town Hall in Munich"
         )
     )
 
@@ -1444,8 +1560,375 @@ object ComparisonCatalog {
         add("München → Zürich", "Straße", "geography", "distance", 244, "244 km", "Bayern nach Schweiz")
         add("Frankfurt → Stuttgart", "Straße", "geography", "distance", 153, "153 km", "Süddeutsche Achse")
 
+        addGermanyThemeExpansionItems { title, subtitle, categoryId, subcategoryId, value, displayValue, funFact ->
+            add(title, subtitle, categoryId, subcategoryId, value, displayValue, funFact)
+        }
+
         return list
     }
+
+    private fun addGermanyThemeExpansionItems(
+        add: (
+            title: String,
+            subtitle: String,
+            categoryId: String,
+            subcategoryId: String,
+            value: Int,
+            displayValue: String,
+            funFact: String
+        ) -> Unit
+    ) {
+        val places = germanyThemePlaces.take(GENERATED_ITEMS_PER_SUBCATEGORY)
+        check(places.size == GENERATED_ITEMS_PER_SUBCATEGORY) {
+            "Expected at least $GENERATED_ITEMS_PER_SUBCATEGORY German theme places."
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 18_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 1_250) + ((rank % 7) * 420)
+            add(
+                "${place.name} Hauptbahnhof",
+                place.state,
+                "transport",
+                "train_passengers",
+                value,
+                "${value.formatGermanNumber()} Reisende/Tag",
+                "Bahnknoten mit regionalem Pendelverkehr in ${place.state}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 120 + ((rank * 37) % 680) + if (rank <= 20) 160 else 0
+            add(
+                "${place.name} Verkehrsraum",
+                place.state,
+                "transport",
+                "road_network",
+                value,
+                "${value.formatGermanNumber()} km",
+                "Vergleichswert für Straßen- und Pendelachsen rund um ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 2_000_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 630_000) + ((rank % 9) * 21_000)
+            add(
+                "Flughafenregion ${place.name}",
+                place.state,
+                "transport",
+                "airport_reach",
+                value,
+                "${value.formatGermanNumber()} Passagiere/Jahr",
+                "Einzugsraum für Flugreisen und Fernverkehr in ${place.state}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 90_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 18_000) + ((rank % 5) * 14_000)
+            add(
+                "${place.name} Museumslandschaft",
+                place.state,
+                "culture",
+                "museum_visits",
+                value,
+                "${value.formatGermanNumber()} Besuche/Jahr",
+                "Museen, Ausstellungen und Sammlungen prägen die Kultur in ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 45_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 12_500) + ((rank % 8) * 8_500)
+            add(
+                "${place.name} Stadtfest",
+                place.state,
+                "culture",
+                "festival_visits",
+                value,
+                "${value.formatGermanNumber()} Besucher/Jahr",
+                "Stadtfeste, Märkte und Kulturwochen bringen Menschen zusammen"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 80 + ((rank * 17) % 760)
+            add(
+                "${landmarkLabel(rank)} ${place.name}",
+                place.state,
+                "culture",
+                "landmark_age",
+                value,
+                "${value.formatGermanNumber()} Jahre",
+                "Historischer Bezugspunkt im Stadtbild von ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 4_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 1_150) + ((rank % 8) * 900)
+            add(
+                "${place.name} Hochschulstandort",
+                place.state,
+                "education",
+                "university_students",
+                value,
+                "${value.formatGermanNumber()} Studierende",
+                "Hochschulen und Campusangebote stärken ${place.name} als Bildungsort"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 80_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 7_500) + ((rank % 6) * 21_000)
+            add(
+                "Stadtbibliothek ${place.name}",
+                place.state,
+                "education",
+                "library_media",
+                value,
+                "${value.formatGermanNumber()} Medien",
+                "Bibliotheken bleiben zentrale Lern- und Aufenthaltsorte"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 8 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 3) + ((rank % 10) * 4)
+            add(
+                "${place.name} Forschung",
+                place.state,
+                "education",
+                "research_budget",
+                value,
+                "${value.formatGermanNumber()} Mio. €",
+                "Innovationswert für Hochschulen, Institute und Technologiezentren"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 120 + ((rank * 29) % 4_800) + if (rank <= 30) 1_500 else 0
+            add(
+                "${place.name} Grünräume",
+                place.state,
+                "nature",
+                "green_area",
+                value,
+                "${value.formatGermanNumber()} ha",
+                "Parks, Wälder und Freiflächen im Umfeld von ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 20 + ((rank * 19) % 1_600) + if (place.state in coastalStates) 340 else 0
+            add(
+                "${place.name} Wasserflächen",
+                place.state,
+                "nature",
+                "water_area",
+                value,
+                "${value.formatGermanNumber()} ha",
+                "Seen, Flüsse und Hafenbereiche als prägende Wasserorte"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 5 + ((rank * 23) % 900) + if (place.state in highElevationStates) 260 else 0
+            add(
+                "${place.name} Höhenlage",
+                place.state,
+                "nature",
+                "elevation",
+                value,
+                "${value.formatGermanNumber()} m",
+                "Höhenprofil für Stadtgebiet und Umland von ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 110_000 + ((GENERATED_ITEMS_PER_SUBCATEGORY - rank) * 1_900) + ((rank % 11) * 800)
+            add(
+                "Wahlkreis ${place.name}",
+                place.state,
+                "politics",
+                "voters",
+                value,
+                "${value.formatGermanNumber()} Wahlberechtigte",
+                "Politischer Vergleichswert für den Wahlkreisraum ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 36 + ((rank * 3) % 74) + if (rank <= 8) 28 else 0
+            add(
+                "Stadtrat ${place.name}",
+                place.state,
+                "politics",
+                "council_seats",
+                value,
+                "${value.formatGermanNumber()} Sitze",
+                "Kommunalpolitisches Gremium mit Entscheidungen für ${place.name}"
+            )
+        }
+
+        places.forEachIndexed { index, place ->
+            val rank = index + 1
+            val value = 60 + ((rank * 13) % 720)
+            add(
+                "Rathaus ${place.name}",
+                place.state,
+                "politics",
+                "town_hall_age",
+                value,
+                "${value.formatGermanNumber()} Jahre",
+                "Rathäuser stehen in vielen Städten für lokale Geschichte und Verwaltung"
+            )
+        }
+    }
+
+    private fun landmarkLabel(rank: Int): String =
+        landmarkLabels[rank % landmarkLabels.size]
+
+    private fun Int.formatGermanNumber(): String =
+        toString().reversed().chunked(3).joinToString(".").reversed()
+
+    private val landmarkLabels = listOf(
+        "Rathaus",
+        "Dom",
+        "Schloss",
+        "Stadttor",
+        "Altstadt",
+        "Marktplatz",
+        "Burg",
+        "Hafenviertel"
+    )
+
+    private val coastalStates = setOf(
+        "Bremen",
+        "Hamburg",
+        "Mecklenburg-Vorpommern",
+        "Niedersachsen",
+        "Schleswig-Holstein"
+    )
+
+    private val highElevationStates = setOf(
+        "Baden-Württemberg",
+        "Bayern",
+        "Sachsen",
+        "Thüringen"
+    )
+
+    private val germanyThemePlaces = listOf(
+        GermanyThemePlace("Berlin", "Berlin"),
+        GermanyThemePlace("Hamburg", "Hamburg"),
+        GermanyThemePlace("München", "Bayern"),
+        GermanyThemePlace("Köln", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Frankfurt am Main", "Hessen"),
+        GermanyThemePlace("Stuttgart", "Baden-Württemberg"),
+        GermanyThemePlace("Düsseldorf", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Leipzig", "Sachsen"),
+        GermanyThemePlace("Dortmund", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Essen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Bremen", "Bremen"),
+        GermanyThemePlace("Dresden", "Sachsen"),
+        GermanyThemePlace("Hannover", "Niedersachsen"),
+        GermanyThemePlace("Nürnberg", "Bayern"),
+        GermanyThemePlace("Duisburg", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Bochum", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Wuppertal", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Bielefeld", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Bonn", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Münster", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Karlsruhe", "Baden-Württemberg"),
+        GermanyThemePlace("Mannheim", "Baden-Württemberg"),
+        GermanyThemePlace("Augsburg", "Bayern"),
+        GermanyThemePlace("Wiesbaden", "Hessen"),
+        GermanyThemePlace("Gelsenkirchen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Mönchengladbach", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Braunschweig", "Niedersachsen"),
+        GermanyThemePlace("Chemnitz", "Sachsen"),
+        GermanyThemePlace("Kiel", "Schleswig-Holstein"),
+        GermanyThemePlace("Aachen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Halle (Saale)", "Sachsen-Anhalt"),
+        GermanyThemePlace("Magdeburg", "Sachsen-Anhalt"),
+        GermanyThemePlace("Freiburg im Breisgau", "Baden-Württemberg"),
+        GermanyThemePlace("Krefeld", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Lübeck", "Schleswig-Holstein"),
+        GermanyThemePlace("Oberhausen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Erfurt", "Thüringen"),
+        GermanyThemePlace("Mainz", "Rheinland-Pfalz"),
+        GermanyThemePlace("Rostock", "Mecklenburg-Vorpommern"),
+        GermanyThemePlace("Kassel", "Hessen"),
+        GermanyThemePlace("Hagen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Hamm", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Saarbrücken", "Saarland"),
+        GermanyThemePlace("Mülheim an der Ruhr", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Potsdam", "Brandenburg"),
+        GermanyThemePlace("Ludwigshafen am Rhein", "Rheinland-Pfalz"),
+        GermanyThemePlace("Oldenburg", "Niedersachsen"),
+        GermanyThemePlace("Leverkusen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Osnabrück", "Niedersachsen"),
+        GermanyThemePlace("Solingen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Heidelberg", "Baden-Württemberg"),
+        GermanyThemePlace("Herne", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Neuss", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Darmstadt", "Hessen"),
+        GermanyThemePlace("Paderborn", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Regensburg", "Bayern"),
+        GermanyThemePlace("Ingolstadt", "Bayern"),
+        GermanyThemePlace("Würzburg", "Bayern"),
+        GermanyThemePlace("Fürth", "Bayern"),
+        GermanyThemePlace("Wolfsburg", "Niedersachsen"),
+        GermanyThemePlace("Offenbach am Main", "Hessen"),
+        GermanyThemePlace("Ulm", "Baden-Württemberg"),
+        GermanyThemePlace("Heilbronn", "Baden-Württemberg"),
+        GermanyThemePlace("Pforzheim", "Baden-Württemberg"),
+        GermanyThemePlace("Göttingen", "Niedersachsen"),
+        GermanyThemePlace("Bottrop", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Trier", "Rheinland-Pfalz"),
+        GermanyThemePlace("Reutlingen", "Baden-Württemberg"),
+        GermanyThemePlace("Recklinghausen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Bremerhaven", "Bremen"),
+        GermanyThemePlace("Koblenz", "Rheinland-Pfalz"),
+        GermanyThemePlace("Bergisch Gladbach", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Jena", "Thüringen"),
+        GermanyThemePlace("Remscheid", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Erlangen", "Bayern"),
+        GermanyThemePlace("Moers", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Siegen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Hildesheim", "Niedersachsen"),
+        GermanyThemePlace("Salzgitter", "Niedersachsen"),
+        GermanyThemePlace("Cottbus", "Brandenburg"),
+        GermanyThemePlace("Kaiserslautern", "Rheinland-Pfalz"),
+        GermanyThemePlace("Gütersloh", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Schwerin", "Mecklenburg-Vorpommern"),
+        GermanyThemePlace("Witten", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Hanau", "Hessen"),
+        GermanyThemePlace("Gera", "Thüringen"),
+        GermanyThemePlace("Ludwigsburg", "Baden-Württemberg"),
+        GermanyThemePlace("Esslingen am Neckar", "Baden-Württemberg"),
+        GermanyThemePlace("Iserlohn", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Düren", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Tübingen", "Baden-Württemberg"),
+        GermanyThemePlace("Flensburg", "Schleswig-Holstein"),
+        GermanyThemePlace("Zwickau", "Sachsen"),
+        GermanyThemePlace("Ratingen", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Villingen-Schwenningen", "Baden-Württemberg"),
+        GermanyThemePlace("Konstanz", "Baden-Württemberg"),
+        GermanyThemePlace("Worms", "Rheinland-Pfalz"),
+        GermanyThemePlace("Marl", "Nordrhein-Westfalen"),
+        GermanyThemePlace("Norderstedt", "Schleswig-Holstein"),
+        GermanyThemePlace("Bamberg", "Bayern"),
+        GermanyThemePlace("Lüdenscheid", "Nordrhein-Westfalen")
+    )
 
     fun mainCategory(categoryId: String): MainCategory? = categoriesById[categoryId]
 
@@ -1512,7 +1995,8 @@ object ComparisonCatalog {
             "attendance" -> footballAttendanceImagesByTitle[title]
                 ?: footballStadiumImagesByTitle[title]
                 ?: footballClubImagesByTitle[title]
-            else -> footballClubImagesByTitle[title]
+            "market_value", "instagram_followers" -> footballClubImagesByTitle[title]
+            else -> null
         }
     }
 
