@@ -1,0 +1,23 @@
+name: einstellungstest_trainer
+description: Trainings-App zur Vorbereitung auf Einstellungs- und Eignungstests.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  # Flutter 3.27+ wegen Color.withValues und den Material-3-Surface-Rollen.
+  sdk: ">=3.6.0 <4.0.0"
+  flutter: ">=3.27.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true

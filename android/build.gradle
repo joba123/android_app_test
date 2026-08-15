@@ -1,0 +1,23 @@
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+// Die Build-Ausgabe muss unterhalb von <projekt>/build landen - dort sucht das
+// Flutter-Tool nach dem fertigen APK. Ohne diese Umleitung baut Gradle zwar
+// erfolgreich, `flutter build apk` meldet aber, es finde keine .apk-Datei.
+rootProject.buildDir = "../build"
+
+subprojects {
+    project.buildDir = "${rootProject.buildDir}/${project.name}"
+}
+
+subprojects {
+    project.evaluationDependsOn(":app")
+}
+
+tasks.register("clean", Delete) {
+    delete rootProject.buildDir
+}

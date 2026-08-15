@@ -1,0 +1,5 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Wird nur im Debug-Build benoetigt, damit sich Flutter per Hot Reload
+         mit dem Geraet verbinden kann. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+</manifest>
