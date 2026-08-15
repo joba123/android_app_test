@@ -152,6 +152,7 @@ class Question {
     required this.answer,
     required this.explanation,
     this.difficulty = Difficulty.medium,
+    this.imageAsset,
   });
 
   final String id;
@@ -167,6 +168,14 @@ class Question {
   final String explanation;
 
   final Difficulty difficulty;
+
+  /// Optionales Bild zur Aufgabe, z. B. `assets/figures/reihe_01.png`.
+  ///
+  /// Vorgesehen für Figurenanalogien und Matrizenaufgaben, die sich sprachlich
+  /// nur behelfsmäßig beschreiben lassen. Ist der Wert gesetzt, zeigt die
+  /// QuestionCard das Bild über dem Aufgabentext an. Damit das greift, muss
+  /// der Asset-Ordner zusätzlich in `pubspec.yaml` eingetragen werden.
+  final String? imageAsset;
 
   /// Die Kategorie der Aufgabe: math, logic oder language.
   TrainingModule get module => subCategory.module;
@@ -217,6 +226,7 @@ class Question {
       answer: answer ?? this.answer,
       explanation: explanation,
       difficulty: difficulty,
+      imageAsset: imageAsset,
     );
   }
 }

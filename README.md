@@ -13,11 +13,11 @@ verwendet, was einer späteren iOS-Unterstützung im Weg steht.
 
 Jedes Modul bietet dieselben drei Trainingsmodi.
 
-| Modul (Kategorie) | Unterkategorien | Antwortformat |
-| --- | --- | --- |
-| **Mathematik** | Grundrechenarten · Dreisatz · Prozentrechnung · Textaufgaben | überwiegend Zahleneingabe |
-| **Logisches Denken** | Zahlenreihen · Wortanalogien · Figurenanalogien · Schlussfolgerungen | Multiple Choice |
-| **Sprache** | Rechtschreibung · Grammatik · Wortschatz & Textverständnis | Multiple Choice |
+| Modul (Kategorie) | Unterkategorien | Antwortformat | Quelle |
+| --- | --- | --- | --- |
+| **Mathematik** | Grundrechenarten · Dreisatz · Prozentrechnung · Textaufgaben | Zahleneingabe | generiert (unbegrenzt) |
+| **Logisches Denken** | Zahlenreihen (23) · Figurenanalogien (15) · Schlussfolgerungen (8) | Multiple Choice | statisch |
+| **Sprache** | Rechtschreibung (21) · Wortanalogien (15) · Grammatik (6) · Wortschatz & Textverständnis (8) | Multiple Choice | statisch |
 
 Eine Aufgabe wird entweder per **Multiple Choice** oder per **freier
 Zahleneingabe** beantwortet. Beides steckt in einer versiegelten Hierarchie
@@ -30,6 +30,44 @@ eine Toleranz für Rundungen.
 Die **Kategorie einer Aufgabe wird aus ihrer Unterkategorie abgeleitet** und
 nicht zusätzlich gespeichert – eine Aufgabe kann damit nicht im Modul
 Mathematik liegen und „Rechtschreibung" als Unterkategorie tragen.
+
+## Aufgabenquellen
+
+Der Content liegt vollständig in der App; ein Backend gibt es im MVP nicht.
+
+**Mathematik wird algorithmisch erzeugt.** Vier Generatoren in
+`lib/data/generators/` liefern beliebig viele Aufgaben samt berechneter Lösung
+und Rechenweg. Grundregel aller Generatoren: **rückwärts konstruieren.** Erst
+steht das Ergebnis fest (bzw. die Größe, aus der es exakt folgt), dann wird die
+Aufgabenstellung daraus abgeleitet. Divisionen werden aus Quotient und Divisor
+aufgebaut, Geld wird in Cent gerechnet, Prozent-Grundwerte sind Vielfache von
+20 bzw. 100. So kann kein krummes Ergebnis und keine nie endende Division
+entstehen. Die Schwierigkeit (`easy`/`medium`/`hard`) steuert Zahlenbereiche
+und Anzahl der Rechenschritte; ohne Vorgabe wird gemischt.
+
+**Logik und Sprache kommen aus statischen Listen** – handgeschrieben, weil sich
+Zahlenreihen-Muster, Figurenbeschreibungen und Rechtschreibfallen nicht sinnvoll
+generieren lassen.
+
+### Qualitätssicherung
+
+`lib/data/question_validation.dart` ist die gemeinsame Messlatte für beide
+Quellen. Geprüft wird unter anderem:
+
+- Aufgabentext, Lösungsweg und ID sind gefüllt
+- Auswahlaufgaben haben mindestens zwei **eindeutige** Optionen und einen
+  gültigen Lösungsindex
+- der Lösungswert lässt sich mit den vorgesehenen Nachkommastellen **exakt**
+  darstellen – das fängt `1/3` und Gleitkomma-Unfälle ab, bevor sie in einer
+  Aufgabe landen
+- der Lösungsweg **nennt das Ergebnis** (ein Rechenweg ohne Resultat ist keiner)
+
+Die Fabrik ruft den Validator bei jeder erzeugten Aufgabe in einem `assert` auf:
+greift in Debug- und Testläufen, kostet im Release nichts. Die Tests schicken
+zusätzlich mehrere tausend generierte Aufgaben hindurch und rechnen die
+Grundrechen-Aufgaben mit einem unabhängigen Parser nach – geprüft wird also
+nicht, ob der Generator in sich stimmig ist, sondern ob die angegebene Lösung
+zur gestellten Aufgabe passt.
 
 ### Trainingsmodi
 
@@ -116,11 +154,18 @@ lib/
 │   ├── timer_bar.dart         Countdown-Anzeige
 │   └── stat_tile.dart         Kennzahl-Kachel
 └── data/                      Aufgabenpools / Content
-    ├── math_questions.dart
-    ├── logic_questions.dart
-    ├── language_questions.dart
-    ├── question_pool.dart     Zentraler Zugriff & Themenfilter
-    └── simulation_blueprints.dart  Baupläne der Testsimulationen
+    ├── generators/            Mathematik-Generatoren
+    │   ├── question_generator.dart      Basisklasse + Rechen-/Formathilfen
+    │   ├── arithmetic_generator.dart    Grundrechenarten
+    │   ├── rule_of_three_generator.dart Dreisatz (auch antiproportional)
+    │   ├── percentage_generator.dart    Prozentrechnung
+    │   ├── word_problem_generator.dart  Textaufgaben mit Alltagsbezug
+    │   └── math_question_factory.dart   Registry, IDs, Validierung
+    ├── question_validation.dart   Qualitätssicherung für alle Aufgaben
+    ├── logic_questions.dart       Statischer Content Logik
+    ├── language_questions.dart    Statischer Content Sprache
+    ├── question_pool.dart         Zugriff auf den statischen Bestand
+    └── simulation_blueprints.dart Baupläne der Testsimulationen
 ```
 
 ### Zwei Entwurfsentscheidungen, die beim Erweitern relevant sind
@@ -138,9 +183,16 @@ schlanken `QuestionResult`-Einträgen (nur ID, Unterkategorie, richtig/falsch,
 Zeit). So bleibt der Verlauf auch dann lesbar, wenn eine Aufgabe später aus dem
 Pool entfernt oder umformuliert wird.
 
-**Content ist austauschbar.** Aktuell liegen die Aufgaben als `const`-Listen im
-Code. Kommt später ein Backend oder eine lokale Datenbank dazu, wird nur die
-`QuestionRepository` ersetzt – Screens und Controller bleiben unverändert.
+**Content ist austauschbar.** Die `QuestionRepository` ist der einzige Ort, an
+dem der Unterschied zwischen generierter und handgeschriebener Quelle eine
+Rolle spielt. Kommt später ein Backend oder eine lokale Datenbank dazu, wird nur
+sie ersetzt – Screens und Controller bleiben unverändert.
+
+**Bilder sind vorbereitet.** `Question.imageAsset` nimmt einen Asset-Pfad auf;
+ist er gesetzt, zeigt die `QuestionCard` das Bild über dem Aufgabentext. Für die
+Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
+beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
+zusätzlich einen Eintrag in `pubspec.yaml`.
 
 ## Einrichtung
 
@@ -172,13 +224,21 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 96 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 140 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Release-Build ist vorerst mit dem Debug-Key signiert, damit er ohne weitere
 Einrichtung durchläuft – vor einer Veröffentlichung muss in
 `android/app/build.gradle` ein echter Release-Keystore hinterlegt werden.
 
 Die Tests decken ab:
 
+- **Generatoren** – mehrere tausend erzeugte Aufgaben gegen den Validator,
+  unabhängiges Nachrechnen der Grundrechen-, Prozent- und
+  Geschwindigkeitsaufgaben, centgenaue Geldbeträge, eindeutige IDs,
+  Reproduzierbarkeit bei festem Seed, Steuerung von Schwierigkeit und
+  Unterkategorien
+- **Qualitätssicherung selbst** – dass der Validator kaputte Aufgaben
+  tatsächlich erkennt (doppelte Optionen, ungültiger Lösungsindex, nicht
+  darstellbare Ergebnisse, Lösungsweg ohne Resultat)
 - **Aufgabenmodell** – Auswertung beider Antwortformate, Einlesen deutscher
   Zahleneingaben, Toleranzen, Umsortieren der Optionen, sowie das Verhalten bei
   Antworten, die nicht zum Format der Aufgabe passen
@@ -186,26 +246,31 @@ Die Tests decken ab:
   Zeit pro Aufgabe), Gruppierung nach Unterkategorie und JSON-Zyklus inklusive
   defekter Datensätze
 - **Aufgabenpool** – eindeutige IDs, stimmige Antwortformate, jede
-  Unterkategorie gefüllt, ausreichend Aufgaben für jede Simulation
+  Unterkategorie gefüllt, Mindestumfang je Unterkategorie, ausreichend Aufgaben
+  für jede Simulation
 - **Ablauf** – beide Quiz-Modi, der mehrteilige Simulationsablauf mit
   Zeitablauf und Auswertung, Persistenz von Fortschritt und Verlauf
 - **Oberfläche** – Navigation, Zahleneingabefeld inklusive Fehlerfall
 
 ## Stand und nächste Schritte
 
-Der Aufgabenpool ist bewusst als **Startbestand** angelegt (rund 60 Aufgaben,
-gleichmäßig über die drei Module und ihre Themen verteilt) – genug, um alle
-Modi und Simulationen vollständig durchzuspielen. Für den produktiven Einsatz
-muss er deutlich wachsen; die Struktur dafür steht.
+Mathematik ist durch die Generatoren unbegrenzt. Der handgeschriebene Bestand
+für Logik und Sprache umfasst 96 Aufgaben und erfüllt die MVP-Vorgaben; ein Test
+hält die Mindestzahlen je Unterkategorie fest, damit sie beim Umbauen nicht
+unbemerkt unterschritten werden.
 
 Die Figurenanalogien sind aktuell **sprachlich beschrieben** statt gezeichnet –
 im echten Test sind das Bildaufgaben. Die Aufgabenlogik stimmt, die Darstellung
-ist ein Zwischenschritt, bis Grafik-Assets vorliegen.
+ist ein Zwischenschritt, bis Grafik-Assets vorliegen; `Question.imageAsset` ist
+dafür bereits vorgesehen.
 
 Naheliegende nächste Schritte:
 
-- Aufgabenpool ausbauen, insbesondere echte Bild-Aufgaben für Figurenanalogien,
-  Matrizen und räumliches Denken
+- Bild-Assets für Figurenanalogien hinterlegen, danach Matrizen und räumliches
+  Denken ergänzen
+- Statischen Bestand für Grammatik und Wortschatz aufstocken (aktuell 6 bzw. 8)
+- Schwierigkeitswahl in der Oberfläche sichtbar machen – die Generatoren können
+  sie bereits, genutzt wird bislang die Mischung
 - Branchen-Profile als Filter über die bestehenden Module legen
 - Rückfrage beim Verlassen einer laufenden Runde über die Android-Zurück-Taste
   (`PopScope`)

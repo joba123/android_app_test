@@ -84,7 +84,7 @@ class HomeScreen extends ConsumerWidget {
             for (final module in TrainingModule.values)
               ModuleCard(
                 module: module,
-                questionCount: QuestionPool.countFor(module),
+                sizeLabel: QuestionPool.describeSize(module),
                 accuracy: stats.forModule(module).accuracy,
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute<void>(

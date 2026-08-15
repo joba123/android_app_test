@@ -6,13 +6,16 @@ class ModuleCard extends StatelessWidget {
   const ModuleCard({
     super.key,
     required this.module,
-    required this.questionCount,
+    required this.sizeLabel,
     required this.accuracy,
     required this.onTap,
   });
 
   final TrainingModule module;
-  final int questionCount;
+
+  /// Umfang des Moduls als Text – bei generierten Modulen wäre eine Zahl
+  /// irreführend.
+  final String sizeLabel;
 
   /// Trefferquote von 0.0 bis 1.0; 0 bedeutet "noch nicht trainiert".
   final double accuracy;
@@ -71,7 +74,7 @@ class ModuleCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            '$questionCount Aufgaben',
+                            sizeLabel,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),

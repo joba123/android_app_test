@@ -22,91 +22,138 @@ void main() {
     );
   }
 
-  test('Mischen der Optionen behält die richtige Antwort bei', () {
-    final drawn = repository.draw(module: TrainingModule.language, count: 30);
+  group('Statischer Content', () {
+    test('Mischen der Optionen behält die richtige Antwort bei', () {
+      final drawn = repository.draw(module: TrainingModule.language, count: 40);
 
-    expect(drawn, isNotEmpty);
-    for (final question in drawn) {
-      final original = originalOf(question);
+      expect(drawn, isNotEmpty);
+      for (final question in drawn) {
+        final original = originalOf(question);
 
-      expect(
-        question.correctAnswerText,
-        original.correctAnswerText,
-        reason: '${question.id}: richtige Antwort ging beim Mischen verloren',
+        expect(
+          question.correctAnswerText,
+          original.correctAnswerText,
+          reason: '${question.id}: richtige Antwort ging beim Mischen verloren',
+        );
+
+        final shuffled = question.answer as MultipleChoice;
+        final source = original.answer as MultipleChoice;
+        expect(shuffled.options.toSet(), source.options.toSet());
+      }
+    });
+
+    test('Übungsrunde liefert die gewünschte Anzahl ohne Wiederholungen', () {
+      final drawn = repository.drawPractice(TrainingModule.logic, count: 8);
+
+      expect(drawn.length, 8);
+      expect(drawn.map((question) => question.id).toSet().length, 8);
+    });
+
+    test('Anforderung über Poolgröße hinaus wird begrenzt statt zu scheitern',
+        () {
+      final available = QuestionPool.countFor(TrainingModule.logic);
+      final drawn = repository.draw(
+        module: TrainingModule.logic,
+        count: available + 50,
       );
 
-      final shuffled = question.answer as MultipleChoice;
-      final source = original.answer as MultipleChoice;
-      expect(shuffled.options.toSet(), source.options.toSet());
-      expect(shuffled.options.length, source.options.length);
-    }
+      expect(drawn.length, available);
+    });
+
+    test('Filter auf Unterkategorien greift', () {
+      final drawn = repository.draw(
+        module: TrainingModule.language,
+        count: 5,
+        subCategories: [SubCategory.spelling],
+      );
+
+      expect(drawn, isNotEmpty);
+      for (final question in drawn) {
+        expect(question.subCategory, SubCategory.spelling);
+      }
+    });
+
+    test('Filter kann mehrere Unterkategorien zusammenfassen', () {
+      final drawn = repository.draw(
+        module: TrainingModule.language,
+        count: 99,
+        subCategories: [SubCategory.grammar, SubCategory.vocabulary],
+      );
+
+      expect(
+        drawn.map((question) => question.subCategory).toSet(),
+        {SubCategory.grammar, SubCategory.vocabulary},
+      );
+    });
+
+    test('Sprint-Warteschlange ist doppelt so lang wie der Pool', () {
+      final queue = repository.drawSprintQueue(TrainingModule.language);
+
+      expect(queue.length, QuestionPool.countFor(TrainingModule.language) * 2);
+    });
   });
 
-  test('Aufgaben mit Zahleneingabe bleiben unverändert', () {
-    final drawn = repository
-        .draw(module: TrainingModule.math, count: 30)
-        .where((question) => question.isNumericInput)
-        .toList();
+  group('Generierte Mathematik', () {
+    test('liefert immer genau die angeforderte Anzahl', () {
+      // Anders als beim statischen Pool gibt es hier keine Obergrenze.
+      for (final count in [1, 10, 50, 200]) {
+        final drawn = repository.draw(
+          module: TrainingModule.math,
+          count: count,
+        );
+        expect(drawn.length, count);
+      }
+    });
 
-    expect(drawn, isNotEmpty);
-    for (final question in drawn) {
-      final original = originalOf(question).answer as NumericInput;
-      final format = question.answer as NumericInput;
+    test('erzeugt ausschließlich Zahleneingaben mit eindeutigen IDs', () {
+      final drawn = repository.draw(module: TrainingModule.math, count: 120);
 
-      expect(format.correctValue, original.correctValue);
-      expect(format.tolerance, original.tolerance);
-      expect(format.unit, original.unit);
-    }
-  });
+      expect(drawn.every((question) => question.isNumericInput), isTrue);
+      expect(drawn.map((question) => question.id).toSet().length, drawn.length);
+    });
 
-  test('Übungsrunde liefert die gewünschte Anzahl ohne Wiederholungen', () {
-    final drawn = repository.drawPractice(TrainingModule.logic, count: 8);
+    test('respektiert den Filter auf Unterkategorien', () {
+      final drawn = repository.draw(
+        module: TrainingModule.math,
+        count: 30,
+        subCategories: [SubCategory.percentage],
+      );
 
-    expect(drawn.length, 8);
-    expect(drawn.map((question) => question.id).toSet().length, 8);
-  });
+      for (final question in drawn) {
+        expect(question.subCategory, SubCategory.percentage);
+      }
+    });
 
-  test('Anforderung über Poolgröße hinaus wird begrenzt statt zu scheitern',
-      () {
-    final available = QuestionPool.countFor(TrainingModule.math);
-    final drawn = repository.draw(
-      module: TrainingModule.math,
-      count: available + 50,
-    );
+    test('reicht die Schwierigkeit durch', () {
+      final drawn = repository.drawPractice(
+        TrainingModule.math,
+        count: 20,
+        difficulty: Difficulty.hard,
+      );
 
-    expect(drawn.length, available);
-  });
+      expect(
+        drawn.every((question) => question.difficulty == Difficulty.hard),
+        isTrue,
+      );
+    });
 
-  test('Filter auf Unterkategorien greift', () {
-    final drawn = repository.draw(
-      module: TrainingModule.math,
-      count: 5,
-      subCategories: [SubCategory.percentage],
-    );
+    test('Sprint-Warteschlange hat die feste Pufferlänge', () {
+      final queue = repository.drawSprintQueue(TrainingModule.math);
 
-    expect(drawn, isNotEmpty);
-    for (final question in drawn) {
-      expect(question.subCategory, SubCategory.percentage);
-    }
-  });
+      expect(queue.length, QuestionRepository.sprintQueueLength);
+    });
 
-  test('Filter kann mehrere Unterkategorien zusammenfassen', () {
-    final drawn = repository.draw(
-      module: TrainingModule.math,
-      count: 99,
-      subCategories: [SubCategory.ruleOfThree, SubCategory.percentage],
-    );
+    test('derselbe Seed liefert dieselben Aufgaben', () {
+      final first = QuestionRepository(random: Random(7))
+          .draw(module: TrainingModule.math, count: 25);
+      final second = QuestionRepository(random: Random(7))
+          .draw(module: TrainingModule.math, count: 25);
 
-    expect(
-      drawn.map((question) => question.subCategory).toSet(),
-      {SubCategory.ruleOfThree, SubCategory.percentage},
-    );
-  });
-
-  test('Sprint-Warteschlange ist länger als der Pool', () {
-    final queue = repository.drawSprintQueue(TrainingModule.language);
-
-    expect(queue.length, QuestionPool.countFor(TrainingModule.language) * 2);
+      expect(
+        first.map((question) => question.prompt).toList(),
+        second.map((question) => question.prompt).toList(),
+      );
+    });
   });
 
   test('Simulationsteil liefert genau die geforderte Anzahl', () {

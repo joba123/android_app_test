@@ -24,6 +24,7 @@ class _FixedRepository extends QuestionRepository {
     required TrainingModule module,
     required int count,
     List<SubCategory> subCategories = const [],
+    Difficulty? difficulty,
   }) =>
       questions;
 
@@ -31,6 +32,7 @@ class _FixedRepository extends QuestionRepository {
   List<Question> drawPractice(
     TrainingModule module, {
     int count = QuestionRepository.practiceLength,
+    Difficulty? difficulty,
   }) =>
       questions;
 

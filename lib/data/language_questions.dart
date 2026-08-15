@@ -1,9 +1,11 @@
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 
-/// Startpool Sprache – durchgängig Multiple Choice.
+/// Startpool Sprache – handgeschrieben, durchgängig Multiple Choice.
 const List<Question> languageQuestions = [
-  // --- Rechtschreibung ---
+  // ---------------------------------------------------------------
+  // Rechtschreibung
+  // ---------------------------------------------------------------
   Question(
     id: 'lang_spell_01',
     subCategory: SubCategory.spelling,
@@ -41,7 +43,7 @@ const List<Question> languageQuestions = [
       ],
       correctIndex: 1,
     ),
-    explanation: 'Das Wort wird aus "voraus" + "sichtlich" gebildet – '
+    explanation: 'Das Wort wird aus "voraus" und "sichtlich" gebildet – '
         'also nur ein "r".',
     difficulty: Difficulty.medium,
   ),
@@ -91,8 +93,363 @@ const List<Question> languageQuestions = [
         'Die Schreibweise "daß" ist seit der Rechtschreibreform veraltet.',
     difficulty: Difficulty.medium,
   ),
+  Question(
+    id: 'lang_spell_08',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Terasse', 'Terrase', 'Terrasse', 'Teraße'],
+      correctIndex: 2,
+    ),
+    explanation: 'Korrekt ist "Terrasse" – doppeltes "r" und doppeltes "s".',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_09',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Diskusion', 'Diskussion', 'Discussion', 'Diskußion'],
+      correctIndex: 1,
+    ),
+    explanation: 'Korrekt ist "Diskussion" mit "k" und doppeltem "s".',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_spell_10',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Kompromis', 'Kompromiß', 'Kompromiss', 'Kommpromiss'],
+      correctIndex: 2,
+    ),
+    explanation: 'Nach kurzem Vokal steht "ss": "Kompromiss".',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_11',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Bibiliothek', 'Biblothek', 'Bibliothek', 'Bibliotek'],
+      correctIndex: 2,
+    ),
+    explanation: 'Korrekt ist "Bibliothek" – mit "bli" und "th".',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_12',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Katastrofe', 'Kathastrophe', 'Katastrophie', 'Katastrophe'],
+      correctIndex: 3,
+    ),
+    explanation: 'Korrekt ist "Katastrophe" – ohne "h" nach dem "K", '
+        'aber mit "ph".',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_13',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Orginal', 'Original', 'Origenal', 'Originahl'],
+      correctIndex: 1,
+    ),
+    explanation: 'Korrekt ist "Original" – das "i" nach dem "g" wird oft '
+        'verschluckt.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_spell_14',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['seperat', 'sepparat', 'separat', 'seprat'],
+      correctIndex: 2,
+    ),
+    explanation: 'Korrekt ist "separat" – mit "a" in der Mitte, '
+        'von lateinisch "separare".',
+    difficulty: Difficulty.hard,
+  ),
+  Question(
+    id: 'lang_spell_15',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Ingeneur', 'Ingeniör', 'Injenieur', 'Ingenieur'],
+      correctIndex: 3,
+    ),
+    explanation: 'Korrekt ist "Ingenieur" – die französische Schreibweise '
+        'mit "ieur" am Ende.',
+    difficulty: Difficulty.hard,
+  ),
+  Question(
+    id: 'lang_spell_16',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Reperatur', 'Reparatur', 'Repperatur', 'Reparathur'],
+      correctIndex: 1,
+    ),
+    explanation: 'Korrekt ist "Reparatur" – abgeleitet von "reparieren", '
+        'also mit "a" in der zweiten Silbe.',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_17',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: ['Machine', 'Maschiene', 'Maschine', 'Masine'],
+      correctIndex: 2,
+    ),
+    explanation: 'Korrekt ist "Maschine" – mit "sch" und ohne "ie".',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_spell_18',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist richtig geschrieben?',
+    answer: MultipleChoice(
+      options: [
+        'proffessionell',
+        'professionel',
+        'profesionell',
+        'professionell',
+      ],
+      correctIndex: 3,
+    ),
+    explanation: 'Korrekt ist "professionell" – ein "f", doppeltes "s", '
+        'doppeltes "l".',
+    difficulty: Difficulty.hard,
+  ),
+  Question(
+    id: 'lang_spell_19',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist FALSCH geschrieben?',
+    answer: MultipleChoice(
+      options: ['Gelegenheit', 'Verantwortung', 'Vorraussetzung', 'Bewerbung'],
+      correctIndex: 2,
+    ),
+    explanation: '"Vorraussetzung" ist falsch. Richtig ist "Voraussetzung" – '
+        'aus "voraus" und "Setzung", also nur ein "r".',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_20',
+    subCategory: SubCategory.spelling,
+    prompt: 'Welches Wort ist FALSCH geschrieben?',
+    answer: MultipleChoice(
+      options: ['Qualifikation', 'Referenz', 'Zeugniss', 'Anschreiben'],
+      correctIndex: 2,
+    ),
+    explanation: '"Zeugniss" ist falsch. Richtig ist "Zeugnis" – '
+        'am Wortende steht hier nur ein "s".',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_spell_21',
+    subCategory: SubCategory.spelling,
+    prompt: 'Ergänzen Sie richtig:\n'
+        '"Das Ergebnis läuft ___ meinen Erwartungen."',
+    answer: MultipleChoice(
+      options: ['wieder', 'wider', 'widder', 'wiedter'],
+      correctIndex: 1,
+    ),
+    explanation: '"Wider" bedeutet "gegen". "Wieder" heißt dagegen "erneut".',
+    difficulty: Difficulty.hard,
+  ),
 
-  // --- Grammatik ---
+  // ---------------------------------------------------------------
+  // Wortanalogien
+  // ---------------------------------------------------------------
+  Question(
+    id: 'lang_ana_01',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Arzt verhält sich zu Krankenhaus wie Lehrer zu …?',
+    answer: MultipleChoice(
+      options: ['Klasse', 'Schule', 'Buch', 'Schüler'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Beruf : Arbeitsstätte". '
+        'Die Arbeitsstätte einer Lehrkraft ist die Schule.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_02',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Auge verhält sich zu sehen wie Ohr zu …?',
+    answer: MultipleChoice(
+      options: ['riechen', 'hören', 'sprechen', 'fühlen'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Sinnesorgan : zugehörige Wahrnehmung". '
+        'Mit dem Ohr wird gehört.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_03',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Hand verhält sich zu Finger wie Fuß zu …?',
+    answer: MultipleChoice(
+      options: ['Bein', 'Ferse', 'Zehe', 'Knie'],
+      correctIndex: 2,
+    ),
+    explanation: 'Das Verhältnis ist "Körperteil : dessen Endglieder". '
+        'Zur Hand gehören Finger, zum Fuß Zehen.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_04',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Kilometer verhält sich zu Entfernung wie Kilogramm zu …?',
+    answer: MultipleChoice(
+      options: ['Volumen', 'Gewicht', 'Länge', 'Zeit'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Einheit : gemessene Größe". '
+        'Kilogramm misst das Gewicht bzw. die Masse.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_05',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Buch verhält sich zu Autor wie Gemälde zu …?',
+    answer: MultipleChoice(
+      options: ['Museum', 'Maler', 'Rahmen', 'Farbe'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Werk : Urheber". '
+        'Ein Gemälde stammt vom Maler.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_06',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Hund verhält sich zu bellen wie Katze zu …?',
+    answer: MultipleChoice(
+      options: ['schnurren', 'miauen', 'fauchen', 'jaulen'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Tier : typischer Laut". '
+        'Bellen ist der Ruf des Hundes, Miauen der der Katze.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_07',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Vogel verhält sich zu Nest wie Biene zu …?',
+    answer: MultipleChoice(
+      options: ['Blüte', 'Bienenstock', 'Honig', 'Schwarm'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Tier : Behausung". '
+        'Die Biene lebt im Bienenstock.',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_ana_08',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'heiß verhält sich zu kalt wie hell zu …?',
+    answer: MultipleChoice(
+      options: ['grell', 'dunkel', 'warm', 'trüb'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Gegensatzpaar". '
+        'Der Gegensatz zu hell ist dunkel.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_09',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Messer verhält sich zu schneiden wie Stift zu …?',
+    answer: MultipleChoice(
+      options: ['spitzen', 'schreiben', 'halten', 'radieren'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Werkzeug : Zweck". '
+        'Ein Stift dient zum Schreiben.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_10',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Soldat verhält sich zu Armee wie Baum zu …?',
+    answer: MultipleChoice(
+      options: ['Wurzel', 'Wald', 'Blatt', 'Holz'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Einzelnes : Gesamtheit". '
+        'Viele Bäume bilden einen Wald.',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_ana_11',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Durst verhält sich zu trinken wie Müdigkeit zu …?',
+    answer: MultipleChoice(
+      options: ['gähnen', 'schlafen', 'ausruhen', 'liegen'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Bedürfnis : die Handlung, die es '
+        'stillt". Durst wird durch Trinken gestillt, Müdigkeit durch Schlafen.',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_ana_12',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Bäcker verhält sich zu Brot wie Schuster zu …?',
+    answer: MultipleChoice(
+      options: ['Leder', 'Schuh', 'Werkstatt', 'Hammer'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Handwerker : hergestelltes Produkt". '
+        'Der Schuster fertigt Schuhe.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_13',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Fisch verhält sich zu Wasser wie Vogel zu …?',
+    answer: MultipleChoice(
+      options: ['Baum', 'Luft', 'Feder', 'Himmel'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Tier : Element, in dem es sich '
+        'fortbewegt". Der Fisch schwimmt im Wasser, der Vogel fliegt in der '
+        'Luft.',
+    difficulty: Difficulty.medium,
+  ),
+  Question(
+    id: 'lang_ana_14',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Anfang verhält sich zu Ende wie Geburt zu …?',
+    answer: MultipleChoice(
+      options: ['Leben', 'Tod', 'Kindheit', 'Alter'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Beginn : Abschluss". '
+        'Die Geburt steht am Anfang des Lebens, der Tod an dessen Ende.',
+    difficulty: Difficulty.easy,
+  ),
+  Question(
+    id: 'lang_ana_15',
+    subCategory: SubCategory.wordAnalogies,
+    prompt: 'Auto verhält sich zu Straße wie Zug zu …?',
+    answer: MultipleChoice(
+      options: ['Bahnhof', 'Schiene', 'Lokomotive', 'Fahrplan'],
+      correctIndex: 1,
+    ),
+    explanation: 'Das Verhältnis ist "Fahrzeug : Fahrweg". '
+        'Der Zug fährt auf Schienen.',
+    difficulty: Difficulty.easy,
+  ),
+
+  // ---------------------------------------------------------------
+  // Grammatik
+  // ---------------------------------------------------------------
   Question(
     id: 'lang_gram_01',
     subCategory: SubCategory.grammar,
@@ -184,7 +541,9 @@ const List<Question> languageQuestions = [
     difficulty: Difficulty.easy,
   ),
 
-  // --- Wortschatz & Textverständnis ---
+  // ---------------------------------------------------------------
+  // Wortschatz & Textverständnis
+  // ---------------------------------------------------------------
   Question(
     id: 'lang_voc_01',
     subCategory: SubCategory.vocabulary,
@@ -252,12 +611,7 @@ const List<Question> languageQuestions = [
     subCategory: SubCategory.vocabulary,
     prompt: 'Was ist das Gegenteil von "transparent"?',
     answer: MultipleChoice(
-      options: [
-        'durchsichtig',
-        'undurchsichtig',
-        'offen',
-        'nachvollziehbar',
-      ],
+      options: ['durchsichtig', 'undurchsichtig', 'offen', 'nachvollziehbar'],
       correctIndex: 1,
     ),
     explanation: '"Transparent" bedeutet durchsichtig bzw. nachvollziehbar – '

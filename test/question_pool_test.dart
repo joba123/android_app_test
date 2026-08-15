@@ -1,15 +1,13 @@
+import 'package:einstellungstest_trainer/data/generators/math_question_factory.dart';
 import 'package:einstellungstest_trainer/data/question_pool.dart';
+import 'package:einstellungstest_trainer/data/question_validation.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
-import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-/// Inhaltliche Grundprüfungen des Aufgaben-Pools.
-///
-/// Diese Tests sind die Absicherung beim Erweitern des Contents: Sie schlagen
-/// an, sobald eine neue Aufgabe fehlerhaft notiert oder eine Simulation mehr
-/// Aufgaben anfordert, als der Pool hergibt.
+/// Prüfungen des handgeschriebenen Aufgabenbestands (Logik und Sprache).
+/// Mathematik wird generiert und in math_generator_test.dart geprüft.
 void main() {
   group('Aufgaben-Pool', () {
     test('IDs sind eindeutig', () {
@@ -17,82 +15,22 @@ void main() {
       expect(ids.toSet().length, ids.length);
     });
 
-    test('Aufgabentext und Erklärung sind gefüllt', () {
+    test('jede Aufgabe besteht die Validierung', () {
       for (final question in QuestionPool.all) {
-        expect(question.prompt.trim(), isNotEmpty, reason: question.id);
-        expect(question.explanation.trim(), isNotEmpty, reason: question.id);
-      }
-    });
-
-    test('jedes Antwortformat ist in sich stimmig', () {
-      for (final question in QuestionPool.all) {
-        switch (question.answer) {
-          case final MultipleChoice format:
-            expect(
-              format.options.length,
-              greaterThanOrEqualTo(2),
-              reason: '${question.id} hat zu wenige Optionen',
-            );
-            expect(
-              format.correctIndex,
-              inInclusiveRange(0, format.options.length - 1),
-              reason: '${question.id} hat einen ungültigen correctIndex',
-            );
-            expect(
-              format.options.toSet().length,
-              format.options.length,
-              reason: '${question.id} enthält doppelte Antwortoptionen',
-            );
-            for (final option in format.options) {
-              expect(option.trim(), isNotEmpty, reason: question.id);
-            }
-
-          case final NumericInput format:
-            expect(
-              format.tolerance,
-              greaterThanOrEqualTo(0),
-              reason: '${question.id} hat eine negative Toleranz',
-            );
-            expect(
-              format.decimals,
-              inInclusiveRange(0, 4),
-              reason: '${question.id} hat unplausible Nachkommastellen',
-            );
-            expect(
-              format.correctValue.isFinite,
-              isTrue,
-              reason: '${question.id} hat keinen endlichen Lösungswert',
-            );
-        }
-      }
-    });
-
-    test('jedes Modul hat Aufgaben', () {
-      for (final module in TrainingModule.values) {
+        final problems = validateQuestion(question);
         expect(
-          QuestionPool.countFor(module),
-          greaterThan(0),
-          reason: 'Modul ${module.label} ist leer',
+          problems,
+          isEmpty,
+          reason: '${question.id}: ${problems.join('; ')}',
         );
       }
     });
 
-    test('jede Unterkategorie hat Aufgaben', () {
-      for (final subCategory in SubCategory.values) {
-        expect(
-          QuestionPool.countForSubCategory(subCategory),
-          greaterThan(0),
-          reason: 'Unterkategorie ${subCategory.label} ist leer',
-        );
-      }
-    });
-
-    test('Mathematik setzt überwiegend auf Zahleneingabe', () {
-      final mathQuestions = QuestionPool.forModule(TrainingModule.math);
-      final numeric =
-          mathQuestions.where((question) => question.isNumericInput).length;
-
-      expect(numeric * 2, greaterThan(mathQuestions.length));
+    test('der statische Pool enthält keine Mathematik-Aufgaben', () {
+      // Mathematik kommt vollständig aus den Generatoren – doppelte
+      // Quellen wären doppelte Wahrheit.
+      expect(QuestionPool.forModule(TrainingModule.math), isEmpty);
+      expect(QuestionPool.isGenerated(TrainingModule.math), isTrue);
     });
 
     test('Logik und Sprache setzen auf Multiple Choice', () {
@@ -105,6 +43,51 @@ void main() {
           );
         }
       }
+    });
+
+    test('jede statische Unterkategorie hat Aufgaben', () {
+      for (final subCategory in SubCategory.values) {
+        if (QuestionPool.isGenerated(subCategory.module)) continue;
+
+        expect(
+          QuestionPool.countForSubCategory(subCategory),
+          greaterThan(0),
+          reason: 'Unterkategorie ${subCategory.label} ist leer',
+        );
+      }
+    });
+
+    test('jede generierbare Unterkategorie hat einen Generator', () {
+      for (final subCategory in SubCategory.values) {
+        if (!QuestionPool.isGenerated(subCategory.module)) continue;
+
+        expect(
+          MathQuestionFactory.supports(subCategory),
+          isTrue,
+          reason: 'Für ${subCategory.label} fehlt ein Generator',
+        );
+      }
+    });
+  });
+
+  group('Mindestumfang für den MVP', () {
+    /// Untergrenzen aus der Produktvorgabe. Sie dürfen wachsen, aber nicht
+    /// unterschritten werden.
+    const minimums = {
+      SubCategory.numberSequences: 20,
+      SubCategory.figureAnalogies: 15,
+      SubCategory.spelling: 20,
+      SubCategory.wordAnalogies: 15,
+    };
+
+    test('die geforderten Aufgabenzahlen sind erreicht', () {
+      minimums.forEach((subCategory, minimum) {
+        expect(
+          QuestionPool.countForSubCategory(subCategory),
+          greaterThanOrEqualTo(minimum),
+          reason: '${subCategory.label}: mindestens $minimum Aufgaben nötig',
+        );
+      });
     });
   });
 
@@ -144,9 +127,12 @@ void main() {
       }
     });
 
-    test('fordern nie mehr Aufgaben an, als der Pool hergibt', () {
+    test('fordern nie mehr Aufgaben an, als der statische Pool hergibt', () {
       for (final blueprint in SimulationBlueprints.all) {
         for (final part in blueprint.parts) {
+          // Generierte Module haben keine Obergrenze.
+          if (QuestionPool.isGenerated(part.module)) continue;
+
           final available = QuestionPool.forSubCategories(
             part.module,
             part.subCategories,

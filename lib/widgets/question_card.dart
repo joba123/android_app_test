@@ -41,6 +41,18 @@ class QuestionCard extends StatelessWidget {
                 ),
             ],
           ),
+          if (question.imageAsset != null) ...[
+            const SizedBox(height: 14),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                question.imageAsset!,
+                fit: BoxFit.contain,
+                // Ein fehlendes Asset darf die laufende Runde nicht abbrechen.
+                errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           Text(
             question.prompt,

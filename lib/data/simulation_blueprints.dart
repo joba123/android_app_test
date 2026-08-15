@@ -19,7 +19,7 @@ abstract final class SimulationBlueprints {
         title: 'Teil 1: Grundrechenarten',
         module: TrainingModule.math,
         subCategories: [SubCategory.arithmetic],
-        questionCount: 6,
+        questionCount: 8,
         duration: Duration(minutes: 8),
         instructions: 'Rechnen ohne Taschenrechner. Arbeiten Sie zügig – '
             'nicht beantwortete Aufgaben zählen als falsch.',
@@ -37,7 +37,7 @@ abstract final class SimulationBlueprints {
         title: 'Teil 3: Textaufgaben',
         module: TrainingModule.math,
         subCategories: [SubCategory.wordProblems],
-        questionCount: 5,
+        questionCount: 6,
         duration: Duration(minutes: 12),
         instructions: 'Lesen Sie die Aufgabe vollständig, bevor Sie rechnen. '
             'Notieren Sie sich die gesuchte Größe.',
@@ -48,26 +48,26 @@ abstract final class SimulationBlueprints {
   static const logic = SimulationBlueprint(
     id: 'sim_logic',
     title: 'Testsimulation Logisches Denken',
-    description: 'Reihen, Analogien und Schlussfolgerungen unter Zeitvorgabe.',
+    description: 'Reihen, Figuren und Schlussfolgerungen unter Zeitvorgabe.',
     module: TrainingModule.logic,
     parts: [
       SimulationPart(
         title: 'Teil 1: Zahlen- und Buchstabenreihen',
         module: TrainingModule.logic,
         subCategories: [SubCategory.numberSequences],
-        questionCount: 7,
+        questionCount: 10,
         duration: Duration(minutes: 10),
         instructions: 'Suchen Sie zuerst die Abstände zwischen den Gliedern. '
             'Nicht jede Reihe wächst gleichmäßig.',
       ),
       SimulationPart(
-        title: 'Teil 2: Wort- und Figurenanalogien',
+        title: 'Teil 2: Figurenanalogien',
         module: TrainingModule.logic,
-        subCategories: [SubCategory.wordAnalogies, SubCategory.figureAnalogies],
+        subCategories: [SubCategory.figureAnalogies],
         questionCount: 8,
         duration: Duration(minutes: 8),
-        instructions: 'Formulieren Sie das Verhältnis des ersten Paares in '
-            'Worten, bevor Sie die Lösung suchen.',
+        instructions: 'Klären Sie erst, was sich von Figur zu Figur ändert – '
+            'Form, Anzahl oder Lage.',
       ),
       SimulationPart(
         title: 'Teil 3: Schlussfolgerungen',
@@ -84,33 +84,35 @@ abstract final class SimulationBlueprints {
   static const language = SimulationBlueprint(
     id: 'sim_language',
     title: 'Testsimulation Sprache',
-    description: 'Rechtschreibung, Grammatik und Textverständnis am Stück.',
+    description: 'Rechtschreibung, Analogien und Textverständnis am Stück.',
     module: TrainingModule.language,
     parts: [
       SimulationPart(
         title: 'Teil 1: Rechtschreibung',
         module: TrainingModule.language,
         subCategories: [SubCategory.spelling],
-        questionCount: 7,
+        questionCount: 10,
         duration: Duration(minutes: 8),
         instructions: 'Vertrauen Sie auf den ersten Eindruck – '
             'langes Grübeln kostet hier meist nur Zeit.',
       ),
       SimulationPart(
-        title: 'Teil 2: Grammatik',
+        title: 'Teil 2: Wortanalogien',
         module: TrainingModule.language,
-        subCategories: [SubCategory.grammar],
-        questionCount: 6,
-        duration: Duration(minutes: 10),
-        instructions: 'Achten Sie auf Fälle, Präpositionen und Kommasetzung.',
+        subCategories: [SubCategory.wordAnalogies],
+        questionCount: 8,
+        duration: Duration(minutes: 8),
+        instructions: 'Formulieren Sie das Verhältnis des ersten Paares in '
+            'Worten, bevor Sie die Lösung suchen.',
       ),
       SimulationPart(
-        title: 'Teil 3: Wortschatz & Textverständnis',
+        title: 'Teil 3: Grammatik & Textverständnis',
         module: TrainingModule.language,
-        subCategories: [SubCategory.vocabulary],
-        questionCount: 8,
-        duration: Duration(minutes: 14),
-        instructions: 'Bei Textaufgaben zählt ausschließlich, was im Text steht.',
+        subCategories: [SubCategory.grammar, SubCategory.vocabulary],
+        questionCount: 10,
+        duration: Duration(minutes: 16),
+        instructions: 'Bei Textaufgaben zählt ausschließlich, was im Text '
+            'steht.',
       ),
     ],
   );
@@ -136,7 +138,7 @@ abstract final class SimulationBlueprints {
         subCategories: [],
         questionCount: 10,
         duration: Duration(minutes: 14),
-        instructions: 'Reihen, Analogien und Schlussfolgerungen gemischt.',
+        instructions: 'Reihen, Figuren und Schlussfolgerungen gemischt.',
       ),
       SimulationPart(
         title: 'Teil 3: Sprache',
@@ -144,7 +146,7 @@ abstract final class SimulationBlueprints {
         subCategories: [],
         questionCount: 10,
         duration: Duration(minutes: 14),
-        instructions: 'Rechtschreibung, Grammatik und Textverständnis gemischt.',
+        instructions: 'Rechtschreibung, Analogien und Textverständnis gemischt.',
       ),
     ],
   );

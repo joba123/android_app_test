@@ -36,11 +36,6 @@ enum SubCategory {
     module: TrainingModule.logic,
     label: 'Zahlenreihen',
   ),
-  wordAnalogies(
-    id: 'word_analogies',
-    module: TrainingModule.logic,
-    label: 'Wortanalogien',
-  ),
   figureAnalogies(
     id: 'figure_analogies',
     module: TrainingModule.logic,
@@ -57,6 +52,14 @@ enum SubCategory {
     id: 'spelling',
     module: TrainingModule.language,
     label: 'Rechtschreibung',
+  ),
+  // Wortanalogien sind sprachliches Verständnis und liegen deshalb im Modul
+  // Sprache, auch wenn Analogien in Testverfahren gelegentlich unter Logik
+  // geführt werden.
+  wordAnalogies(
+    id: 'word_analogies',
+    module: TrainingModule.language,
+    label: 'Wortanalogien',
   ),
   grammar(
     id: 'grammar',
