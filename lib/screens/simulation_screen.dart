@@ -1,7 +1,9 @@
+import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/screens/result_screen.dart';
 import 'package:einstellungstest_trainer/services/simulation_controller.dart';
 import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
+import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +31,8 @@ class SimulationScreen extends ConsumerWidget {
         ),
       SimulationStage.running => _RunningView(
           session: session,
-          onAnswer: controller.answer,
+          onSelectOption: controller.selectOption,
+          onSubmitNumber: controller.submitNumber,
           onSkip: controller.skip,
           onAbort: () => _confirmAbort(context, controller),
         ),
@@ -218,15 +221,46 @@ class _BriefingRow extends StatelessWidget {
 class _RunningView extends StatelessWidget {
   const _RunningView({
     required this.session,
-    required this.onAnswer,
+    required this.onSelectOption,
+    required this.onSubmitNumber,
     required this.onSkip,
     required this.onAbort,
   });
 
   final SimulationSession session;
-  final ValueChanged<int> onAnswer;
+  final ValueChanged<int> onSelectOption;
+  final bool Function(String input) onSubmitNumber;
   final VoidCallback onSkip;
   final VoidCallback onAbort;
+
+  /// Je nach Antwortformat der Aufgabe: Optionsliste oder Zahleneingabe.
+  /// In der Simulation gibt es kein Feedback – die Lösung bleibt verdeckt.
+  List<Widget> _buildAnswerArea() {
+    final question = session.currentQuestion;
+
+    return switch (question.answer) {
+      final MultipleChoice format => [
+          for (var index = 0; index < format.options.length; index++)
+            AnswerOptionTile(
+              label: String.fromCharCode(65 + index),
+              text: format.options[index],
+              state: session.selectedOptionIndex == index
+                  ? AnswerOptionState.selected
+                  : AnswerOptionState.idle,
+              onTap: () => onSelectOption(index),
+            ),
+        ],
+      final NumericInput format => [
+          NumericAnswerField(
+            key: ValueKey(
+              '${session.partIndex}_${session.questionIndex}_${question.id}',
+            ),
+            format: format,
+            onSubmit: onSubmitNumber,
+          ),
+        ],
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -283,15 +317,7 @@ class _RunningView extends StatelessWidget {
                 children: [
                   QuestionCard(question: question),
                   const SizedBox(height: 18),
-                  for (var index = 0; index < question.options.length; index++)
-                    AnswerOptionTile(
-                      label: String.fromCharCode(65 + index),
-                      text: question.options[index],
-                      state: session.selectedIndex == index
-                          ? AnswerOptionState.selected
-                          : AnswerOptionState.idle,
-                      onTap: () => onAnswer(index),
-                    ),
+                  ..._buildAnswerArea(),
                 ],
               ),
             ),

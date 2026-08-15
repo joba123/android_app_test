@@ -1,18 +1,20 @@
+import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/result_screen.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
+import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Gemeinsamer Screen fuer Uebungs- und Sprint-Modus.
+/// Gemeinsamer Screen für Übungs- und Sprint-Modus.
 ///
 /// Die beiden Modi unterscheiden sich nur in Details (Countdown, sofortiges
-/// Feedback), teilen sich aber Aufbau und Bedienung - deshalb ein Screen
-/// statt zwei fast identischer Kopien.
+/// Feedback), teilen sich aber Aufbau und Bedienung – deshalb ein Screen statt
+/// zwei fast identischer Kopien.
 class QuizScreen extends ConsumerWidget {
   const QuizScreen({super.key, required this.mode, required this.module});
 
@@ -68,20 +70,13 @@ class QuizScreen extends ConsumerWidget {
                 children: [
                   QuestionCard(question: question),
                   const SizedBox(height: 18),
-                  for (var index = 0; index < question.options.length; index++)
-                    AnswerOptionTile(
-                      label: String.fromCharCode(65 + index),
-                      text: question.options[index],
-                      state: _optionState(session, index),
-                      onTap: session.revealed
-                          ? null
-                          : () => controller.answer(index),
-                    ),
+                  ..._buildAnswerArea(session, controller),
                   if (session.revealed) ...[
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 12),
                     ExplanationBox(
                       explanation: question.explanation,
-                      isCorrect: session.selectedIndex == question.correctIndex,
+                      isCorrect: session.answers.isNotEmpty &&
+                          session.answers.last.isCorrect,
                     ),
                   ],
                 ],
@@ -120,16 +115,57 @@ class QuizScreen extends ConsumerWidget {
     );
   }
 
-  AnswerOptionState _optionState(QuizSession session, int index) {
+  /// Je nach Antwortformat der Aufgabe: Optionsliste oder Zahleneingabe.
+  List<Widget> _buildAnswerArea(QuizSession session, QuizController controller) {
+    final question = session.currentQuestion;
+
+    switch (question.answer) {
+      case final MultipleChoice format:
+        return [
+          for (var index = 0; index < format.options.length; index++)
+            AnswerOptionTile(
+              label: String.fromCharCode(65 + index),
+              text: format.options[index],
+              state: _optionState(session, format, index),
+              onTap:
+                  session.revealed ? null : () => controller.selectOption(index),
+            ),
+        ];
+
+      case final NumericInput format:
+        if (session.revealed) {
+          final record = session.answers.last;
+          return [
+            NumericAnswerSummary(
+              format: format,
+              givenText: record.responseText,
+              isCorrect: record.isCorrect,
+            ),
+          ];
+        }
+        return [
+          NumericAnswerField(
+            // Neuer Key je Aufgabe, damit das Feld beim Weiterschalten leert.
+            key: ValueKey(question.id),
+            format: format,
+            onSubmit: controller.submitNumber,
+          ),
+        ];
+    }
+  }
+
+  AnswerOptionState _optionState(
+    QuizSession session,
+    MultipleChoice format,
+    int index,
+  ) {
     if (!session.revealed) {
-      return session.selectedIndex == index
+      return session.selectedOptionIndex == index
           ? AnswerOptionState.selected
           : AnswerOptionState.idle;
     }
-    if (index == session.currentQuestion.correctIndex) {
-      return AnswerOptionState.correct;
-    }
-    if (index == session.selectedIndex) return AnswerOptionState.wrong;
+    if (index == format.correctIndex) return AnswerOptionState.correct;
+    if (index == session.selectedOptionIndex) return AnswerOptionState.wrong;
     return AnswerOptionState.dimmed;
   }
 
@@ -142,7 +178,8 @@ class QuizScreen extends ConsumerWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Runde beenden?'),
         content: const Text(
-          'Dein bisheriger Fortschritt wird gewertet und du siehst die Auswertung.',
+          'Dein bisheriger Fortschritt wird gewertet und du siehst die '
+          'Auswertung.',
         ),
         actions: [
           TextButton(
@@ -177,7 +214,8 @@ class _PracticeProgress extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Aufgabe ${session.currentIndex + 1} von ${session.questions.length}',
+              'Aufgabe ${session.currentIndex + 1} von '
+              '${session.questions.length}',
               style: theme.textTheme.labelMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

@@ -1,6 +1,6 @@
-import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
@@ -23,7 +23,7 @@ class ModuleScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final stats = ref.watch(statsControllerProvider).forModule(module);
     final simulation = SimulationBlueprints.forModule(module);
-    final topics = QuestionPool.topicsOf(module);
+    final subCategories = SubCategory.of(module);
 
     return Scaffold(
       appBar: AppBar(title: Text(module.label)),
@@ -43,7 +43,7 @@ class ModuleScreen extends ConsumerWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final topic in topics)
+                for (final subCategory in subCategories)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -54,7 +54,7 @@ class ModuleScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(99),
                     ),
                     child: Text(
-                      topic,
+                      subCategory.label,
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: module.color,
                         fontWeight: FontWeight.w700,

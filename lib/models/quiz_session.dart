@@ -1,31 +1,26 @@
 import 'package:einstellungstest_trainer/models/answer_record.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 
-enum SessionMode {
-  practice(label: 'Uebungsmodus'),
-  sprint(label: 'Sprint-Modus'),
-  simulation(label: 'Testsimulation');
-
-  const SessionMode({required this.label});
-
-  final String label;
-}
+export 'package:einstellungstest_trainer/models/session_mode.dart';
 
 enum SessionStatus { running, finished }
 
-/// Laufender Zustand einer Uebungs- oder Sprint-Runde.
+/// Laufender Zustand einer Übungs- oder Sprint-Runde.
 ///
 /// Die Testsimulation nutzt ein eigenes Modell ([SimulationSession]), weil sie
-/// mehrere Testteile mit je eigener Zeit verwaltet.
+/// mehrere Testteile mit je eigener Zeit verwaltet. Beide münden am Ende in
+/// eine [TrainingSession] für den dauerhaften Verlauf.
 class QuizSession {
   const QuizSession({
     required this.mode,
     required this.module,
     required this.questions,
+    required this.startedAt,
     this.currentIndex = 0,
     this.answers = const [],
-    this.selectedIndex,
+    this.response,
     this.revealed = false,
     this.remainingSeconds,
     this.status = SessionStatus.running,
@@ -34,16 +29,21 @@ class QuizSession {
   final SessionMode mode;
   final TrainingModule module;
   final List<Question> questions;
+
+  /// Beginn der Runde – wird für den Verlaufseintrag gebraucht.
+  final DateTime startedAt;
+
   final int currentIndex;
   final List<AnswerRecord> answers;
 
-  /// Aktuell angetippte Option, solange noch nicht bestaetigt wurde.
-  final int? selectedIndex;
+  /// Bereits gegebene Antwort auf die aktuelle Aufgabe, solange sie noch
+  /// angezeigt wird.
+  final Response? response;
 
-  /// Im Uebungsmodus: Loesung samt Erklaerung wird angezeigt.
+  /// Im Übungsmodus: Lösung samt Erklärung wird angezeigt.
   final bool revealed;
 
-  /// Nur im Sprint-Modus gesetzt (Countdown ueber die gesamte Runde).
+  /// Nur im Sprint-Modus gesetzt (Countdown über die gesamte Runde).
   final int? remainingSeconds;
 
   final SessionStatus status;
@@ -56,14 +56,22 @@ class QuizSession {
 
   int get answeredCount => answers.where((answer) => answer.isAnswered).length;
 
-  /// Fortschritt von 0.0 bis 1.0 fuer die Anzeige im Kopfbereich.
-  double get progress => questions.isEmpty ? 0 : answers.length / questions.length;
+  /// Index der aktuell gewählten Option, falls es sich um eine
+  /// Multiple-Choice-Aufgabe handelt und bereits getippt wurde.
+  int? get selectedOptionIndex {
+    final given = response;
+    return given is ChoiceResponse ? given.optionIndex : null;
+  }
+
+  /// Fortschritt von 0.0 bis 1.0 für die Anzeige im Kopfbereich.
+  double get progress =>
+      questions.isEmpty ? 0 : answers.length / questions.length;
 
   QuizSession copyWith({
     int? currentIndex,
     List<AnswerRecord>? answers,
-    int? selectedIndex,
-    bool clearSelection = false,
+    Response? response,
+    bool clearResponse = false,
     bool? revealed,
     int? remainingSeconds,
     SessionStatus? status,
@@ -72,9 +80,10 @@ class QuizSession {
       mode: mode,
       module: module,
       questions: questions,
+      startedAt: startedAt,
       currentIndex: currentIndex ?? this.currentIndex,
       answers: answers ?? this.answers,
-      selectedIndex: clearSelection ? null : (selectedIndex ?? this.selectedIndex),
+      response: clearResponse ? null : (response ?? this.response),
       revealed: revealed ?? this.revealed,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       status: status ?? this.status,

@@ -1,10 +1,14 @@
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
+import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/simulation_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'helpers.dart';
 
 void main() {
   late ProviderContainer container;
@@ -29,6 +33,15 @@ void main() {
 
   SimulationController controller() => container.read(provider.notifier);
 
+  /// Beantwortet den laufenden Testteil vollständig richtig.
+  int answerCurrentPartCorrectly() {
+    final questionCount = read().currentPart.questions.length;
+    for (var i = 0; i < questionCount; i++) {
+      controller().answer(correctResponse(read().currentQuestion));
+    }
+    return questionCount;
+  }
+
   test('startet im Briefing mit der Zeit des ersten Teils', () {
     final session = read();
 
@@ -50,20 +63,22 @@ void main() {
   });
 
   test('vor dem Start passiert beim Antworten nichts', () {
-    controller().answer(0);
+    controller().answer(const ChoiceResponse(0));
 
     expect(read().answers, isEmpty);
     expect(read().stage, SimulationStage.briefing);
+  });
+
+  test('eine Zahleneingabe vor dem Start wird ebenfalls abgewiesen', () {
+    expect(controller().submitNumber('42'), isFalse);
+    expect(read().answers, isEmpty);
   });
 
   test('nach dem letzten Teil-Item folgt das Briefing des nächsten Teils', () {
     controller().startPart();
     expect(read().stage, SimulationStage.running);
 
-    final questionCount = read().currentPart.questions.length;
-    for (var i = 0; i < questionCount; i++) {
-      controller().answer(read().currentQuestion.correctIndex);
-    }
+    final questionCount = answerCurrentPartCorrectly();
 
     final session = read();
     expect(session.stage, SimulationStage.briefing);
@@ -83,9 +98,20 @@ void main() {
     expect(record.isCorrect, isFalse);
   });
 
+  test('eine unlesbare Zahleneingabe verbraucht die Aufgabe nicht', () {
+    controller().startPart();
+
+    // Der erste Teil besteht aus Grundrechenarten - also Zahleneingabe.
+    expect(read().currentQuestion.isNumericInput, isTrue);
+    expect(controller().submitNumber('keine Zahl'), isFalse);
+
+    expect(read().answers, isEmpty);
+    expect(read().questionIndex, 0);
+  });
+
   test('Abbruch füllt alle offenen Aufgaben auf und wertet aus', () async {
     controller().startPart();
-    controller().answer(read().currentQuestion.correctIndex);
+    controller().answer(correctResponse(read().currentQuestion));
 
     controller().abort();
     await Future<void>.delayed(Duration.zero);
@@ -115,15 +141,29 @@ void main() {
 
   test('Ergebnis der Simulation landet in der Statistik', () async {
     controller().startPart();
-    final questionCount = read().currentPart.questions.length;
-    for (var i = 0; i < questionCount; i++) {
-      controller().answer(read().currentQuestion.correctIndex);
-    }
+    final questionCount = answerCurrentPartCorrectly();
     controller().abort();
     await Future<void>.delayed(Duration.zero);
 
     final stats = container.read(statsControllerProvider);
     expect(stats.totalCorrect, questionCount);
     expect(stats.totalAnswered, questionCount);
+  });
+
+  test('Simulation legt einen Verlaufseintrag mit Zeitstempel an', () async {
+    controller().startPart();
+    answerCurrentPartCorrectly();
+    controller().abort();
+    await Future<void>.delayed(Duration.zero);
+
+    final history = container.read(sessionHistoryProvider);
+    expect(history, hasLength(1));
+
+    final session = history.single;
+    expect(session.mode, SessionMode.simulation);
+    expect(session.module, blueprint.module);
+    expect(session.total, read().totalQuestions);
+    expect(session.finishedAt.isBefore(DateTime.now().add(Duration.zero)), isTrue);
+    expect(session.resultsBySubCategory.keys, isNotEmpty);
   });
 }

@@ -1,19 +1,21 @@
 import 'dart:async';
 
 import 'package:einstellungstest_trainer/models/answer_record.dart';
+import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Schluessel fuer den Session-Provider: Modus plus Modul.
+/// Schlüssel für den Session-Provider: Modus plus Modul.
 typedef QuizConfig = ({SessionMode mode, TrainingModule module});
 
-/// Steuert Uebungs- und Sprint-Runden.
+/// Steuert Übungs- und Sprint-Runden.
 ///
-/// Der Timer lebt im Controller, nicht im Widget. Dadurch laeuft der
-/// Sprint-Countdown unabhaengig von Rebuilds weiter und wird ueber
-/// `ref.onDispose` zuverlaessig abgeraeumt.
+/// Der Timer lebt im Controller, nicht im Widget. Dadurch läuft der
+/// Sprint-Countdown unabhängig von Rebuilds weiter und wird über
+/// `ref.onDispose` zuverlässig abgeräumt.
 class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> {
   /// Dauer einer Sprint-Runde in Sekunden.
   static const int sprintSeconds = 60;
@@ -30,7 +32,8 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
 
     ref.onDispose(() => _timer?.cancel());
 
-    _questionStartedAt = DateTime.now();
+    final now = DateTime.now();
+    _questionStartedAt = now;
     if (arg.mode == SessionMode.sprint) {
       _startTimer();
     }
@@ -39,21 +42,22 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
       mode: arg.mode,
       module: arg.module,
       questions: questions,
+      startedAt: now,
       remainingSeconds: arg.mode == SessionMode.sprint ? sprintSeconds : null,
     );
   }
 
   /// Antwort abgeben.
   ///
-  /// Im Uebungsmodus wird die Loesung samt Erklaerung sofort aufgedeckt und
-  /// der Nutzer geht per "Weiter" selbst zur naechsten Aufgabe. Im Sprint
-  /// zaehlt Tempo - dort wird ohne Feedback direkt weitergeschaltet.
-  void answer(int optionIndex) {
+  /// Im Übungsmodus wird die Lösung samt Erklärung sofort aufgedeckt und der
+  /// Nutzer geht per "Weiter" selbst zur nächsten Aufgabe. Im Sprint zählt
+  /// Tempo – dort wird ohne Feedback direkt weitergeschaltet.
+  void answer(Response response) {
     if (state.status == SessionStatus.finished || state.revealed) return;
 
     final record = AnswerRecord(
       question: state.currentQuestion,
-      selectedIndex: optionIndex,
+      response: response,
       timeSpent: DateTime.now().difference(_questionStartedAt),
     );
     final answers = [...state.answers, record];
@@ -61,29 +65,49 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
     if (state.mode == SessionMode.practice) {
       state = state.copyWith(
         answers: answers,
-        selectedIndex: optionIndex,
+        response: response,
         revealed: true,
       );
     } else {
-      state = state.copyWith(answers: answers, selectedIndex: optionIndex);
+      state = state.copyWith(answers: answers, response: response);
       _advance();
     }
   }
 
-  /// Aufgabe ueberspringen - zaehlt als nicht beantwortet.
+  /// Eine Antwortoption antippen.
+  void selectOption(int optionIndex) => answer(ChoiceResponse(optionIndex));
+
+  /// Eine getippte Zahl abgeben.
+  ///
+  /// Gibt `false` zurück, wenn sich aus der Eingabe keine Zahl lesen lässt –
+  /// dann bleibt die Aufgabe offen und die Oberfläche kann einen Hinweis
+  /// anzeigen.
+  bool submitNumber(String input) {
+    final parsed = NumericResponse.tryParse(input);
+    if (parsed == null) return false;
+
+    answer(parsed);
+    return true;
+  }
+
+  /// Aufgabe überspringen – zählt als nicht beantwortet.
   void skip() {
     if (state.status == SessionStatus.finished) return;
 
     final record = AnswerRecord(
       question: state.currentQuestion,
-      selectedIndex: null,
+      response: null,
       timeSpent: DateTime.now().difference(_questionStartedAt),
     );
-    state = state.copyWith(answers: [...state.answers, record], revealed: false);
+    state = state.copyWith(
+      answers: [...state.answers, record],
+      revealed: false,
+      clearResponse: true,
+    );
     _advance();
   }
 
-  /// Im Uebungsmodus nach dem Aufdecken zur naechsten Aufgabe.
+  /// Im Übungsmodus nach dem Aufdecken zur nächsten Aufgabe.
   void next() {
     if (state.status == SessionStatus.finished) return;
     _advance();
@@ -99,7 +123,7 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
     _questionStartedAt = DateTime.now();
     state = state.copyWith(
       currentIndex: state.currentIndex + 1,
-      clearSelection: true,
+      clearResponse: true,
       revealed: false,
     );
   }
@@ -122,13 +146,14 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
     _timer?.cancel();
     state = state.copyWith(status: SessionStatus.finished, revealed: false);
 
-    unawaited(
-      ref.read(statsControllerProvider.notifier).recordSession(
-            state.answers,
-            sprintScore: state.mode == SessionMode.sprint ? state.correctCount : null,
-            sprintModule: state.mode == SessionMode.sprint ? state.module : null,
-          ),
+    final session = TrainingSession.fromAnswers(
+      mode: state.mode,
+      module: state.module,
+      startedAt: state.startedAt,
+      finishedAt: DateTime.now(),
+      answers: state.answers,
     );
+    unawaited(ref.read(statsControllerProvider.notifier).record(session));
   }
 }
 

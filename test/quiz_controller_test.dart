@@ -1,25 +1,71 @@
+import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
+import 'package:einstellungstest_trainer/models/simulation.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/services/question_repository.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'helpers.dart';
+
+/// Liefert immer denselben, im Test vorgegebenen Aufgabensatz. Damit lassen
+/// sich Abläufe prüfen, die von einem bestimmten Antwortformat abhängen.
+class _FixedRepository extends QuestionRepository {
+  _FixedRepository(this.questions);
+
+  final List<Question> questions;
+
+  @override
+  List<Question> draw({
+    required TrainingModule module,
+    required int count,
+    List<SubCategory> subCategories = const [],
+  }) =>
+      questions;
+
+  @override
+  List<Question> drawPractice(
+    TrainingModule module, {
+    int count = QuestionRepository.practiceLength,
+  }) =>
+      questions;
+
+  @override
+  List<Question> drawSprintQueue(TrainingModule module) => questions;
+
+  @override
+  List<Question> drawForPart(SimulationPart part) => questions;
+}
+
 void main() {
   late ProviderContainer container;
 
-  setUp(() async {
+  Future<ProviderContainer> buildContainer({
+    List<Question>? questions,
+  }) async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
 
-    container = ProviderContainer(
-      overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+    return ProviderContainer(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(prefs),
+        if (questions != null)
+          questionRepositoryProvider
+              .overrideWithValue(_FixedRepository(questions)),
+      ],
     );
+  }
+
+  setUp(() async {
+    container = await buildContainer();
     addTearDown(container.dispose);
   });
 
-  /// Haelt den autoDispose-Provider am Leben, solange der Test laeuft.
+  /// Hält den autoDispose-Provider am Leben, solange der Test läuft.
   QuizConfig keepAlive(SessionMode mode, TrainingModule module) {
     final config = (mode: mode, module: module);
     final subscription = container.listen(
@@ -39,7 +85,7 @@ void main() {
       expect(before.revealed, isFalse);
       expect(before.remainingSeconds, isNull);
 
-      controller.answer(before.currentQuestion.correctIndex);
+      controller.answer(correctResponse(before.currentQuestion));
 
       final after = container.read(quizControllerProvider(config));
       expect(after.revealed, isTrue);
@@ -52,10 +98,11 @@ void main() {
     test('eine zweite Antwort auf dieselbe Aufgabe wird ignoriert', () {
       final config = keepAlive(SessionMode.practice, TrainingModule.math);
       final controller = container.read(quizControllerProvider(config).notifier);
-      final question = container.read(quizControllerProvider(config)).currentQuestion;
+      final question =
+          container.read(quizControllerProvider(config)).currentQuestion;
 
-      controller.answer(question.correctIndex);
-      controller.answer((question.correctIndex + 1) % question.options.length);
+      controller.answer(correctResponse(question));
+      controller.answer(wrongResponse(question));
 
       expect(container.read(quizControllerProvider(config)).answers.length, 1);
     });
@@ -64,29 +111,94 @@ void main() {
       final config = keepAlive(SessionMode.practice, TrainingModule.logic);
       final controller = container.read(quizControllerProvider(config).notifier);
 
-      controller.answer(0);
+      controller.answer(
+        correctResponse(
+          container.read(quizControllerProvider(config)).currentQuestion,
+        ),
+      );
       controller.next();
 
       final session = container.read(quizControllerProvider(config));
       expect(session.currentIndex, 1);
       expect(session.revealed, isFalse);
-      expect(session.selectedIndex, isNull);
+      expect(session.response, isNull);
     });
 
     test('beendet die Runde nach der letzten Aufgabe', () {
       final config = keepAlive(SessionMode.practice, TrainingModule.language);
       final controller = container.read(quizControllerProvider(config).notifier);
-      final total = container.read(quizControllerProvider(config)).questions.length;
+      final total =
+          container.read(quizControllerProvider(config)).questions.length;
 
       for (var i = 0; i < total; i++) {
         final current = container.read(quizControllerProvider(config));
-        controller.answer(current.currentQuestion.correctIndex);
+        controller.answer(correctResponse(current.currentQuestion));
         controller.next();
       }
 
       final session = container.read(quizControllerProvider(config));
       expect(session.status, SessionStatus.finished);
       expect(session.correctCount, total);
+    });
+  });
+
+  group('Zahleneingabe', () {
+    setUp(() async {
+      container = await buildContainer(
+        questions: [
+          numericQuestion(id: 'n1', correctValue: 84, unit: 'km/h'),
+          numericQuestion(id: 'n2', correctValue: 2.4, tolerance: 0.01),
+        ],
+      );
+      addTearDown(container.dispose);
+    });
+
+    test('eine getippte Zahl wird gelesen und als richtig gewertet', () {
+      final config = keepAlive(SessionMode.practice, TrainingModule.math);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      final accepted = controller.submitNumber('84');
+
+      expect(accepted, isTrue);
+      final session = container.read(quizControllerProvider(config));
+      expect(session.revealed, isTrue);
+      expect(session.correctCount, 1);
+      expect(session.answers.single.responseText, '84 km/h');
+    });
+
+    test('deutsche Schreibweise mit Komma wird akzeptiert', () {
+      final config = keepAlive(SessionMode.practice, TrainingModule.math);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      controller.submitNumber('84');
+      controller.next();
+
+      expect(controller.submitNumber('2,4'), isTrue);
+      expect(container.read(quizControllerProvider(config)).correctCount, 2);
+    });
+
+    test('eine unlesbare Eingabe lässt die Aufgabe offen', () {
+      final config = keepAlive(SessionMode.practice, TrainingModule.math);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      final accepted = controller.submitNumber('weiß nicht');
+
+      expect(accepted, isFalse);
+      final session = container.read(quizControllerProvider(config));
+      expect(session.answers, isEmpty);
+      expect(session.revealed, isFalse);
+    });
+
+    test('eine falsche Zahl wird als falsch gewertet', () {
+      final config = keepAlive(SessionMode.practice, TrainingModule.math);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      controller.submitNumber('80');
+
+      final session = container.read(quizControllerProvider(config));
+      expect(session.answers.single.isAnswered, isTrue);
+      expect(session.answers.single.isCorrect, isFalse);
+      expect(session.correctCount, 0);
     });
   });
 
@@ -98,7 +210,7 @@ void main() {
       final before = container.read(quizControllerProvider(config));
       expect(before.remainingSeconds, QuizController.sprintSeconds);
 
-      controller.answer(before.currentQuestion.correctIndex);
+      controller.answer(correctResponse(before.currentQuestion));
 
       final after = container.read(quizControllerProvider(config));
       expect(after.revealed, isFalse);
@@ -124,20 +236,37 @@ void main() {
       final config = keepAlive(SessionMode.sprint, TrainingModule.math);
       final controller = container.read(quizControllerProvider(config).notifier);
 
-      final first = container.read(quizControllerProvider(config));
-      controller.answer(first.currentQuestion.correctIndex);
-      final second = container.read(quizControllerProvider(config));
-      controller.answer(second.currentQuestion.correctIndex);
+      for (var i = 0; i < 2; i++) {
+        final current = container.read(quizControllerProvider(config));
+        controller.answer(correctResponse(current.currentQuestion));
+      }
 
       controller.finishEarly();
-      // Das Persistieren laeuft asynchron an.
+      // Das Persistieren läuft asynchron an.
       await Future<void>.delayed(Duration.zero);
 
-      final stats =
-          container.read(statsControllerProvider).forModule(TrainingModule.math);
+      final stats = container
+          .read(statsControllerProvider)
+          .forModule(TrainingModule.math);
       expect(stats.bestSprintScore, 2);
       expect(stats.answered, 2);
       expect(stats.correct, 2);
+    });
+
+    test('legt einen Eintrag im Sitzungsverlauf an', () async {
+      final config = keepAlive(SessionMode.sprint, TrainingModule.logic);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      final current = container.read(quizControllerProvider(config));
+      controller.answer(correctResponse(current.currentQuestion));
+      controller.finishEarly();
+      await Future<void>.delayed(Duration.zero);
+
+      final history = container.read(sessionHistoryProvider);
+      expect(history, hasLength(1));
+      expect(history.single.mode, SessionMode.sprint);
+      expect(history.single.module, TrainingModule.logic);
+      expect(history.single.correctCount, 1);
     });
   });
 }

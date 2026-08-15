@@ -2,16 +2,19 @@ import 'dart:async';
 
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
 import 'package:einstellungstest_trainer/models/answer_record.dart';
+import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
+import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Steuert eine Testsimulation ueber mehrere Testteile hinweg.
+/// Steuert eine Testsimulation über mehrere Testteile hinweg.
 ///
-/// Der entscheidende Unterschied zum Sprint: Der Countdown gilt jeweils fuer
-/// einen Testteil. Laeuft er ab, werden die restlichen Aufgaben des Teils
-/// automatisch als "nicht beantwortet" verbucht und es geht zum naechsten
-/// Teil - genau wie in einem echten Auswahlverfahren.
+/// Der entscheidende Unterschied zum Sprint: Der Countdown gilt jeweils für
+/// einen Testteil. Läuft er ab, werden die restlichen Aufgaben des Teils
+/// automatisch als "nicht beantwortet" verbucht und es geht zum nächsten Teil –
+/// genau wie in einem echten Auswahlverfahren.
 class SimulationController
     extends AutoDisposeFamilyNotifier<SimulationSession, String> {
   Timer? _timer;
@@ -35,6 +38,7 @@ class SimulationController
     return SimulationSession(
       blueprint: blueprint,
       loadedParts: loadedParts,
+      startedAt: DateTime.now(),
       remainingSeconds: blueprint.parts.first.duration.inSeconds,
     );
   }
@@ -51,14 +55,27 @@ class SimulationController
     _startTimer();
   }
 
-  void answer(int optionIndex) {
+  void answer(Response response) {
     if (state.stage != SimulationStage.running) return;
 
-    _record(optionIndex);
+    _record(response);
     _advance();
   }
 
-  /// In der Simulation gibt es kein Zurueck - Ueberspringen kostet die Aufgabe.
+  void selectOption(int optionIndex) => answer(ChoiceResponse(optionIndex));
+
+  /// Gibt `false` zurück, wenn sich aus der Eingabe keine Zahl lesen lässt.
+  bool submitNumber(String input) {
+    if (state.stage != SimulationStage.running) return false;
+
+    final parsed = NumericResponse.tryParse(input);
+    if (parsed == null) return false;
+
+    answer(parsed);
+    return true;
+  }
+
+  /// In der Simulation gibt es kein Zurück – Überspringen kostet die Aufgabe.
   void skip() {
     if (state.stage != SimulationStage.running) return;
 
@@ -66,15 +83,16 @@ class SimulationController
     _advance();
   }
 
-  void _record(int? optionIndex) {
+  void _record(Response? response) {
     final record = AnswerRecord(
       question: state.currentQuestion,
-      selectedIndex: optionIndex,
+      response: response,
       timeSpent: DateTime.now().difference(_questionStartedAt),
     );
     state = state.copyWith(
       answers: [...state.answers, record],
-      selectedIndex: optionIndex,
+      response: response,
+      clearResponse: response == null,
     );
   }
 
@@ -86,7 +104,7 @@ class SimulationController
     _questionStartedAt = DateTime.now();
     state = state.copyWith(
       questionIndex: state.questionIndex + 1,
-      clearSelection: true,
+      clearResponse: true,
     );
   }
 
@@ -103,7 +121,7 @@ class SimulationController
     });
   }
 
-  /// Schliesst den laufenden Teil ab und fuellt unbearbeitete Aufgaben auf.
+  /// Schließt den laufenden Teil ab und füllt unbearbeitete Aufgaben auf.
   void _completeCurrentPart() {
     _timer?.cancel();
 
@@ -115,7 +133,7 @@ class SimulationController
       answers.add(
         AnswerRecord(
           question: questions[index],
-          selectedIndex: null,
+          response: null,
           timeSpent: Duration.zero,
         ),
       );
@@ -125,11 +143,17 @@ class SimulationController
       state = state.copyWith(
         answers: answers,
         stage: SimulationStage.finished,
-        clearSelection: true,
+        clearResponse: true,
       );
-      unawaited(
-        ref.read(statsControllerProvider.notifier).recordSession(answers),
+
+      final session = TrainingSession.fromAnswers(
+        mode: SessionMode.simulation,
+        module: state.blueprint.module,
+        startedAt: state.startedAt,
+        finishedAt: DateTime.now(),
+        answers: answers,
       );
+      unawaited(ref.read(statsControllerProvider.notifier).record(session));
       return;
     }
 
@@ -138,13 +162,13 @@ class SimulationController
       answers: answers,
       partIndex: nextIndex,
       questionIndex: 0,
-      clearSelection: true,
+      clearResponse: true,
       stage: SimulationStage.briefing,
       remainingSeconds: state.loadedParts[nextIndex].part.duration.inSeconds,
     );
   }
 
-  /// Simulation vorzeitig beenden - alle offenen Aufgaben zaehlen als falsch.
+  /// Simulation vorzeitig beenden – alle offenen Aufgaben zählen als falsch.
   void abort() {
     _timer?.cancel();
     while (state.stage != SimulationStage.finished) {

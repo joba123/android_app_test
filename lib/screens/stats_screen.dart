@@ -1,6 +1,8 @@
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
+import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -58,6 +60,7 @@ class StatsScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             for (final module in TrainingModule.values)
               _ModuleStatsCard(module: module),
+            const _SessionHistorySection(),
             if (stats.totalAnswered == 0) ...[
               const SizedBox(height: 20),
               Text(
@@ -177,6 +180,105 @@ class _ModuleStatsCard extends ConsumerWidget {
                 value: '${stats.sessionsCompleted}',
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Die zuletzt abgeschlossenen Sitzungen aus dem gespeicherten Verlauf.
+class _SessionHistorySection extends ConsumerWidget {
+  const _SessionHistorySection();
+
+  /// Wie viele Einträge angezeigt werden. Gespeichert werden mehr – hier soll
+  /// nur der jüngste Verlauf sichtbar sein.
+  static const int visibleCount = 5;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final sessions = ref.watch(sessionHistoryProvider);
+
+    if (sessions.isEmpty) return const SizedBox.shrink();
+
+    final visible = sessions.take(visibleCount).toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 14),
+        Text(
+          'Letzte Sitzungen',
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 12),
+        for (final session in visible) _SessionTile(session: session),
+      ],
+    );
+  }
+}
+
+class _SessionTile extends StatelessWidget {
+  const _SessionTile({required this.session});
+
+  final TrainingSession session;
+
+  String _formatDate(DateTime value) {
+    final day = value.day.toString().padLeft(2, '0');
+    final month = value.month.toString().padLeft(2, '0');
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$day.$month. · $hour:$minute';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = session.module?.color ?? theme.colorScheme.primary;
+    final label = session.module?.shortLabel ?? 'Alle Module';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$label · ${session.mode.label}',
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_formatDate(session.finishedAt)} · '
+                  '${formatMmSs(session.duration.inSeconds)} min · '
+                  'Ø ${session.averageTimePerQuestion.inSeconds} s/Aufgabe',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(
+            '${session.correctCount}/${session.total}',
+            style: theme.textTheme.titleSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: accent,
+            ),
           ),
         ],
       ),

@@ -13,11 +13,23 @@ verwendet, was einer späteren iOS-Unterstützung im Weg steht.
 
 Jedes Modul bietet dieselben drei Trainingsmodi.
 
-| Modul | Themen |
-| --- | --- |
-| **Mathematik** | Grundrechenarten · Dreisatz & Prozent · Textaufgaben |
-| **Logisches Denken** | Zahlenreihen · Analogien & Wortlogik · Muster & Schlussfolgerungen |
-| **Sprache** | Rechtschreibung · Grammatik · Wortschatz & Textverständnis |
+| Modul (Kategorie) | Unterkategorien | Antwortformat |
+| --- | --- | --- |
+| **Mathematik** | Grundrechenarten · Dreisatz · Prozentrechnung · Textaufgaben | überwiegend Zahleneingabe |
+| **Logisches Denken** | Zahlenreihen · Wortanalogien · Figurenanalogien · Schlussfolgerungen | Multiple Choice |
+| **Sprache** | Rechtschreibung · Grammatik · Wortschatz & Textverständnis | Multiple Choice |
+
+Eine Aufgabe wird entweder per **Multiple Choice** oder per **freier
+Zahleneingabe** beantwortet. Beides steckt in einer versiegelten Hierarchie
+(`AnswerFormat` mit `MultipleChoice` und `NumericInput`), sodass es keine
+Aufgabe geben kann, die gleichzeitig Antwortoptionen und einen Zahlenwert
+trägt. Die Zahleneingabe akzeptiert deutsche Schreibweise (Komma als
+Dezimaltrennzeichen), ignoriert mitgetippte Einheiten und erlaubt pro Aufgabe
+eine Toleranz für Rundungen.
+
+Die **Kategorie einer Aufgabe wird aus ihrer Unterkategorie abgeleitet** und
+nicht zusätzlich gespeichert – eine Aufgabe kann damit nicht im Modul
+Mathematik liegen und „Rechtschreibung" als Unterkategorie tragen.
 
 ### Trainingsmodi
 
@@ -44,7 +56,9 @@ pro Testteil und pro Aufgabe.
 | **Gesamtsimulation** | 3 × 14 Min (alle Module) | 42 Min |
 
 Zusätzlich gibt es einen Statistik-Screen mit Trefferquote, Sprint-Bestwerten
-und Rundenzahl je Modul. Der Fortschritt wird lokal auf dem Gerät gespeichert.
+und Rundenzahl je Modul sowie den zuletzt abgeschlossenen Sitzungen. Beides wird
+lokal auf dem Gerät gespeichert; der Verlauf ist auf die letzten 50 Sitzungen
+begrenzt.
 
 ## State-Management: Riverpod
 
@@ -73,11 +87,14 @@ lib/
 ├── main.dart                  App-Start, lädt SharedPreferences vor
 ├── app.dart                   MaterialApp + Material-3-Theme
 ├── models/                    Datenmodelle (unveränderlich)
-│   ├── training_module.dart   Module inkl. Farbe/Icon/Beschreibung
-│   ├── question.dart          Aufgabe + Schwierigkeitsgrad
-│   ├── answer_record.dart     Protokoll einer (Nicht-)Antwort
+│   ├── training_module.dart   Kategorien inkl. Farbe/Icon/Beschreibung
+│   ├── sub_category.dart      Unterkategorien, je fest einem Modul zugeordnet
+│   ├── question.dart          Aufgabe, Antwortformate, gegebene Antworten
+│   ├── answer_record.dart     Protokoll einer (Nicht-)Antwort zur Laufzeit
+│   ├── session_mode.dart      Übung / Sprint / Simulation
 │   ├── quiz_session.dart      Zustand für Übung & Sprint
 │   ├── simulation.dart        Testteile, Simulationszustand, Auswertung
+│   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
 │   └── module_stats.dart      Persistierter Lernfortschritt
 ├── screens/                   UI-Screens
 │   ├── home_screen.dart       Modulübersicht + Gesamtsimulation
@@ -111,8 +128,15 @@ lib/
 **Antwortoptionen werden zur Laufzeit gemischt.** Im Content stehen die Optionen
 in sinnvoller Reihenfolge (z. B. Zahlen aufsteigend); das Mischen übernimmt die
 `QuestionRepository`. So kann sich niemand eine Antwortposition merken, und der
-Content bleibt gut lesbar. `Question.reordered()` zieht den `correctIndex` dabei
-korrekt mit.
+Content bleibt gut lesbar. `MultipleChoice.reordered()` zieht den `correctIndex`
+dabei korrekt mit; Aufgaben mit Zahleneingabe bleiben unangetastet.
+
+**Zwei Modelle für eine Sitzung.** `AnswerRecord` lebt nur während einer Runde
+und kennt die vollständige `Question` – die Auswertung braucht Aufgabentext und
+Erklärung. Für den dauerhaften Verlauf wird daraus eine `TrainingSession` mit
+schlanken `QuestionResult`-Einträgen (nur ID, Unterkategorie, richtig/falsch,
+Zeit). So bleibt der Verlauf auch dann lesbar, wenn eine Aufgabe später aus dem
+Pool entfernt oder umformuliert wird.
 
 **Content ist austauschbar.** Aktuell liegen die Aufgaben als `const`-Listen im
 Code. Kommt später ein Backend oder eine lokale Datenbank dazu, wird nur die
@@ -148,15 +172,24 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 33 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 96 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Release-Build ist vorerst mit dem Debug-Key signiert, damit er ohne weitere
 Einrichtung durchläuft – vor einer Veröffentlichung muss in
 `android/app/build.gradle` ein echter Release-Keystore hinterlegt werden.
 
-Die Tests decken den Aufgabenpool (eindeutige IDs, gültige Lösungsindizes,
-ausreichend Aufgaben für jede Simulation), das Ziehen und Mischen, beide
-Quiz-Modi sowie den mehrteiligen Simulationsablauf inklusive Zeitablauf und
-Auswertung ab.
+Die Tests decken ab:
+
+- **Aufgabenmodell** – Auswertung beider Antwortformate, Einlesen deutscher
+  Zahleneingaben, Toleranzen, Umsortieren der Optionen, sowie das Verhalten bei
+  Antworten, die nicht zum Format der Aufgabe passen
+- **Sitzungsmodell** – Kennzahlen (richtig/falsch/übersprungen, Trefferquote,
+  Zeit pro Aufgabe), Gruppierung nach Unterkategorie und JSON-Zyklus inklusive
+  defekter Datensätze
+- **Aufgabenpool** – eindeutige IDs, stimmige Antwortformate, jede
+  Unterkategorie gefüllt, ausreichend Aufgaben für jede Simulation
+- **Ablauf** – beide Quiz-Modi, der mehrteilige Simulationsablauf mit
+  Zeitablauf und Auswertung, Persistenz von Fortschritt und Verlauf
+- **Oberfläche** – Navigation, Zahleneingabefeld inklusive Fehlerfall
 
 ## Stand und nächste Schritte
 
@@ -165,13 +198,19 @@ gleichmäßig über die drei Module und ihre Themen verteilt) – genug, um alle
 Modi und Simulationen vollständig durchzuspielen. Für den produktiven Einsatz
 muss er deutlich wachsen; die Struktur dafür steht.
 
+Die Figurenanalogien sind aktuell **sprachlich beschrieben** statt gezeichnet –
+im echten Test sind das Bildaufgaben. Die Aufgabenlogik stimmt, die Darstellung
+ist ein Zwischenschritt, bis Grafik-Assets vorliegen.
+
 Naheliegende nächste Schritte:
 
-- Aufgabenpool ausbauen, ggf. mit Bild-Aufgaben (Matrizen, räumliches Denken)
+- Aufgabenpool ausbauen, insbesondere echte Bild-Aufgaben für Figurenanalogien,
+  Matrizen und räumliches Denken
 - Branchen-Profile als Filter über die bestehenden Module legen
 - Rückfrage beim Verlassen einer laufenden Runde über die Android-Zurück-Taste
   (`PopScope`)
-- Verlaufsstatistik pro Sitzung statt nur Zählerständen – dafür ist der Wechsel
-  von SharedPreferences auf eine lokale Datenbank vorgesehen
+- Auswertung über mehrere Sitzungen hinweg (Verlaufskurven je Unterkategorie) –
+  die Daten dafür liegen bereits in `TrainingSession`, ab einer größeren
+  Historie lohnt der Wechsel von SharedPreferences auf eine lokale Datenbank
 - Auth/Sync, falls der Fortschritt geräteübergreifend verfügbar sein soll
   (`lib/services/` ist dafür der vorgesehene Ort)

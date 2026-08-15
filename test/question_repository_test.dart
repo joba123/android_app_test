@@ -1,8 +1,9 @@
 import 'dart:math';
 
-import 'package:einstellungstest_trainer/data/math_questions.dart';
 import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
+import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/services/question_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,20 +16,46 @@ void main() {
     repository = QuestionRepository(random: Random(42));
   });
 
-  test('Mischen der Optionen behält die richtige Antwort bei', () {
-    final drawn = repository.draw(module: TrainingModule.math, count: 20);
+  Question originalOf(Question question) {
+    return QuestionPool.all.firstWhere(
+      (candidate) => candidate.id == question.id,
+    );
+  }
 
+  test('Mischen der Optionen behält die richtige Antwort bei', () {
+    final drawn = repository.draw(module: TrainingModule.language, count: 30);
+
+    expect(drawn, isNotEmpty);
     for (final question in drawn) {
-      final original = QuestionPool.all.firstWhere(
-        (candidate) => candidate.id == question.id,
-      );
+      final original = originalOf(question);
 
       expect(
-        question.correctAnswer,
-        original.correctAnswer,
+        question.correctAnswerText,
+        original.correctAnswerText,
         reason: '${question.id}: richtige Antwort ging beim Mischen verloren',
       );
-      expect(question.options.toSet(), original.options.toSet());
+
+      final shuffled = question.answer as MultipleChoice;
+      final source = original.answer as MultipleChoice;
+      expect(shuffled.options.toSet(), source.options.toSet());
+      expect(shuffled.options.length, source.options.length);
+    }
+  });
+
+  test('Aufgaben mit Zahleneingabe bleiben unverändert', () {
+    final drawn = repository
+        .draw(module: TrainingModule.math, count: 30)
+        .where((question) => question.isNumericInput)
+        .toList();
+
+    expect(drawn, isNotEmpty);
+    for (final question in drawn) {
+      final original = originalOf(question).answer as NumericInput;
+      final format = question.answer as NumericInput;
+
+      expect(format.correctValue, original.correctValue);
+      expect(format.tolerance, original.tolerance);
+      expect(format.unit, original.unit);
     }
   });
 
@@ -50,35 +77,54 @@ void main() {
     expect(drawn.length, available);
   });
 
-  test('Themenfilter greift', () {
+  test('Filter auf Unterkategorien greift', () {
     final drawn = repository.draw(
       module: TrainingModule.math,
       count: 5,
-      topics: [MathTopics.percentage],
+      subCategories: [SubCategory.percentage],
     );
 
     expect(drawn, isNotEmpty);
     for (final question in drawn) {
-      expect(question.topic, MathTopics.percentage);
+      expect(question.subCategory, SubCategory.percentage);
     }
+  });
+
+  test('Filter kann mehrere Unterkategorien zusammenfassen', () {
+    final drawn = repository.draw(
+      module: TrainingModule.math,
+      count: 99,
+      subCategories: [SubCategory.ruleOfThree, SubCategory.percentage],
+    );
+
+    expect(
+      drawn.map((question) => question.subCategory).toSet(),
+      {SubCategory.ruleOfThree, SubCategory.percentage},
+    );
   });
 
   test('Sprint-Warteschlange ist länger als der Pool', () {
     final queue = repository.drawSprintQueue(TrainingModule.language);
 
-    expect(
-      queue.length,
-      QuestionPool.countFor(TrainingModule.language) * 2,
-    );
+    expect(queue.length, QuestionPool.countFor(TrainingModule.language) * 2);
   });
 
   test('Simulationsteil liefert genau die geforderte Anzahl', () {
-    for (final part in SimulationBlueprints.full.parts) {
-      final drawn = repository.drawForPart(part);
+    for (final blueprint in SimulationBlueprints.all) {
+      for (final part in blueprint.parts) {
+        final drawn = repository.drawForPart(part);
 
-      expect(drawn.length, part.questionCount);
-      for (final question in drawn) {
-        expect(question.module, part.module);
+        expect(
+          drawn.length,
+          part.questionCount,
+          reason: '${blueprint.title} / ${part.title}',
+        );
+        for (final question in drawn) {
+          expect(question.module, part.module);
+          if (part.subCategories.isNotEmpty) {
+            expect(part.subCategories, contains(question.subCategory));
+          }
+        }
       }
     }
   });

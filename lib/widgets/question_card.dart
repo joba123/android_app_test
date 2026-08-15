@@ -22,17 +22,23 @@ class QuestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
             children: [
               _Chip(
-                text: question.topic,
+                text: question.subCategory.label,
                 color: question.module.color,
               ),
-              const SizedBox(width: 8),
               _Chip(
                 text: question.difficulty.label,
                 color: theme.colorScheme.outline,
               ),
+              if (question.isNumericInput)
+                _Chip(
+                  text: 'Zahleneingabe',
+                  color: theme.colorScheme.tertiary,
+                ),
             ],
           ),
           const SizedBox(height: 14),

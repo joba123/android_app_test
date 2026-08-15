@@ -344,7 +344,7 @@ class _AnswerReviewTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '${question.topic} · $status',
+          '${question.subCategory.label} · $status',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),
@@ -360,15 +360,13 @@ class _AnswerReviewTile extends StatelessWidget {
           const SizedBox(height: 10),
           _ReviewLine(
             label: 'Deine Antwort',
-            value: record.isAnswered
-                ? question.options[record.selectedIndex!]
-                : '—',
+            value: record.responseText,
             color: record.isCorrect ? const Color(0xFF0E9F6E) : color,
           ),
           const SizedBox(height: 4),
           _ReviewLine(
             label: 'Richtige Antwort',
-            value: question.correctAnswer,
+            value: question.correctAnswerText,
             color: const Color(0xFF0E9F6E),
           ),
           const SizedBox(height: 10),

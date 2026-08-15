@@ -2,13 +2,14 @@ import 'package:einstellungstest_trainer/data/language_questions.dart';
 import 'package:einstellungstest_trainer/data/logic_questions.dart';
 import 'package:einstellungstest_trainer/data/math_questions.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 
 /// Zentraler Zugriff auf alle statisch hinterlegten Aufgaben.
 ///
-/// Aktuell liegt der Content fest im Code. Sobald ein Backend oder eine
-/// lokale Datenbank dazukommt, wird nur die QuestionRepository ausgetauscht -
-/// die Screens bleiben unveraendert.
+/// Aktuell liegt der Content fest im Code. Sobald ein Backend oder eine lokale
+/// Datenbank dazukommt, wird nur die QuestionRepository ausgetauscht – die
+/// Screens bleiben unverändert.
 abstract final class QuestionPool {
   static const List<Question> all = [
     ...mathQuestions,
@@ -20,22 +21,28 @@ abstract final class QuestionPool {
     return all.where((question) => question.module == module).toList();
   }
 
-  static List<Question> forTopics(TrainingModule module, List<String> topics) {
-    if (topics.isEmpty) return forModule(module);
+  static List<Question> forSubCategory(SubCategory subCategory) {
     return all
-        .where((question) =>
-            question.module == module && topics.contains(question.topic))
+        .where((question) => question.subCategory == subCategory)
         .toList();
   }
 
-  /// Alle Feinthemen eines Moduls in der Reihenfolge ihres ersten Auftretens.
-  static List<String> topicsOf(TrainingModule module) {
-    final topics = <String>[];
-    for (final question in forModule(module)) {
-      if (!topics.contains(question.topic)) topics.add(question.topic);
-    }
-    return topics;
+  /// Aufgaben eines Moduls, optional auf bestimmte Unterkategorien begrenzt.
+  /// Eine leere Liste bedeutet: keine Einschränkung.
+  static List<Question> forSubCategories(
+    TrainingModule module,
+    List<SubCategory> subCategories,
+  ) {
+    if (subCategories.isEmpty) return forModule(module);
+    return all
+        .where((question) =>
+            question.module == module &&
+            subCategories.contains(question.subCategory))
+        .toList();
   }
 
   static int countFor(TrainingModule module) => forModule(module).length;
+
+  static int countForSubCategory(SubCategory subCategory) =>
+      forSubCategory(subCategory).length;
 }
