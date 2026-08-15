@@ -1,8 +1,0 @@
-.gradle/
-/local.properties
-/build/
-/app/build/
-*.iml
-.idea/
-.DS_Store
-gradle/wrapper/gradle-wrapper.jar
