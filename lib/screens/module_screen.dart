@@ -1,11 +1,12 @@
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
-import 'package:einstellungstest_trainer/services/question_repository.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/module_card.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
@@ -98,11 +99,18 @@ class ModuleScreen extends ConsumerWidget {
             ModeCard(
               title: 'Übungsmodus',
               subtitle: 'Ohne Zeitdruck lernen. Nach jeder Antwort siehst du '
-                  'sofort die Lösung mit Erklärung.',
-              meta: '${QuestionRepository.practiceLength} Aufgaben',
+                  'sofort die Lösung mit Rechenweg. Einzelnes Thema oder '
+                  'alle Themen des Moduls.',
+              meta: 'Thema wählbar',
               icon: Icons.school_outlined,
               color: module.color,
-              onTap: () => _openQuiz(context, SessionMode.practice),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => PracticeSetupScreen(
+                    initialScope: PracticeScope.module(module),
+                  ),
+                ),
+              ),
             ),
             ModeCard(
               title: 'Sprint-Modus',
@@ -111,7 +119,14 @@ class ModuleScreen extends ConsumerWidget {
               meta: '${QuizController.sprintSeconds} Sek',
               icon: Icons.bolt_outlined,
               color: const Color(0xFFD97706),
-              onTap: () => _openQuiz(context, SessionMode.sprint),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => QuizScreen(
+                    mode: SessionMode.sprint,
+                    scope: PracticeScope.module(module),
+                  ),
+                ),
+              ),
             ),
             ModeCard(
               title: 'Testsimulation',
@@ -132,11 +147,4 @@ class ModuleScreen extends ConsumerWidget {
     );
   }
 
-  void _openQuiz(BuildContext context, SessionMode mode) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => QuizScreen(mode: mode, module: module),
-      ),
-    );
-  }
 }

@@ -8,6 +8,13 @@ String formatMmSs(int totalSeconds) {
   return '$minutes:${seconds.toString().padLeft(2, '0')}';
 }
 
+/// Kompakte Dauer für die Auswertung: unter einer Minute in Sekunden,
+/// darüber als "M:SS min".
+String formatShortDuration(Duration duration) {
+  final seconds = duration.inSeconds < 0 ? 0 : duration.inSeconds;
+  return seconds < 60 ? '$seconds s' : '${formatMmSs(seconds)} min';
+}
+
 /// Countdown-Anzeige fuer Sprint und Testsimulation.
 ///
 /// Faerbt sich in den letzten 10 Sekunden warnend ein - das ist der Moment,

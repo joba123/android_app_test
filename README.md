@@ -71,8 +71,19 @@ zur gestellten Aufgabe passt.
 
 ### Trainingsmodi
 
-**Übungsmodus** – Lernen ohne Zeitdruck. Nach jeder Antwort wird die Lösung
-sofort aufgedeckt und erklärt. Standardumfang sind 10 Aufgaben pro Runde.
+**Übungsmodus** – Lernen ohne Zeitdruck. Vor dem Start wird gewählt, **was**
+geübt wird und **wie viel**:
+
+- ein einzelnes Thema (z. B. nur Prozentrechnung)
+- ein ganzes Modul mit allen seinen Themen
+- alle Kategorien gemischt – Mathematik, Logik und Sprache im Wechsel
+
+Dazu 10, 20 oder 30 Aufgaben; gibt ein Thema weniger her, wird die Runde
+entsprechend kürzer. Nach jeder Antwort erscheint sofort die Rückmeldung samt
+Rechenweg, erst danach geht es per „Weiter" zur nächsten Aufgabe. Der
+Fortschritt steht durchgehend im Kopfbereich („Aufgabe 5/20"). Am Ende folgt die
+Auswertung mit Trefferquote, **Fehlerquote**, **Ø Zeit pro Aufgabe**,
+Gesamtdauer und – bei gemischten Runden – einer Aufschlüsselung nach Thema.
 
 **Sprint-Modus** – 60 Sekunden, so viele richtige Antworten wie möglich. Kein
 Feedback zwischendurch, direktes Weiterschalten nach jedem Tipp. Pro Modul wird
@@ -130,13 +141,15 @@ lib/
 │   ├── question.dart          Aufgabe, Antwortformate, gegebene Antworten
 │   ├── answer_record.dart     Protokoll einer (Nicht-)Antwort zur Laufzeit
 │   ├── session_mode.dart      Übung / Sprint / Simulation
+│   ├── practice_scope.dart    Thema, ganzes Modul oder alles gemischt
 │   ├── quiz_session.dart      Zustand für Übung & Sprint
 │   ├── simulation.dart        Testteile, Simulationszustand, Auswertung
 │   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
 │   └── module_stats.dart      Persistierter Lernfortschritt
 ├── screens/                   UI-Screens
-│   ├── home_screen.dart       Modulübersicht + Gesamtsimulation
+│   ├── home_screen.dart       Schnellstart, Module, Gesamtsimulation
 │   ├── module_screen.dart     Modus-Auswahl innerhalb eines Moduls
+│   ├── practice_setup_screen.dart  Thema/Misch-Modus und Umfang wählen
 │   ├── quiz_screen.dart       Übungs- und Sprint-Modus
 │   ├── simulation_screen.dart Briefing → Bearbeitung → Ergebnis
 │   ├── result_screen.dart     Auswertungen (Runde und Simulation)
@@ -175,6 +188,12 @@ in sinnvoller Reihenfolge (z. B. Zahlen aufsteigend); das Mischen übernimmt die
 `QuestionRepository`. So kann sich niemand eine Antwortposition merken, und der
 Content bleibt gut lesbar. `MultipleChoice.reordered()` zieht den `correctIndex`
 dabei korrekt mit; Aufgaben mit Zahleneingabe bleiben unangetastet.
+
+**Der Übungsumfang ist ein eigener Typ.** `PracticeScope` kennt drei benannte
+Konstruktoren – `mixed()`, `module()` und `subCategory()`. Wer ein Thema wählt,
+bekommt dessen Modul automatisch mitgesetzt; Modul und Thema können also nicht
+auseinanderlaufen. Der Typ dient zugleich als Schlüssel des Session-Providers
+und hat dafür `==` und `hashCode`.
 
 **Zwei Modelle für eine Sitzung.** `AnswerRecord` lebt nur während einer Runde
 und kennt die vollständige `Question` – die Auswertung braucht Aufgabentext und
@@ -224,7 +243,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 140 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 165 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Release-Build ist vorerst mit dem Debug-Key signiert, damit er ohne weitere
 Einrichtung durchläuft – vor einer Veröffentlichung muss in
 `android/app/build.gradle` ein echter Release-Keystore hinterlegt werden.
@@ -250,7 +269,9 @@ Die Tests decken ab:
   für jede Simulation
 - **Ablauf** – beide Quiz-Modi, der mehrteilige Simulationsablauf mit
   Zeitablauf und Auswertung, Persistenz von Fortschritt und Verlauf
-- **Oberfläche** – Navigation, Zahleneingabefeld inklusive Fehlerfall
+- **Oberfläche** – Navigation, Auswahl des Übungsumfangs, Fortschrittsanzeige,
+  sofortige Rückmeldung mit Erklärung, Auswertung mit Fehlerquote und Zeiten,
+  Zahleneingabefeld inklusive Fehlerfall
 
 ## Stand und nächste Schritte
 

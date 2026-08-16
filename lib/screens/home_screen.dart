@@ -2,6 +2,7 @@ import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/module_screen.dart';
+import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
 import 'package:einstellungstest_trainer/screens/stats_screen.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
@@ -74,6 +75,27 @@ class HomeScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 26),
+            Text(
+              'Schnellstart',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ModeCard(
+              title: 'Übungsmodus',
+              subtitle: 'Einzelnes Thema oder alle Kategorien gemischt – '
+                  'mit Lösung und Rechenweg nach jeder Antwort.',
+              meta: 'ohne Zeitdruck',
+              icon: Icons.school_outlined,
+              color: theme.colorScheme.primary,
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const PracticeSetupScreen(),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
             Text(
               'Module',
               style: theme.textTheme.titleMedium?.copyWith(

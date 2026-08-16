@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:einstellungstest_trainer/models/answer_record.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
@@ -8,8 +9,11 @@ import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Schlüssel für den Session-Provider: Modus plus Modul.
-typedef QuizConfig = ({SessionMode mode, TrainingModule module});
+/// Schlüssel für den Session-Provider.
+///
+/// [length] gilt nur für den Übungsmodus – im Sprint bestimmt die Zeit das
+/// Ende der Runde, nicht die Aufgabenzahl.
+typedef QuizConfig = ({SessionMode mode, PracticeScope scope, int length});
 
 /// Steuert Übungs- und Sprint-Runden.
 ///
@@ -20,15 +24,23 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
   /// Dauer einer Sprint-Runde in Sekunden.
   static const int sprintSeconds = 60;
 
+  /// Auswahlmöglichkeiten für den Umfang einer Übungsrunde.
+  static const List<int> practiceLengths = [10, 20, 30];
+
+  static const int defaultPracticeLength = 20;
+
   Timer? _timer;
   DateTime _questionStartedAt = DateTime.now();
 
   @override
   QuizSession build(QuizConfig arg) {
     final repository = ref.watch(questionRepositoryProvider);
+
+    // Der Sprint läuft immer auf genau einem Modul – eine gemischte Variante
+    // gibt es dort nicht, deshalb der Rückfall auf Mathematik.
     final questions = arg.mode == SessionMode.sprint
-        ? repository.drawSprintQueue(arg.module)
-        : repository.drawPractice(arg.module);
+        ? repository.drawSprintQueue(arg.scope.module ?? TrainingModule.math)
+        : repository.drawForScope(arg.scope, count: arg.length);
 
     ref.onDispose(() => _timer?.cancel());
 
@@ -40,7 +52,7 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
 
     return QuizSession(
       mode: arg.mode,
-      module: arg.module,
+      scope: arg.scope,
       questions: questions,
       startedAt: now,
       remainingSeconds: arg.mode == SessionMode.sprint ? sprintSeconds : null,
@@ -54,6 +66,7 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
   /// Tempo – dort wird ohne Feedback direkt weitergeschaltet.
   void answer(Response response) {
     if (state.status == SessionStatus.finished || state.revealed) return;
+    if (state.questions.isEmpty) return;
 
     final record = AnswerRecord(
       question: state.currentQuestion,
@@ -93,6 +106,7 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
   /// Aufgabe überspringen – zählt als nicht beantwortet.
   void skip() {
     if (state.status == SessionStatus.finished) return;
+    if (state.questions.isEmpty) return;
 
     final record = AnswerRecord(
       question: state.currentQuestion,
@@ -144,16 +158,22 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
   void _finish() {
     if (state.status == SessionStatus.finished) return;
     _timer?.cancel();
-    state = state.copyWith(status: SessionStatus.finished, revealed: false);
 
-    final session = TrainingSession.fromAnswers(
+    final summary = TrainingSession.fromAnswers(
       mode: state.mode,
-      module: state.module,
+      module: state.scope.module,
       startedAt: state.startedAt,
       finishedAt: DateTime.now(),
       answers: state.answers,
     );
-    unawaited(ref.read(statsControllerProvider.notifier).record(session));
+
+    state = state.copyWith(
+      status: SessionStatus.finished,
+      revealed: false,
+      summary: summary,
+    );
+
+    unawaited(ref.read(statsControllerProvider.notifier).record(summary));
   }
 }
 

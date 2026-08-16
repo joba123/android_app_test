@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
@@ -29,8 +30,8 @@ class _FixedRepository extends QuestionRepository {
       questions;
 
   @override
-  List<Question> drawPractice(
-    TrainingModule module, {
+  List<Question> drawForScope(
+    PracticeScope scope, {
     int count = QuestionRepository.practiceLength,
     Difficulty? difficulty,
   }) =>
@@ -68,8 +69,16 @@ void main() {
   });
 
   /// Hält den autoDispose-Provider am Leben, solange der Test läuft.
-  QuizConfig keepAlive(SessionMode mode, TrainingModule module) {
-    final config = (mode: mode, module: module);
+  QuizConfig keepAlive(
+    SessionMode mode,
+    TrainingModule module, {
+    int length = QuizController.defaultPracticeLength,
+  }) {
+    final config = (
+      mode: mode,
+      scope: PracticeScope.module(module),
+      length: length,
+    );
     final subscription = container.listen(
       quizControllerProvider(config),
       (_, __) {},
@@ -77,6 +86,162 @@ void main() {
     addTearDown(subscription.close);
     return config;
   }
+
+  /// Wie [keepAlive], aber für beliebige Übungsumfänge.
+  QuizConfig keepAliveScope(PracticeScope scope, {int length = 20}) {
+    final config = (mode: SessionMode.practice, scope: scope, length: length);
+    final subscription = container.listen(
+      quizControllerProvider(config),
+      (_, __) {},
+    );
+    addTearDown(subscription.close);
+    return config;
+  }
+
+  group('Übungsumfang', () {
+    test('die gewählte Aufgabenzahl bestimmt die Rundenlänge', () {
+      for (final length in [10, 20, 30]) {
+        final config = keepAliveScope(
+          const PracticeScope.module(TrainingModule.logic),
+          length: length,
+        );
+
+        expect(
+          container.read(quizControllerProvider(config)).totalQuestions,
+          length,
+        );
+      }
+    });
+
+    test('ein knappes Thema kürzt die Runde, statt zu scheitern', () {
+      final config = keepAliveScope(
+        PracticeScope.subCategory(SubCategory.grammar),
+        length: 30,
+      );
+      final session = container.read(quizControllerProvider(config));
+
+      expect(session.totalQuestions, lessThan(30));
+      expect(session.totalQuestions, greaterThan(0));
+      for (final question in session.questions) {
+        expect(question.subCategory, SubCategory.grammar);
+      }
+    });
+
+    test('der Misch-Modus zieht aus allen Modulen', () {
+      final config = keepAliveScope(const PracticeScope.mixed(), length: 30);
+      final session = container.read(quizControllerProvider(config));
+
+      expect(
+        session.questions.map((question) => question.module).toSet(),
+        TrainingModule.values.toSet(),
+      );
+    });
+
+    test('die Fortschrittsanzeige zählt ab eins', () {
+      final config = keepAliveScope(
+        const PracticeScope.module(TrainingModule.logic),
+        length: 20,
+      );
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      expect(container.read(quizControllerProvider(config)).currentNumber, 1);
+
+      controller.answer(
+        correctResponse(
+          container.read(quizControllerProvider(config)).currentQuestion,
+        ),
+      );
+      controller.next();
+
+      final session = container.read(quizControllerProvider(config));
+      expect(session.currentNumber, 2);
+      expect(session.totalQuestions, 20);
+      expect(session.progress, closeTo(2 / 20, 1e-9));
+    });
+  });
+
+  group('Auswertung der Runde', () {
+    test('am Ende steht eine Zusammenfassung bereit', () {
+      final config = keepAliveScope(
+        const PracticeScope.module(TrainingModule.logic),
+        length: 10,
+      );
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      expect(container.read(quizControllerProvider(config)).summary, isNull);
+
+      for (var i = 0; i < 10; i++) {
+        final current = container.read(quizControllerProvider(config));
+        controller.answer(correctResponse(current.currentQuestion));
+        controller.next();
+      }
+
+      final summary = container.read(quizControllerProvider(config)).summary;
+      expect(summary, isNotNull);
+      expect(summary!.total, 10);
+      expect(summary.correctCount, 10);
+      expect(summary.accuracy, 1.0);
+      expect(summary.mode, SessionMode.practice);
+      expect(summary.module, TrainingModule.logic);
+    });
+
+    test('Fehlerquote und Zeiten sind in sich stimmig', () {
+      final config = keepAliveScope(
+        const PracticeScope.module(TrainingModule.logic),
+        length: 10,
+      );
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      // Zwei richtig, eine falsch, eine übersprungen, Rest richtig.
+      for (var i = 0; i < 10; i++) {
+        final current = container.read(quizControllerProvider(config));
+        if (i == 2) {
+          controller.answer(wrongResponse(current.currentQuestion));
+        } else if (i == 5) {
+          controller.skip();
+          continue;
+        } else {
+          controller.answer(correctResponse(current.currentQuestion));
+        }
+        controller.next();
+      }
+
+      final summary = container.read(quizControllerProvider(config)).summary!;
+
+      expect(summary.total, 10);
+      expect(summary.correctCount, 8);
+      expect(summary.wrongCount, 1);
+      expect(summary.skippedCount, 1);
+      expect(
+        summary.correctCount + summary.wrongCount + summary.skippedCount,
+        summary.total,
+      );
+      // Fehlerquote ist die Gegenzahl zur Trefferquote.
+      expect(1 - summary.accuracy, closeTo(0.2, 1e-9));
+      expect(summary.duration, greaterThanOrEqualTo(Duration.zero));
+      expect(
+        summary.averageTimePerQuestion,
+        greaterThanOrEqualTo(Duration.zero),
+      );
+    });
+
+    test('eine gemischte Runde schlüsselt nach Thema auf', () {
+      final config = keepAliveScope(const PracticeScope.mixed(), length: 12);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      final total =
+          container.read(quizControllerProvider(config)).totalQuestions;
+      for (var i = 0; i < total; i++) {
+        final current = container.read(quizControllerProvider(config));
+        controller.answer(correctResponse(current.currentQuestion));
+        controller.next();
+      }
+
+      final summary = container.read(quizControllerProvider(config)).summary!;
+      expect(summary.resultsBySubCategory.length, greaterThan(1));
+      expect(summary.module, isNull);
+    });
+  });
 
   group('Übungsmodus', () {
     test('deckt nach der Antwort die Lösung auf und zählt sie', () {

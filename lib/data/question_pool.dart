@@ -61,4 +61,10 @@ abstract final class QuestionPool {
         ? 'beliebig viele Aufgaben'
         : '${countFor(module)} Aufgaben';
   }
+
+  static String describeSubCategorySize(SubCategory subCategory) {
+    return isGenerated(subCategory.module)
+        ? 'beliebig viele Aufgaben'
+        : '${countForSubCategory(subCategory)} Aufgaben';
+  }
 }

@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
@@ -43,7 +44,10 @@ void main() {
     });
 
     test('Übungsrunde liefert die gewünschte Anzahl ohne Wiederholungen', () {
-      final drawn = repository.drawPractice(TrainingModule.logic, count: 8);
+      final drawn = repository.drawForScope(
+        const PracticeScope.module(TrainingModule.logic),
+        count: 8,
+      );
 
       expect(drawn.length, 8);
       expect(drawn.map((question) => question.id).toSet().length, 8);
@@ -125,8 +129,8 @@ void main() {
     });
 
     test('reicht die Schwierigkeit durch', () {
-      final drawn = repository.drawPractice(
-        TrainingModule.math,
+      final drawn = repository.drawForScope(
+        const PracticeScope.module(TrainingModule.math),
         count: 20,
         difficulty: Difficulty.hard,
       );
@@ -153,6 +157,72 @@ void main() {
         first.map((question) => question.prompt).toList(),
         second.map((question) => question.prompt).toList(),
       );
+    });
+  });
+
+  group('Übungsumfang', () {
+    test('Misch-Modus zieht aus allen Modulen', () {
+      final drawn = repository.drawForScope(
+        const PracticeScope.mixed(),
+        count: 30,
+      );
+
+      expect(drawn.length, 30);
+      expect(
+        drawn.map((question) => question.module).toSet(),
+        TrainingModule.values.toSet(),
+      );
+    });
+
+    test('Misch-Modus verteilt gleichmäßig über die Module', () {
+      final drawn = repository.drawForScope(
+        const PracticeScope.mixed(),
+        count: 30,
+      );
+
+      for (final module in TrainingModule.values) {
+        expect(
+          drawn.where((question) => question.module == module).length,
+          10,
+          reason: 'Modul ${module.label} ist ungleich vertreten',
+        );
+      }
+    });
+
+    test('ein einzelnes Thema wird eingehalten', () {
+      final drawn = repository.drawForScope(
+        PracticeScope.subCategory(SubCategory.numberSequences),
+        count: 12,
+      );
+
+      expect(drawn, isNotEmpty);
+      for (final question in drawn) {
+        expect(question.subCategory, SubCategory.numberSequences);
+      }
+    });
+
+    test('ein knappes Thema liefert weniger statt zu scheitern', () {
+      final available = QuestionPool.countForSubCategory(SubCategory.grammar);
+      final drawn = repository.drawForScope(
+        PracticeScope.subCategory(SubCategory.grammar),
+        count: 30,
+      );
+
+      expect(drawn.length, available);
+      expect(drawn.length, lessThan(30));
+    });
+
+    test('ein generiertes Thema liefert immer die volle Anzahl', () {
+      final drawn = repository.drawForScope(
+        PracticeScope.subCategory(SubCategory.percentage),
+        count: 30,
+      );
+
+      expect(drawn.length, 30);
+    });
+
+    test('Misch-Modus mit null Aufgaben liefert eine leere Liste', () {
+      expect(repository.drawMixed(count: 0), isEmpty);
     });
   });
 

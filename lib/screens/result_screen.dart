@@ -1,30 +1,37 @@
 import 'package:einstellungstest_trainer/models/answer_record.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
-import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
+import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
+import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
 
-/// Auswertung einer Uebungs- oder Sprint-Runde.
+/// Auswertung einer Übungs- oder Sprint-Runde.
+///
+/// Die Kennzahlen kommen aus der [TrainingSession], die der Controller beim
+/// Abschluss gebaut hat. Für die Aufgabendurchsicht braucht es zusätzlich die
+/// [AnswerRecord]s, weil nur sie die vollständigen Aufgaben kennen.
 class QuizResultScreen extends StatelessWidget {
   const QuizResultScreen({
     super.key,
     required this.mode,
-    required this.module,
+    required this.scopeLabel,
+    required this.summary,
     required this.answers,
     required this.onRetry,
   });
 
   final SessionMode mode;
-  final TrainingModule module;
+  final String scopeLabel;
+  final TrainingSession summary;
   final List<AnswerRecord> answers;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    final correct = answers.where((answer) => answer.isCorrect).length;
-    final answered = answers.where((answer) => answer.isAnswered).length;
-    final accuracy = answered == 0 ? 0.0 : correct / answered;
+    final theme = Theme.of(context);
+    final byTopic = summary.resultsBySubCategory;
 
     return Scaffold(
       appBar: AppBar(
@@ -37,17 +44,17 @@ class QuizResultScreen extends StatelessWidget {
           children: [
             _ResultHeadline(
               title: mode == SessionMode.sprint
-                  ? '$correct richtig in 60 Sekunden'
-                  : 'Runde abgeschlossen',
-              subtitle: '${module.label} · ${mode.label}',
-              accuracy: accuracy,
+                  ? '${summary.correctCount} richtig in 60 Sekunden'
+                  : '${summary.correctCount} von ${summary.total} richtig',
+              subtitle: '$scopeLabel · ${mode.label}',
+              accuracy: summary.accuracy,
             ),
             const SizedBox(height: 18),
             Row(
               children: [
                 Expanded(
                   child: StatTile(
-                    value: '$correct',
+                    value: '${summary.correctCount}',
                     label: 'richtig',
                     icon: Icons.check_circle_outline,
                     color: const Color(0xFF0E9F6E),
@@ -56,28 +63,77 @@ class QuizResultScreen extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: StatTile(
-                    value: '${answered - correct}',
+                    value: '${summary.wrongCount}',
                     label: 'falsch',
                     icon: Icons.cancel_outlined,
-                    color: Theme.of(context).colorScheme.error,
+                    color: theme.colorScheme.error,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: StatTile(
-                    value: '${answers.length - answered}',
+                    value: '${summary.skippedCount}',
                     label: 'offen',
                     icon: Icons.remove_circle_outline,
                   ),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: StatTile(
+                    value: '${((1 - summary.accuracy) * 100).round()} %',
+                    label: 'Fehlerquote',
+                    icon: Icons.percent,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatTile(
+                    value: formatShortDuration(summary.averageTimePerQuestion),
+                    label: 'Ø pro Aufgabe',
+                    icon: Icons.speed_outlined,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatTile(
+                    value: formatShortDuration(summary.duration),
+                    label: 'Gesamtdauer',
+                    icon: Icons.schedule_outlined,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Die Fehlerquote bezieht offene Aufgaben mit ein. '
+              'Der Durchschnitt zählt nur tatsächlich bearbeitete Aufgaben.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (byTopic.length > 1) ...[
+              const SizedBox(height: 26),
+              Text(
+                'Nach Thema',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final entry in byTopic.entries)
+                _TopicRow(subCategory: entry.key, results: entry.value),
+            ],
             const SizedBox(height: 26),
             Text(
               'Aufgaben im Überblick',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 10),
             for (var index = 0; index < answers.length; index++)
@@ -90,7 +146,7 @@ class QuizResultScreen extends StatelessWidget {
             const SizedBox(height: 10),
             OutlinedButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Zurück zum Modul'),
+              child: const Text('Zurück zur Auswahl'),
             ),
           ],
         ),
@@ -99,7 +155,7 @@ class QuizResultScreen extends StatelessWidget {
   }
 }
 
-/// Auswertung einer kompletten Testsimulation, aufgeschluesselt nach Teilen.
+/// Auswertung einer kompletten Testsimulation, aufgeschlüsselt nach Teilen.
 class SimulationResultScreen extends StatelessWidget {
   const SimulationResultScreen({
     super.key,
@@ -182,7 +238,7 @@ class _ResultHeadline extends StatelessWidget {
   final String subtitle;
   final double accuracy;
 
-  /// Kurze Einordnung des Ergebnisses - bewusst sachlich, ohne Übertreibung.
+  /// Kurze Einordnung des Ergebnisses – bewusst sachlich, ohne Übertreibung.
   String get _verdict {
     if (accuracy >= 0.9) return 'Sehr starkes Ergebnis. Weiter so.';
     if (accuracy >= 0.75) return 'Solide Leistung – der Kurs stimmt.';
@@ -233,6 +289,58 @@ class _ResultHeadline extends StatelessWidget {
             '${(accuracy * 100).round()} % Trefferquote · $_verdict',
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onPrimaryContainer,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Eine Zeile der Themen-Aufschlüsselung nach einer gemischten Runde.
+class _TopicRow extends StatelessWidget {
+  const _TopicRow({required this.subCategory, required this.results});
+
+  final SubCategory subCategory;
+  final List<QuestionResult> results;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final correct = results.where((result) => result.correct).length;
+    final ratio = results.isEmpty ? 0.0 : correct / results.length;
+    final color = subCategory.module.color;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${subCategory.module.shortLabel} · ${subCategory.label}',
+                  style: theme.textTheme.bodyMedium,
+                ),
+              ),
+              Text(
+                '$correct/${results.length}',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 5,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(color),
             ),
           ),
         ],
@@ -297,7 +405,7 @@ class _PartResultCard extends StatelessWidget {
   }
 }
 
-/// Aufklappbare Zeile mit Aufgabe, gegebener Antwort und Erklaerung.
+/// Aufklappbare Zeile mit Aufgabe, gegebener Antwort und Erklärung.
 class _AnswerReviewTile extends StatelessWidget {
   const _AnswerReviewTile({required this.number, required this.record});
 
@@ -344,7 +452,8 @@ class _AnswerReviewTile extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          '${question.subCategory.label} · $status',
+          '${question.subCategory.label} · $status · '
+          '${formatShortDuration(record.timeSpent)}',
           style: theme.textTheme.bodySmall?.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
           ),

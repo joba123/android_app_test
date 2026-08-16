@@ -1,7 +1,8 @@
 import 'package:einstellungstest_trainer/models/answer_record.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
-import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/models/training_session.dart';
 
 export 'package:einstellungstest_trainer/models/session_mode.dart';
 
@@ -11,11 +12,11 @@ enum SessionStatus { running, finished }
 ///
 /// Die Testsimulation nutzt ein eigenes Modell ([SimulationSession]), weil sie
 /// mehrere Testteile mit je eigener Zeit verwaltet. Beide münden am Ende in
-/// eine [TrainingSession] für den dauerhaften Verlauf.
+/// eine [TrainingSession].
 class QuizSession {
   const QuizSession({
     required this.mode,
-    required this.module,
+    required this.scope,
     required this.questions,
     required this.startedAt,
     this.currentIndex = 0,
@@ -24,10 +25,14 @@ class QuizSession {
     this.revealed = false,
     this.remainingSeconds,
     this.status = SessionStatus.running,
+    this.summary,
   });
 
   final SessionMode mode;
-  final TrainingModule module;
+
+  /// Was geübt wird: ein Thema, ein ganzes Modul oder alles gemischt.
+  final PracticeScope scope;
+
   final List<Question> questions;
 
   /// Beginn der Runde – wird für den Verlaufseintrag gebraucht.
@@ -48,6 +53,10 @@ class QuizSession {
 
   final SessionStatus status;
 
+  /// Auswertung der Runde. Steht erst fest, wenn [status] auf
+  /// [SessionStatus.finished] gewechselt ist.
+  final TrainingSession? summary;
+
   Question get currentQuestion => questions[currentIndex];
 
   bool get isLastQuestion => currentIndex >= questions.length - 1;
@@ -55,6 +64,11 @@ class QuizSession {
   int get correctCount => answers.where((answer) => answer.isCorrect).length;
 
   int get answeredCount => answers.where((answer) => answer.isAnswered).length;
+
+  /// Nummer der aktuellen Aufgabe für die Anzeige "Aufgabe 5/20".
+  int get currentNumber => currentIndex + 1;
+
+  int get totalQuestions => questions.length;
 
   /// Index der aktuell gewählten Option, falls es sich um eine
   /// Multiple-Choice-Aufgabe handelt und bereits getippt wurde.
@@ -65,7 +79,7 @@ class QuizSession {
 
   /// Fortschritt von 0.0 bis 1.0 für die Anzeige im Kopfbereich.
   double get progress =>
-      questions.isEmpty ? 0 : answers.length / questions.length;
+      questions.isEmpty ? 0 : (currentIndex + 1) / questions.length;
 
   QuizSession copyWith({
     int? currentIndex,
@@ -75,10 +89,11 @@ class QuizSession {
     bool? revealed,
     int? remainingSeconds,
     SessionStatus? status,
+    TrainingSession? summary,
   }) {
     return QuizSession(
       mode: mode,
-      module: module,
+      scope: scope,
       questions: questions,
       startedAt: startedAt,
       currentIndex: currentIndex ?? this.currentIndex,
@@ -87,6 +102,7 @@ class QuizSession {
       revealed: revealed ?? this.revealed,
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       status: status ?? this.status,
+      summary: summary ?? this.summary,
     );
   }
 }

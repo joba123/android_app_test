@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:einstellungstest_trainer/data/generators/math_question_factory.dart';
 import 'package:einstellungstest_trainer/data/question_pool.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
@@ -56,12 +57,52 @@ class QuestionRepository {
   }
 
   /// Übungsmodus: begrenzte Runde ohne Zeitdruck.
-  List<Question> drawPractice(
-    TrainingModule module, {
+  ///
+  /// Bei statischem Content kann das Ergebnis kürzer ausfallen als [count],
+  /// wenn das gewählte Thema weniger Aufgaben hergibt.
+  List<Question> drawForScope(
+    PracticeScope scope, {
     int count = practiceLength,
     Difficulty? difficulty,
   }) {
-    return draw(module: module, count: count, difficulty: difficulty);
+    final module = scope.module;
+    if (module == null) {
+      return drawMixed(count: count, difficulty: difficulty);
+    }
+
+    return draw(
+      module: module,
+      count: count,
+      subCategories: scope.subCategories,
+      difficulty: difficulty,
+    );
+  }
+
+  /// Misch-Modus: Aufgaben aus allen Modulen, möglichst gleichmäßig verteilt
+  /// und anschließend durchgemischt.
+  List<Question> drawMixed({
+    required int count,
+    Difficulty? difficulty,
+  }) {
+    if (count <= 0) return const [];
+
+    const modules = TrainingModule.values;
+    final shares = {for (final module in modules) module: 0};
+    for (var index = 0; index < count; index++) {
+      final module = modules[index % modules.length];
+      shares[module] = shares[module]! + 1;
+    }
+
+    final drawn = [
+      for (final entry in shares.entries)
+        ...draw(
+          module: entry.key,
+          count: entry.value,
+          difficulty: difficulty,
+        ),
+    ];
+
+    return drawn..shuffle(_random);
   }
 
   /// Sprint-Modus: In 60 Sekunden soll die Warteschlange nicht ausgehen.

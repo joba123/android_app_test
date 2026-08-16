@@ -1,6 +1,6 @@
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
-import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/result_screen.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
@@ -16,12 +16,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Feedback), teilen sich aber Aufbau und Bedienung – deshalb ein Screen statt
 /// zwei fast identischer Kopien.
 class QuizScreen extends ConsumerWidget {
-  const QuizScreen({super.key, required this.mode, required this.module});
+  const QuizScreen({
+    super.key,
+    required this.mode,
+    required this.scope,
+    this.length = QuizController.defaultPracticeLength,
+  });
 
   final SessionMode mode;
-  final TrainingModule module;
+  final PracticeScope scope;
 
-  QuizConfig get _config => (mode: mode, module: module);
+  /// Nur für den Übungsmodus relevant.
+  final int length;
+
+  QuizConfig get _config => (mode: mode, scope: scope, length: length);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -29,12 +37,20 @@ class QuizScreen extends ConsumerWidget {
     final controller = ref.read(quizControllerProvider(_config).notifier);
 
     if (session.status == SessionStatus.finished) {
-      return QuizResultScreen(
-        mode: mode,
-        module: module,
-        answers: session.answers,
-        onRetry: () => ref.invalidate(quizControllerProvider(_config)),
-      );
+      final summary = session.summary;
+      if (summary != null) {
+        return QuizResultScreen(
+          mode: mode,
+          scopeLabel: scope.label,
+          summary: summary,
+          answers: session.answers,
+          onRetry: () => ref.invalidate(quizControllerProvider(_config)),
+        );
+      }
+    }
+
+    if (session.questions.isEmpty) {
+      return _EmptyPool(scopeLabel: scope.label);
     }
 
     final theme = Theme.of(context);
@@ -43,7 +59,7 @@ class QuizScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${module.shortLabel} · ${mode.label}'),
+        title: Text('${scope.shortLabel} · ${mode.label}'),
         actions: [
           TextButton(
             onPressed: () => _confirmExit(context, controller),
@@ -146,7 +162,7 @@ class QuizScreen extends ConsumerWidget {
         return [
           NumericAnswerField(
             // Neuer Key je Aufgabe, damit das Feld beim Weiterschalten leert.
-            key: ValueKey(question.id),
+            key: ValueKey('${session.currentIndex}_${question.id}'),
             format: format,
             onSubmit: controller.submitNumber,
           ),
@@ -198,6 +214,7 @@ class QuizScreen extends ConsumerWidget {
   }
 }
 
+/// Fortschrittsanzeige des Übungsmodus: "Aufgabe 5/20" plus Balken.
 class _PracticeProgress extends StatelessWidget {
   const _PracticeProgress({required this.session});
 
@@ -214,10 +231,9 @@ class _PracticeProgress extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Aufgabe ${session.currentIndex + 1} von '
-              '${session.questions.length}',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+              'Aufgabe ${session.currentNumber}/${session.totalQuestions}',
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
             Text(
@@ -239,6 +255,48 @@ class _PracticeProgress extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Fällt nur an, wenn ein Thema wider Erwarten keine Aufgaben liefert.
+class _EmptyPool extends StatelessWidget {
+  const _EmptyPool({required this.scopeLabel});
+
+  final String scopeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Übungsmodus')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.inbox_outlined,
+                size: 44,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(height: 14),
+              Text(
+                'Für "$scopeLabel" liegen derzeit keine Aufgaben vor.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge,
+              ),
+              const SizedBox(height: 18),
+              OutlinedButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Andere Auswahl treffen'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
