@@ -34,3 +34,7 @@ android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
 
 # macOS
 .DS_Store
+
+# Firebase-Konfiguration gehoert nicht ins Repository.
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

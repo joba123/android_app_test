@@ -1,6 +1,8 @@
 import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
+import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/screens/account_screen.dart';
 import 'package:einstellungstest_trainer/screens/module_screen.dart';
 import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
@@ -8,6 +10,7 @@ import 'package:einstellungstest_trainer/screens/sprint_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/stats_screen.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
+import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
 import 'package:einstellungstest_trainer/widgets/module_card.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:flutter/material.dart';
@@ -20,11 +23,22 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final stats = ref.watch(statsControllerProvider);
+    final examDate = ref.watch(examDateProvider);
+    final signedIn = ref.watch(authUserProvider).value != null;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Einstellungstest Trainer'),
         actions: [
+          IconButton(
+            tooltip: signedIn ? 'Konto' : 'Anmelden & Testtermin',
+            icon: Icon(
+              signedIn ? Icons.cloud_done_outlined : Icons.account_circle_outlined,
+            ),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const AccountScreen()),
+            ),
+          ),
           IconButton(
             tooltip: 'Statistik',
             icon: const Icon(Icons.insights_outlined),
@@ -53,6 +67,10 @@ class HomeScreen extends ConsumerWidget {
                 height: 1.45,
               ),
             ),
+            if (examDate != null) ...[
+              const SizedBox(height: 18),
+              _ExamCountdown(examDate: examDate),
+            ],
             const SizedBox(height: 20),
             Row(
               children: [
@@ -156,5 +174,74 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+}
+
+/// Countdown bis zum hinterlegten Testtermin.
+///
+/// Erscheint nur, wenn ein Termin gesetzt ist – ein leerer Platzhalter auf der
+/// Startseite waere nur Rauschen.
+class _ExamCountdown extends StatelessWidget {
+  const _ExamCountdown({required this.examDate});
+
+  final ExamDate examDate;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final now = DateTime.now();
+    final past = examDate.isPast(now);
+    final accent = past ? theme.colorScheme.outline : theme.colorScheme.primary;
+
+    return Material(
+      color: accent.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const AccountScreen()),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.event_available_outlined, color: accent),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      examDate.describe(now),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      [
+                        _formatDate(examDate.date),
+                        if (examDate.label != null) examDate.label!,
+                      ].join(' · '),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right, color: theme.colorScheme.outline),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  static String _formatDate(DateTime date) {
+    final day = date.day.toString().padLeft(2, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    return '$day.$month.${date.year}';
   }
 }

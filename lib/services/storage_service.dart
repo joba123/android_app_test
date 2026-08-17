@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/module_stats.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,6 +20,7 @@ class StorageService {
   static const String _statsKey = 'training_stats_v1';
   static const String _sprintBestsKey = 'sprint_bests_v1';
   static const String _sessionsKey = 'training_sessions_v1';
+  static const String _examDateKey = 'exam_date_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -116,9 +118,52 @@ class StorageService {
     return trimmed;
   }
 
+  // --- Testtermin ---
+
+  ExamDate? loadExamDate() {
+    final raw = _prefs.getString(_examDateKey);
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      return ExamDate.fromJson(decoded);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  Future<void> saveExamDate(ExamDate? examDate) async {
+    if (examDate == null) {
+      await _prefs.remove(_examDateKey);
+      return;
+    }
+    await _prefs.setString(_examDateKey, jsonEncode(examDate.toJson()));
+  }
+
   Future<void> resetStats() async {
     await _prefs.remove(_statsKey);
     await _prefs.remove(_sprintBestsKey);
     await _prefs.remove(_sessionsKey);
+  }
+
+  /// Räumt alles ab, was zu diesem Gerät gehört – auch den Testtermin.
+  /// Wird beim Löschen des Kontos verwendet.
+  Future<void> resetEverything() async {
+    await resetStats();
+    await _prefs.remove(_examDateKey);
+  }
+
+  /// Ersetzt die gespeicherten Sitzungen vollständig – nach einem Abgleich
+  /// mit der Cloud ist die zusammengeführte Liste maßgeblich.
+  Future<void> replaceSessions(List<TrainingSession> sessions) async {
+    final trimmed = sessions.length > maxStoredSessions
+        ? sessions.sublist(0, maxStoredSessions)
+        : sessions;
+
+    await _prefs.setString(
+      _sessionsKey,
+      jsonEncode([for (final entry in trimmed) entry.toJson()]),
+    );
   }
 }

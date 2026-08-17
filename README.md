@@ -136,7 +136,8 @@ einzelne Aufgabe mit gegebener Antwort, Musterlösung und Rechenweg.
 Zusätzlich gibt es einen Statistik-Screen mit Trefferquote, Sprint-Bestwerten
 und Rundenzahl je Modul sowie den zuletzt abgeschlossenen Sitzungen. Beides wird
 lokal auf dem Gerät gespeichert; der Verlauf ist auf die letzten 50 Sitzungen
-begrenzt.
+begrenzt. Wer sich anmeldet, bekommt denselben Stand zusätzlich in der Cloud –
+siehe [Konto und Cloud-Sync](#konto-und-cloud-sync).
 
 ## State-Management: Riverpod
 
@@ -162,7 +163,8 @@ klar weiter.
 
 ```
 lib/
-├── main.dart                  App-Start, lädt SharedPreferences vor
+├── main.dart                  App-Start, SharedPreferences + Firebase (optional)
+├── firebase_options.dart      Platzhalter, wird von flutterfire erzeugt
 ├── app.dart                   MaterialApp + Material-3-Theme
 ├── models/                    Datenmodelle (unveränderlich)
 │   ├── training_module.dart   Kategorien inkl. Farbe/Icon/Beschreibung
@@ -174,9 +176,11 @@ lib/
 │   ├── quiz_session.dart      Zustand für Übung & Sprint
 │   ├── simulation.dart        Testteile, Simulationszustand, Auswertung
 │   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
+│   ├── exam_date.dart         Hinterlegter Testtermin inkl. Countdown
 │   └── module_stats.dart      Persistierter Lernfortschritt
 ├── screens/                   UI-Screens
 │   ├── home_screen.dart       Schnellstart, Module, Gesamtsimulation
+│   ├── account_screen.dart    Anmeldung, Abgleich, Testtermin, Datenschutz
 │   ├── module_screen.dart     Modus-Auswahl innerhalb eines Moduls
 │   ├── practice_setup_screen.dart  Thema/Misch-Modus und Umfang wählen
 │   ├── sprint_setup_screen.dart    Aufgabentyp für den Sprint wählen
@@ -189,7 +193,17 @@ lib/
 │   ├── question_repository.dart  Ziehen und Mischen von Aufgaben
 │   ├── quiz_controller.dart   Übung & Sprint inkl. 60-Sek-Timer
 │   ├── simulation_controller.dart  Mehrteilige Simulation mit Teil-Timern
-│   └── storage_service.dart   Lokale Persistenz (SharedPreferences)
+│   ├── storage_service.dart   Lokale Persistenz (SharedPreferences)
+│   ├── auth/                  Anmeldung
+│   │   ├── auth_service.dart          Schnittstelle + lokaler Modus
+│   │   ├── firebase_auth_service.dart Google/Apple über Firebase Auth
+│   │   └── account_controller.dart    An-/Abmelden, Konto löschen
+│   └── sync/                  Cloud-Abgleich
+│       ├── cloud_models.dart          Cloud-Darstellung (Profil, Sitzung)
+│       ├── cloud_sync_service.dart    Schnittstelle + In-Memory-Ersatz
+│       ├── firestore_sync_service.dart Firestore-Anbindung
+│       ├── sync_merge.dart            Zusammenführen lokal ↔ Cloud
+│       └── sync_controller.dart       Ablauf, Zustand, Testtermin
 ├── widgets/                   Wiederverwendbare Bausteine
 │   ├── module_card.dart       Modul- und Modus-Kacheln
 │   ├── scope_selector.dart    Auswahlliste, geteilt von Übung und Sprint
@@ -244,6 +258,109 @@ Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
 beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
 zusätzlich einen Eintrag in `pubspec.yaml`.
 
+## Konto und Cloud-Sync
+
+Die App ist **ohne Konto vollständig nutzbar**. Fortschritt, Verlauf und
+Testtermin liegen dann ausschließlich auf dem Gerät. Eine Anmeldung mit Google
+oder Apple sichert denselben Stand zusätzlich in der Cloud und macht ihn auf
+weiteren Geräten verfügbar.
+
+Ist keine Firebase-Konfiguration hinterlegt, blendet die Oberfläche die
+Anmeldung aus, statt eine Schaltfläche anzubieten, die nur scheitern kann:
+`main()` versucht `Firebase.initializeApp()` und setzt bei einem Fehlschlag
+`firebaseReadyProvider` auf `false`. Genau dieser Zustand ist auch der
+Testmodus – die Tests laufen dadurch ohne Platform-Channels.
+
+### Struktur in Firestore
+
+```
+users/{uid}
+├── schemaVersion, updatedAt
+├── examDate, examLabel, examUpdatedAt      hinterlegter Testtermin
+├── progress: { math|logic|language: { answered, correct, sessions } }
+├── sprintBests: { "topic:arithmetic": 14, "module:math": 11, … }
+└── sessions/{sessionId}
+    ├── mode, moduleId, startedAt, finishedAt, durationMs
+    ├── total, answered, correct
+    └── bySubCategory: { arithmetic: { t, a, c, ms }, … }
+```
+
+Drei Entscheidungen prägen diese Struktur:
+
+**Sitzungen sind eine Unterkollektion, kein Array im Profil.** Ein
+Firestore-Dokument ist auf 1 MB begrenzt und wird bei jedem Schreiben komplett
+übertragen. Als Unterkollektion wächst der Verlauf unbegrenzt, und ein neuer
+Eintrag kostet genau einen kleinen Schreibvorgang.
+
+**Die Dokument-ID einer Sitzung ist ihre lokale Kennung.** Ein erneuter Upload
+derselben Sitzung überschreibt sie damit, statt eine Dublette anzulegen. Das ist
+die Grundlage der Idempotenz: Zweimaliges Anmelden kann den Fortschritt nicht
+verdoppeln.
+
+**In der Cloud liegen nur Summen je Thema, keine einzelnen Aufgaben.**
+Gesamtzahlen, Trefferquote, Zeiten und die Aufschlüsselung nach Thema kommen
+verlustfrei zurück – die Auswertung zeigt nichts anderes. Was bewusst nicht
+gespeichert wird, ist die Zuordnung zu einzelnen Aufgaben.
+
+### Zusammenführen
+
+`mergeForSync()` in `lib/services/sync/sync_merge.dart` ist der Kern. Leitsatz:
+**Die Sitzungen sind die Quelle der Wahrheit, die Zähler sind abgeleitet.**
+
+- Hochgeladen wird nur, was der Cloud fehlt (Vergleich über die Kennungen).
+- Die Zähler wachsen um genau diese Sitzungen – ein zweiter Abgleich findet
+  nichts Neues und ändert deshalb auch nichts.
+- Beim **ersten** Abgleich (noch kein Profil in der Cloud) werden die lokalen
+  Zähler unverändert übernommen: Der Verlauf ist auf 50 Einträge begrenzt, die
+  Zähler laufen dagegen über die gesamte Nutzungsdauer.
+- Sprint-Bestwerte: je Aufgabentyp gewinnt der höhere Wert.
+- Testtermin: die jüngere Änderung gewinnt (`examUpdatedAt`).
+
+### Datenschutz
+
+Gespeichert wird nur, was die Auswertung tatsächlich anzeigt. Es gibt **keine**
+E-Mail-Adresse und keinen Namen in der eigenen Datenbank – beides liegt bereits
+bei Firebase Auth, eine zweite Kopie wäre unnötige Datenhaltung. Ebenso keine
+Aufgabentexte, keine einzelnen Antworten, keine Geräte-Kennungen, kein
+Standort. Der Konto-Bildschirm nennt das im Klartext statt im Kleingedruckten.
+
+„Konto und Daten löschen“ setzt Art. 17 DSGVO um: erst die Firestore-Daten
+(inklusive Unterkollektion), dann das Konto beim Anbieter, dann die lokale
+Kopie. Die Reihenfolge ist load-bearing – nach dem Löschen des Kontos fehlt die
+Berechtigung für die eigenen Dokumente.
+
+Die Firestore-Datenbank muss in einer **EU-Region** angelegt werden
+(`eur3` oder `europe-west3`); die Region lässt sich nachträglich nicht ändern.
+Die Kontodaten selbst verwaltet Firebase Auth und verarbeitet sie auch außerhalb
+der EU – das steht so auch in der App.
+
+`firestore.rules` beschränkt den Zugriff auf das jeweils eigene Konto; alles
+außerhalb von `users/{uid}` ist gesperrt.
+
+### Firebase einrichten
+
+`lib/firebase_options.dart` ist im Repository ein Platzhalter, der bewusst
+wirft. Für einen echten Build:
+
+```bash
+dart pub global activate flutterfire_cli
+flutterfire configure --project <projekt-id>   # überschreibt firebase_options.dart
+firebase deploy --only firestore:rules
+```
+
+Zusätzlich nötig:
+
+- **Firestore** in einer EU-Region anlegen (siehe oben).
+- **Google Sign-In:** die SHA-1- und SHA-256-Fingerprints des Signaturschlüssels
+  in der Firebase-Konsole hinterlegen, sonst schlägt die Anmeldung auf dem Gerät
+  fehl (`flutter build apk` nutzt vorerst den Debug-Key).
+- **Apple Sign-In:** erfordert ein Apple-Developer-Konto und ist auf Android nur
+  als Web-Flow verfügbar. Für den Android-Build muss in der Firebase-Konsole der
+  Apple-Anbieter mit Service-ID und Redirect-URL konfiguriert sein.
+- `google-services.json` gehört **nicht** ins Repository.
+
+Ohne diese Schritte bleibt alles lauffähig – die App startet im lokalen Modus.
+
 ## Einrichtung
 
 Vorausgesetzt wird Flutter **3.27 oder neuer** (wegen `Color.withValues` und der
@@ -274,7 +391,10 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 198 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 228 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Der Android-Build gelingt auch **ohne** `google-services.json`: Das
+google-services-Gradle-Plugin wird nicht angewandt, die Konfiguration kommt aus
+Dart.
 Der Release-Build ist vorerst mit dem Debug-Key signiert, damit er ohne weitere
 Einrichtung durchläuft – vor einer Veröffentlichung muss in
 `android/app/build.gradle` ein echter Release-Keystore hinterlegt werden.
@@ -300,10 +420,18 @@ Die Tests decken ab:
   für jede Simulation
 - **Ablauf** – beide Quiz-Modi, der mehrteilige Simulationsablauf mit
   Zeitablauf und Auswertung, Persistenz von Fortschritt und Verlauf
+- **Cloud-Abgleich** – Idempotenz (ein zweiter Abgleich lädt nichts hoch und
+  verdoppelt den Fortschritt nicht), erster Abgleich gegen eine leere Cloud,
+  Herunterladen auf ein frisch installiertes Gerät, Kappen des Verlaufs,
+  Sprint-Bestwerte, Testtermin nach jüngster Änderung, verlustfreier
+  Cloud-Zyklus einer Sitzung
+- **Konto** – Anmelden mit sofortigem Abgleich, abgebrochene Anmeldung ohne
+  Fehlermeldung, Abmelden ohne Datenverlust, Löschen von Cloud, Konto und
+  Gerät, sowie der lokale Modus ohne Firebase
 - **Oberfläche** – Navigation, Auswahl von Übungsumfang und Sprint-Aufgabentyp,
   Fortschrittsanzeige, sofortige Rückmeldung mit Erklärung, Sprint ohne
   Erklärung bis zum Zeitablauf, Auswertung mit Fehlerquote und Zeiten,
-  Zahleneingabefeld inklusive Fehlerfall
+  Zahleneingabefeld inklusive Fehlerfall, Konto-Bildschirm und Testtermin
 
 ## Stand und nächste Schritte
 
@@ -330,5 +458,8 @@ Naheliegende nächste Schritte:
 - Auswertung über mehrere Sitzungen hinweg (Verlaufskurven je Unterkategorie) –
   die Daten dafür liegen bereits in `TrainingSession`, ab einer größeren
   Historie lohnt der Wechsel von SharedPreferences auf eine lokale Datenbank
-- Auth/Sync, falls der Fortschritt geräteübergreifend verfügbar sein soll
-  (`lib/services/` ist dafür der vorgesehene Ort)
+- Firebase-Projekt anlegen und `firebase_options.dart` erzeugen – die
+  Anmeldung ist fertig verdrahtet und wartet nur auf die Konfiguration
+- Abgleich im Hintergrund anstoßen (nach jeder Sitzung, nicht nur beim
+  Anmelden und auf Knopfdruck)
+- Erinnerung vor dem hinterlegten Testtermin (lokale Benachrichtigung)

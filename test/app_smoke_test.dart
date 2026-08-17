@@ -418,6 +418,60 @@ void main() {
     });
   });
 
+  group('Konto & Sicherung', () {
+    /// Startseite → Konto.
+    Future<void> openAccount(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.account_circle_outlined));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('erklärt den lokalen Modus, solange niemand angemeldet ist',
+        (tester) async {
+      await pumpApp(tester);
+      await openAccount(tester);
+
+      expect(find.text('Konto & Sicherung'), findsOneWidget);
+      expect(find.text('Lokaler Modus'), findsOneWidget);
+      // Ohne Firebase-Konfiguration wird gar keine Anmeldung angeboten.
+      expect(find.text('Mit Google anmelden'), findsNothing);
+      expect(
+        find.textContaining('kein Firebase-Projekt'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('nennt im Klartext, was gespeichert wird und was nicht',
+        (tester) async {
+      await pumpApp(tester);
+      await openAccount(tester);
+
+      expect(find.text('Mit Konto wird gespeichert'), findsOneWidget);
+      expect(find.text('Nicht gespeichert'), findsOneWidget);
+      expect(find.textContaining('EU-Region'), findsOneWidget);
+    });
+
+    testWidgets('der gesetzte Testtermin erscheint auf der Startseite',
+        (tester) async {
+      await pumpApp(tester);
+      await openAccount(tester);
+
+      expect(find.text('Noch kein Termin hinterlegt.'), findsOneWidget);
+
+      await tester.tap(find.text('Termin setzen'));
+      await tester.pumpAndSettle();
+      // Der Kalender steht auf "in 30 Tagen" – bestaetigen genuegt.
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Noch 30 Tage'), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Noch 30 Tage'), findsOneWidget);
+    });
+  });
+
   group('Eingabefeld für Zahlen', () {
     Future<void> pumpField(
       WidgetTester tester, {
