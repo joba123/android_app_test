@@ -14,6 +14,7 @@ import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/module_card.dart';
+import 'package:einstellungstest_trainer/widgets/review_card.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,7 +71,9 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: 18),
               _ExamCountdown(examDate: examDate),
             ],
-            const SizedBox(height: 20),
+            const SizedBox(height: 18),
+            const ReviewCard(),
+            const SizedBox(height: 2),
             Row(
               children: [
                 Expanded(

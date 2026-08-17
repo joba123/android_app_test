@@ -11,6 +11,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # Deutsche Beschriftungen in den Material-Dialogen (Datums- und
+  # Uhrzeitauswahl). Ohne das faellt Flutter auf Englisch zurueck.
+  flutter_localizations:
+    sdk: flutter
   flutter_riverpod: ^2.6.1
   shared_preferences: ^2.3.3
 

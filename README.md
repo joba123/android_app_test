@@ -180,6 +180,7 @@ lib/
 │   ├── simulation.dart        Testteile, Simulationszustand, Auswertung
 │   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
 │   ├── exam_date.dart         Hinterlegter Testtermin inkl. Countdown
+│   ├── review_book.dart       Fehler-Gedaechtnis und Themenstaerke
 │   ├── pro_entitlement.dart   Tarife, Berechtigung, Pro-Leistungen
 │   ├── ad_frequency.dart      Taktung der Unterbrecher-Werbung
 │   ├── reminder_settings.dart Erinnerungen: Einstellungen + Terminberechnung
@@ -228,6 +229,7 @@ lib/
 │       └── sync_controller.dart       Ablauf, Zustand, Testtermin
 ├── widgets/                   Wiederverwendbare Bausteine
 │   ├── module_card.dart       Modul- und Modus-Kacheln
+│   ├── review_card.dart       Einstieg in die Fehler-Wiederholung
 │   ├── scope_selector.dart    Auswahlliste, geteilt von Übung und Sprint
 │   ├── question_card.dart     Aufgabenkarte + Erklärungsbox
 │   ├── answer_option_tile.dart  Antwortoption mit Zustandsfarben
@@ -280,6 +282,58 @@ ist er gesetzt, zeigt die `QuestionCard` das Bild über dem Aufgabentext. Für d
 Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
 beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
 zusätzlich einen Eintrag in `pubspec.yaml`.
+
+## Fehler-Wiederholung
+
+Eine Trainings-App, die immer nur zufällig zieht, lässt den größten Hebel
+liegen: Wer eine Aufgabe dreimal falsch hatte, soll sie öfter sehen als eine,
+die er immer kann. `lib/models/review_book.dart` hält dafür fest, was
+schiefging – und die Startseite bietet daraus eine Runde an.
+
+### Zwei Ebenen, weil es zwei Aufgabenquellen gibt
+
+**Einzelne Aufgaben** (`QuestionMemory`) für den statischen Bestand aus Logik
+und Sprache. Dort kehrt dieselbe Aufgabe wieder, also lohnt es, sie zu merken.
+Nach jeder richtigen Antwort wächst der Abstand – 1, 3, 7, 16 Tage –, ein
+Fehler setzt den Fortschritt auf null und macht sie sofort wieder fällig. Nach
+vier richtigen Antworten in Folge gilt sie als gekonnt und verschwindet.
+
+Die Intervalle sind bewusst kurz. Wer sich auf einen Test in vier Wochen
+vorbereitet, hat von einem Abstand über sechs Monate nichts.
+
+**Aufgabentypen** (`TopicMastery`) für alle Module, auch Mathematik. Dort wird
+jede Aufgabe erzeugt und existiert kein zweites Mal – die Kennung zu merken
+brächte nichts. Stattdessen wird die Trefferquote je Thema beobachtet: Wer bei
+Dreisatz bei 45 % liegt, bekommt mehr Dreisatz-Aufgaben, mit neuen Zahlen.
+
+Zwei Schutzregeln stecken darin:
+
+- **Übersprungene Aufgaben zählen nicht.** Wer nicht geantwortet hat, hat
+  weder Können noch Nichtkönnen gezeigt.
+- **Unter acht Antworten gibt es kein Urteil.** Zwei Fehlversuche machen noch
+  keine Schwäche. Erst darüber gilt ein Thema unter 70 % als Schwachstelle.
+
+### Wie eine Wiederholungsrunde entsteht
+
+`QuestionRepository.drawReview()` füllt die Runde in dieser Reihenfolge:
+
+1. **Fällige Einzelaufgaben**, dringendste zuerst – was oft falsch war und
+   lange liegt.
+2. **Schwache Themen**, aufgefüllt mit frisch gezogenen Aufgaben. Gibt es
+   mehrere Schwachstellen, wird verteilt statt die größte auszureizen.
+
+Ist noch nichts bekannt, kommt eine gemischte Runde zurück – eine leere Runde
+wäre die schlechtere Antwort.
+
+Der Umfang ist ein eigener `PracticeScope.review()`. Dadurch läuft die Runde
+durch denselben Übungs-Screen wie jede andere, mit sofortiger Rückmeldung und
+Rechenweg.
+
+### Auf der Startseite
+
+Die Karte „Deine Fehler wiederholen" erscheint **nur, wenn es etwas zu tun
+gibt**, und nennt konkret was: „7 Aufgaben stehen an · Dreisatz liegt bei
+45 %". Wer noch nie geübt hat, wird nicht auf seine Fehler hingewiesen.
 
 ## Monetarisierung
 
@@ -599,6 +653,10 @@ Ohne diese Schritte bleibt alles lauffähig – die App startet im lokalen Modus
 
 ## Einrichtung
 
+Die App ist durchgaengig deutsch: `flutter_localizations` ist eingebunden und
+die Locale fest auf `de` gesetzt, damit auch die Material-Dialoge (Datums- und
+Uhrzeitauswahl) deutsche Beschriftungen und Monatsnamen zeigen.
+
 Vorausgesetzt wird Flutter **3.27 oder neuer** (wegen `Color.withValues` und der
 Material-3-Surface-Rollen) mit JDK 17.
 
@@ -630,7 +688,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 317 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 354 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Android-Build gelingt auch **ohne** `google-services.json`: Das
 google-services-Gradle-Plugin wird nicht angewandt, die Konfiguration kommt aus
 Dart.
@@ -667,6 +725,11 @@ Die Tests decken ab:
 - **Konto** – Anmelden mit sofortigem Abgleich, abgebrochene Anmeldung ohne
   Fehlermeldung, Abmelden ohne Datenverlust, Löschen von Cloud, Konto und
   Gerät, sowie der lokale Modus ohne Firebase
+- **Fehler-Wiederholung** – wachsende Abstaende und Ruecksetzen bei einem
+  Fehler, gekonnte Aufgaben verschwinden, uebersprungene zaehlen nicht,
+  generierte Mathe-Aufgaben landen nur auf der Themen-Ebene, Schwachstellen
+  erst ab genug Daten, Ziehen aus faelligen Aufgaben und schwachen Themen,
+  Fortschreiben ueber Neustarts hinweg
 - **Monetarisierung** – Berechtigung (Einmalkauf ohne Ablauf, Abo mit Ablauf,
   abgelaufenes Abo gilt beim Start nicht mehr), Kauf/Abbruch/Fehlschlag/
   Wiederherstellung, Werbung endet mit dem Kauf sofort, Taktung der
@@ -707,8 +770,6 @@ Naheliegende nächste Schritte:
   RevenueCat wechseln, falls die Abo-Verwaltung zum Problem wird
   (`PurchaseService` ist dafür die einzige zu ersetzende Datei)
 - Branchen-Profile als Filter über die bestehenden Module legen
-- Rückfrage beim Verlassen einer laufenden Runde über die Android-Zurück-Taste
-  (`PopScope`)
 - Auswertung über mehrere Sitzungen hinweg (Verlaufskurven je Unterkategorie) –
   die Daten dafür liegen bereits in `TrainingSession`, ab einer größeren
   Historie lohnt der Wechsel von SharedPreferences auf eine lokale Datenbank

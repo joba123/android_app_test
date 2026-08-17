@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.einstellungstest_trainer"
+    namespace = "com.einstellungstest.jojoo"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -22,7 +22,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.einstellungstest_trainer"
+        applicationId = "com.einstellungstest.jojoo"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

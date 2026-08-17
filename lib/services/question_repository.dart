@@ -4,6 +4,7 @@ import 'package:einstellungstest_trainer/data/generators/math_question_factory.d
 import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/review_book.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
@@ -102,7 +103,12 @@ class QuestionRepository {
     PracticeScope scope, {
     int count = practiceLength,
     Difficulty? difficulty,
+    ReviewBook? reviewBook,
   }) {
+    if (scope.isReview) {
+      return drawReview(reviewBook ?? const ReviewBook.empty(), count: count);
+    }
+
     final module = scope.module;
     if (module == null) {
       return drawMixed(count: count, difficulty: difficulty);
@@ -114,6 +120,73 @@ class QuestionRepository {
       subCategories: scope.subCategories,
       difficulty: difficulty,
     );
+  }
+
+  /// Wiederholung: die eigenen Fehler, nicht der Zufall.
+  ///
+  /// Zwei Quellen, in dieser Reihenfolge:
+  ///
+  /// 1. **Fällige Einzelaufgaben** aus dem statischen Bestand – dringendste
+  ///    zuerst, also was oft falsch war und lange liegt.
+  /// 2. **Schwache Themen**, aufgefüllt mit frisch gezogenen Aufgaben. Nur so
+  ///    kommt auch Mathematik vor: Dort gibt es die alte Aufgabe nicht mehr,
+  ///    wohl aber beliebig viele neue desselben Typs.
+  ///
+  /// Bleibt danach Platz, wird mit den schwächsten Themen weiter aufgefüllt.
+  /// Ist gar nichts bekannt, kommt eine gemischte Runde zurück – eine leere
+  /// Runde waere die schlechtere Antwort.
+  List<Question> drawReview(
+    ReviewBook book, {
+    int count = practiceLength,
+  }) {
+    if (count <= 0) return const [];
+
+    final byId = {
+      for (final question in QuestionPool.pool(proUnlocked: proUnlocked))
+        question.id: question,
+    };
+
+    final questions = <Question>[];
+    final usedIds = <String>{};
+
+    // 1. Fällige Einzelaufgaben.
+    for (final memory in book.dueMemories(DateTime.now())) {
+      if (questions.length >= count) break;
+
+      final question = byId[memory.questionId];
+      // Eine Aufgabe kann inzwischen entfernt oder hinter Pro gewandert sein.
+      if (question == null || !usedIds.add(question.id)) continue;
+
+      questions.add(_shuffleOptions(question));
+    }
+
+    // 2. Schwache Themen auffüllen.
+    final weak = book.weakTopics();
+    for (final topic in weak) {
+      if (questions.length >= count) break;
+
+      final remaining = count - questions.length;
+      // Nicht alles auf ein Thema setzen, solange weitere Schwachstellen
+      // warten: Die Runde soll die Schwächen abbilden, nicht nur die groesste.
+      final share = weak.length == 1
+          ? remaining
+          : (remaining / weak.length).ceil().clamp(1, remaining);
+
+      for (final question in draw(
+        module: topic.module,
+        count: share,
+        subCategories: [topic.subCategory],
+      )) {
+        if (questions.length >= count) break;
+        if (!usedIds.add(question.id)) continue;
+
+        questions.add(question);
+      }
+    }
+
+    if (questions.isEmpty) return drawMixed(count: count);
+
+    return questions..shuffle(_random);
   }
 
   /// Misch-Modus: Aufgaben aus allen Modulen, möglichst gleichmäßig verteilt

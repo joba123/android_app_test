@@ -50,6 +50,8 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
             arg.scope,
             count: arg.length,
             difficulty: arg.difficulty,
+            // Nur fuer den Wiederholungs-Umfang relevant; sonst ignoriert.
+            reviewBook: ref.read(reviewBookProvider),
           );
 
     ref.onDispose(() => _timer?.cancel());

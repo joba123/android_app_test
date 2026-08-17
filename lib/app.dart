@@ -4,6 +4,7 @@ import 'package:einstellungstest_trainer/screens/home_screen.dart';
 import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class EinstellungstestTrainerApp extends ConsumerStatefulWidget {
@@ -39,6 +40,12 @@ class _EinstellungstestTrainerAppState
     return MaterialApp(
       title: 'Einstellungstest Trainer',
       debugShowCheckedModeBanner: false,
+      // Die App ist durchgaengig deutsch. Ohne diese Angaben zeigen die
+      // Material-Dialoge - vor allem Datums- und Uhrzeitauswahl - englische
+      // Beschriftungen und Monatsnamen.
+      locale: const Locale('de'),
+      supportedLocales: const [Locale('de')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
       home: const HomeScreen(),

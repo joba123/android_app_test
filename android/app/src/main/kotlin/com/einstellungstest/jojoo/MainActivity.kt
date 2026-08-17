@@ -1,4 +1,4 @@
-package com.example.einstellungstest_trainer
+package com.einstellungstest.jojoo
 
 import io.flutter.embedding.android.FlutterActivity
 

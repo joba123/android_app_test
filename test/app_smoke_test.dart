@@ -41,6 +41,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Zurück-Navigation über die AppBar.
+  ///
+  /// `tester.pageBack()` sucht nach dem Tooltip „Back" – seit die App
+  /// deutsch lokalisiert ist, heißt der „Zurück". Deshalb hier über den
+  /// Widget-Typ statt über den Text.
+  Future<void> goBack(WidgetTester tester) async {
+    await tester.tap(find.byType(BackButton).first);
+    await tester.pumpAndSettle();
+  }
+
   /// Startseite → Übungsmodus → Auswahlbildschirm.
   Future<void> openPracticeSetup(WidgetTester tester) async {
     await tester.tap(find.text('Übungsmodus'));
@@ -482,8 +492,7 @@ void main() {
 
       expect(find.text('Noch 30 Tage'), findsOneWidget);
 
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+      await goBack(tester);
 
       expect(find.text('Noch 30 Tage'), findsOneWidget);
     });
@@ -591,6 +600,93 @@ void main() {
     });
   });
 
+  group('Fehler-Wiederholung', () {
+    testWidgets('bleibt verborgen, solange nichts falsch war', (tester) async {
+      await pumpApp(tester);
+
+      expect(find.text('Deine Fehler wiederholen'), findsNothing);
+    });
+
+    testWidgets('erscheint nach einer falsch beantworteten Runde',
+        (tester) async {
+      await pumpApp(tester);
+      await openPracticeSetup(tester);
+
+      // Zahlenreihen sind Auswahlaufgaben – "A" ist meist falsch.
+      await tester.tap(find.text('Zahlenreihen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('10 Aufgaben'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Übung starten'));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 10; i++) {
+        await tester.tap(find.text('A'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(i == 9 ? 'Auswertung' : 'Weiter'));
+        await tester.pumpAndSettle();
+      }
+
+      // Der Auswertungs-Screen hat keinen Zurueck-Pfeil, sondern einen
+      // eigenen Knopf; danach vom Auswahlbildschirm zur Startseite.
+      await tester.tap(find.text('Zurück zur Auswahl'));
+      await tester.pumpAndSettle();
+      await goBack(tester);
+
+      expect(find.text('Deine Fehler wiederholen'), findsOneWidget);
+      expect(find.textContaining('stehen an'), findsOneWidget);
+    });
+
+    testWidgets('startet eine Runde aus den eigenen Fehlern', (tester) async {
+      await pumpApp(tester);
+      await openPracticeSetup(tester);
+
+      await tester.tap(find.text('Zahlenreihen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('10 Aufgaben'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Übung starten'));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < 10; i++) {
+        await tester.tap(find.text('A'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text(i == 9 ? 'Auswertung' : 'Weiter'));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.text('Zurück zur Auswahl'));
+      await tester.pumpAndSettle();
+      await goBack(tester);
+
+      await tester.tap(find.text('Deine Fehler wiederholen'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Deine Fehler'), findsWidgets);
+      // Bewusst ohne feste Aufgabenzahl: Wie viele Aufgaben anstehen, haengt
+      // davon ab, wie viele der zufaellig angeordneten Optionen zufaellig
+      // richtig waren. Der Prueferpunkt ist, dass die Runde ueberhaupt aus
+      // dem Fehlerbestand startet.
+      expect(find.textContaining('Aufgabe 1/'), findsOneWidget);
+    });
+  });
+
+  group('Deutsche Beschriftungen', () {
+    testWidgets('die Datumsauswahl ist auf Deutsch', (tester) async {
+      await pumpApp(tester);
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Termin setzen'));
+      await tester.pumpAndSettle();
+
+      // Ohne flutter_localizations stuende hier "Cancel" statt "Abbrechen"
+      // und "SELECT DATE" statt "Datum auswählen". ("OK" heisst in beiden
+      // Sprachen OK und taugt deshalb nicht als Beleg.)
+      expect(find.text('Abbrechen'), findsOneWidget);
+      expect(find.text('Cancel'), findsNothing);
+    });
+  });
+
   group('Pro', () {
     late InMemoryPurchaseService store;
 
@@ -654,8 +750,7 @@ void main() {
 
       expect(find.text('Pro ist aktiv'), findsOneWidget);
 
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+      await goBack(tester);
 
       expect(find.text('Pro: mehr Aufgaben, keine Werbung'), findsNothing);
     });
@@ -676,8 +771,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Einmalkauf'));
       await tester.pumpAndSettle();
-      await tester.pageBack();
-      await tester.pumpAndSettle();
+      await goBack(tester);
 
       expect(find.widgetWithText(ChoiceChip, 'Schwer'), findsOneWidget);
       expect(find.text('Pro ansehen'), findsNothing);

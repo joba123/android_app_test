@@ -1,5 +1,6 @@
 import 'package:einstellungstest_trainer/models/module_stats.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
+import 'package:einstellungstest_trainer/models/review_book.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
@@ -18,6 +19,35 @@ final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
 
 final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService(ref.watch(sharedPreferencesProvider));
+});
+
+/// Was die App über die eigenen Schwachstellen weiß.
+///
+/// Wird bei jeder abgeschlossenen Sitzung fortgeschrieben – siehe
+/// [StatsController.record].
+class ReviewController extends Notifier<ReviewBook> {
+  @override
+  ReviewBook build() => ref.watch(storageServiceProvider).loadReviewBook();
+
+  Future<void> apply(TrainingSession session) async {
+    final updated = state.applySession(session);
+
+    state = updated;
+    await ref.read(storageServiceProvider).saveReviewBook(updated);
+  }
+
+  Future<void> reset() async {
+    state = const ReviewBook.empty();
+    await ref.read(storageServiceProvider).saveReviewBook(state);
+  }
+}
+
+final reviewBookProvider =
+    NotifierProvider<ReviewController, ReviewBook>(ReviewController.new);
+
+/// Wie viele Aufgaben gerade zur Wiederholung anstehen.
+final dueReviewCountProvider = Provider<int>((ref) {
+  return ref.watch(reviewBookProvider).dueCount(DateTime.now());
 });
 
 /// Zieht Aufgaben – mit oder ohne Pro-Bestand.
@@ -92,11 +122,15 @@ class StatsController extends Notifier<TrainingStats> {
     state = updated;
     await ref.read(storageServiceProvider).saveStats(updated);
     await ref.read(sessionHistoryProvider.notifier).add(session);
+    // Fehler und Themenstaerke fortschreiben – die Grundlage fuer die
+    // Wiederholung und den Schwachstellen-Hinweis auf der Startseite.
+    await ref.read(reviewBookProvider.notifier).apply(session);
   }
 
   Future<void> reset() async {
     state = TrainingStats.empty();
     ref.read(sessionHistoryProvider.notifier).clear();
+    await ref.read(reviewBookProvider.notifier).reset();
     await ref.read(storageServiceProvider).resetStats();
   }
 }

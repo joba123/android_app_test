@@ -5,6 +5,7 @@ import 'package:einstellungstest_trainer/models/ad_frequency.dart';
 import 'package:einstellungstest_trainer/models/module_stats.dart';
 import 'package:einstellungstest_trainer/models/pro_entitlement.dart';
 import 'package:einstellungstest_trainer/models/reminder_settings.dart';
+import 'package:einstellungstest_trainer/models/review_book.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,6 +28,7 @@ class StorageService {
   static const String _reminderSettingsKey = 'reminder_settings_v1';
   static const String _entitlementKey = 'pro_entitlement_v1';
   static const String _adFrequencyKey = 'ad_frequency_v1';
+  static const String _reviewBookKey = 'review_book_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -218,10 +220,30 @@ class StorageService {
     await _prefs.setString(_adFrequencyKey, jsonEncode(state.toJson()));
   }
 
+  // --- Wiederholung ---
+
+  ReviewBook loadReviewBook() {
+    final raw = _prefs.getString(_reviewBookKey);
+    if (raw == null || raw.isEmpty) return const ReviewBook.empty();
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return const ReviewBook.empty();
+      return ReviewBook.fromJson(decoded);
+    } on FormatException {
+      return const ReviewBook.empty();
+    }
+  }
+
+  Future<void> saveReviewBook(ReviewBook book) async {
+    await _prefs.setString(_reviewBookKey, jsonEncode(book.toJson()));
+  }
+
   Future<void> resetStats() async {
     await _prefs.remove(_statsKey);
     await _prefs.remove(_sprintBestsKey);
     await _prefs.remove(_sessionsKey);
+    await _prefs.remove(_reviewBookKey);
   }
 
   /// Räumt alles ab, was zu diesem Gerät gehört – auch den Testtermin.

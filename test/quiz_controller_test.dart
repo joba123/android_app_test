@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/models/review_book.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
@@ -34,6 +35,7 @@ class _FixedRepository extends QuestionRepository {
     PracticeScope scope, {
     int count = QuestionRepository.practiceLength,
     Difficulty? difficulty,
+    ReviewBook? reviewBook,
   }) =>
       questions;
 
