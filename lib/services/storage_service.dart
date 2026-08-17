@@ -1,7 +1,9 @@
 import 'dart:convert';
 
 import 'package:einstellungstest_trainer/models/exam_date.dart';
+import 'package:einstellungstest_trainer/models/ad_frequency.dart';
 import 'package:einstellungstest_trainer/models/module_stats.dart';
+import 'package:einstellungstest_trainer/models/pro_entitlement.dart';
 import 'package:einstellungstest_trainer/models/reminder_settings.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -23,6 +25,8 @@ class StorageService {
   static const String _sessionsKey = 'training_sessions_v1';
   static const String _examDateKey = 'exam_date_v1';
   static const String _reminderSettingsKey = 'reminder_settings_v1';
+  static const String _entitlementKey = 'pro_entitlement_v1';
+  static const String _adFrequencyKey = 'ad_frequency_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -107,11 +111,15 @@ class StorageService {
   }
 
   /// Stellt eine abgeschlossene Sitzung an den Anfang des Verlaufs.
-  Future<List<TrainingSession>> appendSession(TrainingSession session) async {
+  ///
+  /// [limit] kommt von aussen, weil Pro einen laengeren Verlauf bekommt.
+  Future<List<TrainingSession>> appendSession(
+    TrainingSession session, {
+    int limit = maxStoredSessions,
+  }) async {
     final sessions = [session, ...loadSessions()];
-    final trimmed = sessions.length > maxStoredSessions
-        ? sessions.sublist(0, maxStoredSessions)
-        : sessions;
+    final trimmed =
+        sessions.length > limit ? sessions.sublist(0, limit) : sessions;
 
     await _prefs.setString(
       _sessionsKey,
@@ -165,6 +173,51 @@ class StorageService {
     );
   }
 
+  // --- Pro-Berechtigung ---
+
+  ProEntitlement? loadEntitlement() {
+    final raw = _prefs.getString(_entitlementKey);
+    if (raw == null || raw.isEmpty) return null;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return null;
+      return ProEntitlement.fromJson(decoded);
+    } on FormatException {
+      return null;
+    }
+  }
+
+  /// Die lokale Kopie ist nur ein Zwischenspeicher, damit die App offline
+  /// und ohne Verzoegerung weiss, was freigeschaltet ist. Massgeblich bleibt
+  /// der Store; ein Abgleich ueberschreibt diesen Wert.
+  Future<void> saveEntitlement(ProEntitlement? entitlement) async {
+    if (entitlement == null) {
+      await _prefs.remove(_entitlementKey);
+      return;
+    }
+    await _prefs.setString(_entitlementKey, jsonEncode(entitlement.toJson()));
+  }
+
+  // --- Anzeigen-Taktung ---
+
+  AdFrequencyState loadAdFrequency() {
+    final raw = _prefs.getString(_adFrequencyKey);
+    if (raw == null || raw.isEmpty) return const AdFrequencyState();
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return const AdFrequencyState();
+      return AdFrequencyState.fromJson(decoded);
+    } on FormatException {
+      return const AdFrequencyState();
+    }
+  }
+
+  Future<void> saveAdFrequency(AdFrequencyState state) async {
+    await _prefs.setString(_adFrequencyKey, jsonEncode(state.toJson()));
+  }
+
   Future<void> resetStats() async {
     await _prefs.remove(_statsKey);
     await _prefs.remove(_sprintBestsKey);
@@ -177,14 +230,20 @@ class StorageService {
     await resetStats();
     await _prefs.remove(_examDateKey);
     await _prefs.remove(_reminderSettingsKey);
+    await _prefs.remove(_adFrequencyKey);
+    // Die Pro-Berechtigung bleibt bewusst stehen: Sie haengt am Store-Konto,
+    // nicht an den Lerndaten. Wer sein Konto loescht, verliert nicht, wofuer
+    // er bezahlt hat.
   }
 
   /// Ersetzt die gespeicherten Sitzungen vollständig – nach einem Abgleich
   /// mit der Cloud ist die zusammengeführte Liste maßgeblich.
-  Future<void> replaceSessions(List<TrainingSession> sessions) async {
-    final trimmed = sessions.length > maxStoredSessions
-        ? sessions.sublist(0, maxStoredSessions)
-        : sessions;
+  Future<void> replaceSessions(
+    List<TrainingSession> sessions, {
+    int limit = maxStoredSessions,
+  }) async {
+    final trimmed =
+        sessions.length > limit ? sessions.sublist(0, limit) : sessions;
 
     await _prefs.setString(
       _sessionsKey,

@@ -22,12 +22,22 @@ import 'package:einstellungstest_trainer/models/training_module.dart';
 /// [random] lässt sich in Tests mit einem festen Seed überschreiben; der Seed
 /// wird an die Generatoren durchgereicht.
 class QuestionRepository {
-  QuestionRepository({Random? random, MathQuestionFactory? mathFactory})
-      : _random = random ?? Random(),
+  QuestionRepository({
+    Random? random,
+    MathQuestionFactory? mathFactory,
+    this.proUnlocked = false,
+  })  : _random = random ?? Random(),
         _math = mathFactory ?? MathQuestionFactory(random: random);
 
   final Random _random;
   final MathQuestionFactory _math;
+
+  /// Ob der Pro-Aufgabenbestand mitgezogen wird.
+  ///
+  /// Sitzt am Repository und nicht an den Aufrufstellen: So kann kein Screen
+  /// vergessen, die Freischaltung zu beruecksichtigen. Mathematik ist davon
+  /// unberuehrt – generierte Aufgaben gibt es ohnehin unbegrenzt.
+  final bool proUnlocked;
 
   /// Standardumfang einer Übungsrunde.
   static const int practiceLength = 10;
@@ -50,10 +60,38 @@ class QuestionRepository {
       );
     }
 
-    final pool = QuestionPool.forSubCategories(module, subCategories)
-      ..shuffle(_random);
+    final pool = _filterByDifficulty(
+      QuestionPool.forSubCategories(
+        module,
+        subCategories,
+        proUnlocked: proUnlocked,
+      ),
+      difficulty,
+    )..shuffle(_random);
+
     final take = count < pool.length ? count : pool.length;
     return [for (final question in pool.take(take)) _shuffleOptions(question)];
+  }
+
+  /// Schränkt einen statischen Bestand auf eine Schwierigkeit ein.
+  ///
+  /// Gibt der Bestand die gewünschte Stufe kaum her, wird die Einschränkung
+  /// fallen gelassen: Eine Runde aus drei Aufgaben wäre nutzloser als eine
+  /// gemischte. Bei generierten Aufgaben stellt sich die Frage nicht – dort
+  /// entsteht jede Stufe in beliebiger Menge.
+  static const int _minimumFilteredPool = 5;
+
+  List<Question> _filterByDifficulty(
+    List<Question> pool,
+    Difficulty? difficulty,
+  ) {
+    if (difficulty == null) return pool;
+
+    final filtered = pool
+        .where((question) => question.difficulty == difficulty)
+        .toList();
+
+    return filtered.length >= _minimumFilteredPool ? filtered : pool;
   }
 
   /// Übungsmodus: begrenzte Runde ohne Zeitdruck.
@@ -123,7 +161,11 @@ class QuestionRepository {
       );
     }
 
-    final pool = QuestionPool.forSubCategories(module, scope.subCategories);
+    final pool = QuestionPool.forSubCategories(
+      module,
+      scope.subCategories,
+      proUnlocked: proUnlocked,
+    );
     if (pool.isEmpty) return const [];
 
     final queue = <Question>[];

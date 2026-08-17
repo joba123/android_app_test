@@ -5,6 +5,7 @@ import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
+import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,7 +13,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///
 /// [length] gilt nur für den Übungsmodus – im Sprint bestimmt die Zeit das
 /// Ende der Runde, nicht die Aufgabenzahl.
-typedef QuizConfig = ({SessionMode mode, PracticeScope scope, int length});
+typedef QuizConfig = ({
+  SessionMode mode,
+  PracticeScope scope,
+  int length,
+
+  /// `null` heisst gemischt – so lief es bisher und so bleibt es ohne Pro.
+  Difficulty? difficulty,
+});
 
 /// Steuert Übungs- und Sprint-Runden.
 ///
@@ -38,7 +46,11 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
 
     final questions = isSprint
         ? repository.drawSprintQueue(arg.scope)
-        : repository.drawForScope(arg.scope, count: arg.length);
+        : repository.drawForScope(
+            arg.scope,
+            count: arg.length,
+            difficulty: arg.difficulty,
+          );
 
     ref.onDispose(() => _timer?.cancel());
 
@@ -51,7 +63,12 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
 
     final now = DateTime.now();
     _questionStartedAt = now;
-    if (isSprint) _startTimer();
+    if (isSprint) {
+      _startTimer();
+      // Waehrend der 60 Sekunden vorladen, damit die Anzeige - wenn sie denn
+      // ueberhaupt drankommt - nicht als Wartezeit erscheint.
+      ref.read(adControllerProvider.notifier).preload();
+    }
 
     return QuizSession(
       mode: arg.mode,
@@ -183,6 +200,13 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
         scope: state.scope,
       ),
     );
+
+    // Nur nach dem Sprint, und auch dort nur, wenn die Taktung es zulaesst -
+    // siehe InterstitialPolicy. Im Uebungsmodus wird nie unterbrochen: Dort
+    // folgt auf die Antwort die Erklaerung, und die soll nichts verdecken.
+    if (state.mode == SessionMode.sprint) {
+      unawaited(ref.read(adControllerProvider.notifier).onSprintFinished());
+    }
   }
 }
 

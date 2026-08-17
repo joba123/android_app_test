@@ -1,9 +1,13 @@
 import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/reminder_settings.dart';
 import 'package:einstellungstest_trainer/screens/account_screen.dart';
+import 'package:einstellungstest_trainer/screens/pro_screen.dart';
+import 'package:einstellungstest_trainer/services/ads/ad_config.dart';
+import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_service.dart';
+import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +27,8 @@ class SettingsScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
           children: [
+            const _ProCard(),
+            const SizedBox(height: 26),
             const _SectionTitle(
               title: 'Testtermin',
               subtitle: 'Dein Termin steuert den Countdown auf der Startseite '
@@ -39,6 +45,7 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             const _ReminderCard(),
             const SizedBox(height: 26),
+            const _AdPrivacySection(),
             const _SectionTitle(
               title: 'Konto',
               subtitle: 'Anmeldung, Cloud-Abgleich und Datenschutz.',
@@ -408,5 +415,128 @@ class _ReminderCard extends ConsumerWidget {
     await ref
         .read(reminderControllerProvider.notifier)
         .setTime(hour: picked.hour, minute: picked.minute);
+  }
+}
+
+
+/// Einstieg zu Pro – im Free-Tier ein Hinweis, mit Pro eine Bestätigung.
+class _ProCard extends ConsumerWidget {
+  const _ProCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final isPro = ref.watch(isProProvider);
+
+    return Material(
+      color: isPro
+          ? theme.colorScheme.primaryContainer
+          : theme.colorScheme.surfaceContainerLow,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ProScreen()),
+        ),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isPro
+                  ? Colors.transparent
+                  : theme.colorScheme.outlineVariant,
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                Icons.workspace_premium_outlined,
+                color: isPro
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.primary,
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isPro ? 'Pro ist aktiv' : 'Pro',
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: isPro
+                            ? theme.colorScheme.onPrimaryContainer
+                            : null,
+                      ),
+                    ),
+                    Text(
+                      isPro
+                          ? 'Werbefrei, mit dem vollen Aufgabenbestand'
+                          : 'Zusätzliche Aufgaben und keine Werbung',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isPro
+                            ? theme.colorScheme.onPrimaryContainer
+                                .withValues(alpha: 0.85)
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: isPro
+                    ? theme.colorScheme.onPrimaryContainer
+                    : theme.colorScheme.outline,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Einwilligung zur Werbung – muss widerrufbar sein, solange Werbung läuft.
+class _AdPrivacySection extends ConsumerWidget {
+  const _AdPrivacySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final service = ref.watch(adServiceProvider);
+
+    // Mit Pro gibt es keine Werbung und damit nichts einzustellen.
+    if (ref.watch(isProProvider) || !service.isAvailable) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle(
+          title: 'Werbung',
+          subtitle: 'Die kostenlose Version zeigt Anzeigen. Deine '
+              'Einwilligung dazu kannst du jederzeit ändern.',
+        ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => service.showPrivacyOptions(),
+          icon: const Icon(Icons.privacy_tip_outlined),
+          label: const Text('Datenschutzeinstellungen für Werbung'),
+        ),
+        if (AdConfig.usesTestUnits) ...[
+          const SizedBox(height: 8),
+          Text(
+            'Testbuild: Es werden Googles Test-Anzeigen ausgeliefert.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+        const SizedBox(height: 26),
+      ],
+    );
   }
 }

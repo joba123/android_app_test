@@ -3,6 +3,7 @@ import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/screens/result_screen.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
+import 'package:einstellungstest_trainer/widgets/ad_banner_slot.dart';
 import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
@@ -21,6 +22,7 @@ class QuizScreen extends ConsumerWidget {
     required this.mode,
     required this.scope,
     this.length = QuizController.defaultPracticeLength,
+    this.difficulty,
   });
 
   final SessionMode mode;
@@ -29,7 +31,11 @@ class QuizScreen extends ConsumerWidget {
   /// Nur für den Übungsmodus relevant.
   final int length;
 
-  QuizConfig get _config => (mode: mode, scope: scope, length: length);
+  /// Nur im Uebungsmodus gesetzt und nur mit Pro waehlbar.
+  final Difficulty? difficulty;
+
+  QuizConfig get _config =>
+      (mode: mode, scope: scope, length: length, difficulty: difficulty);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -129,6 +135,9 @@ class QuizScreen extends ConsumerWidget {
                   ),
                 ),
               ),
+            // Nur im Uebungsmodus. Im Sprint laeuft eine Uhr - dort waere ein
+            // Banner neben dem Countdown gegenueber dem Nutzer unfair.
+            if (!isSprint) const AdBannerSlot(),
           ],
         ),
       ),

@@ -6,6 +6,10 @@
     <!-- Ohne diese Berechtigung waeren nach einem Neustart des Geraets alle
          geplanten Erinnerungen verloren. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- In-App-Kaeufe ueber Google Play. -->
+    <uses-permission android:name="com.android.vending.BILLING" />
+    <!-- AdMob und die Einwilligungsabfrage brauchen Netz. -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:label="Einstellungstest Trainer"
@@ -31,6 +35,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- AdMob-App-ID. Hier steht Googles oeffentliche TEST-ID; vor einer
+             Veroeffentlichung durch die eigene ID aus der AdMob-Konsole
+             ersetzen. Fehlt der Eintrag, stuerzt die App beim Start des
+             Ad-SDK ab - deshalb steht er auch im Testbuild. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
 
         <!-- Stellt geplante Erinnerungen nach einem Neustart wieder her.
              Gehoert zu flutter_local_notifications. -->

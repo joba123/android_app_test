@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:einstellungstest_trainer/screens/home_screen.dart';
+import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,6 +26,11 @@ class _EinstellungstestTrainerAppState
     // anderen Geraet verschoben worden sein.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(reminderControllerProvider.notifier).reschedule();
+
+      // Anzeigen erst nach dem ersten Frame starten: Der Einwilligungsdialog
+      // gehoert nicht vor die Startseite, und ohne Einwilligung wird ohnehin
+      // nichts angefordert.
+      unawaited(ref.read(adServiceProvider).initialize());
     });
   }
 

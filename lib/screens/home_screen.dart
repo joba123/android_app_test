@@ -4,12 +4,14 @@ import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/module_screen.dart';
 import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
+import 'package:einstellungstest_trainer/screens/pro_screen.dart';
 import 'package:einstellungstest_trainer/screens/settings_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
 import 'package:einstellungstest_trainer/screens/sprint_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/stats_screen.dart';
 import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/module_card.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
@@ -167,9 +169,35 @@ class HomeScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            if (!ref.watch(isProProvider)) ...[
+              const SizedBox(height: 20),
+              const _ProHint(),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Ein Satz am Ende der Startseite – kein Banner, kein Dialog, kein Abfangen
+/// beim Start. Wer mehr wissen will, tippt darauf.
+class _ProHint extends StatelessWidget {
+  const _ProHint();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return TextButton(
+      onPressed: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const ProScreen()),
+      ),
+      style: TextButton.styleFrom(
+        minimumSize: const Size.fromHeight(44),
+        foregroundColor: theme.colorScheme.onSurfaceVariant,
+      ),
+      child: const Text('Pro: mehr Aufgaben, keine Werbung'),
     );
   }
 }

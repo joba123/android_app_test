@@ -3,6 +3,8 @@ import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_service.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
+import 'package:einstellungstest_trainer/services/purchase/purchase_service.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:flutter/material.dart';
@@ -586,6 +588,99 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(reminders.scheduled, isEmpty);
+    });
+  });
+
+  group('Pro', () {
+    late InMemoryPurchaseService store;
+
+    setUp(() => store = InMemoryPurchaseService());
+    tearDown(() => store.dispose());
+
+    Future<void> openPro(WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        overrides: [purchaseServiceProvider.overrideWithValue(store)],
+      );
+      await tester.tap(find.text('Pro: mehr Aufgaben, keine Werbung'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('ist von der Startseite aus erreichbar', (tester) async {
+      await openPro(tester);
+
+      expect(find.text('Mehr Aufgaben, keine Werbung'), findsOneWidget);
+    });
+
+    testWidgets('nennt zuerst, was kostenlos bleibt', (tester) async {
+      await openPro(tester);
+
+      expect(
+        find.textContaining('bleiben kostenlos'),
+        findsOneWidget,
+      );
+      expect(find.text('Keine Werbung – weder Banner noch Unterbrechungen'),
+          findsOneWidget);
+    });
+
+    testWidgets('bietet alle drei Tarife ohne Vorauswahl an', (tester) async {
+      await openPro(tester);
+
+      expect(find.text('Einmalkauf'), findsOneWidget);
+      expect(find.text('Monatlich'), findsOneWidget);
+      expect(find.text('Jährlich'), findsOneWidget);
+      // Kein Tarif ist hervorgehoben oder vorausgewaehlt.
+      expect(find.textContaining('Beliebteste'), findsNothing);
+      expect(find.textContaining('Empfohlen'), findsNothing);
+    });
+
+    testWidgets('benennt die Bedingungen des Abos', (tester) async {
+      await openPro(tester);
+
+      expect(find.textContaining('verlängern sich'), findsOneWidget);
+      expect(find.textContaining('kündigst'), findsOneWidget);
+      expect(
+        find.text('Früheren Kauf wiederherstellen'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('nach dem Kauf ist Pro aktiv und der Hinweis verschwindet',
+        (tester) async {
+      await openPro(tester);
+
+      await tester.tap(find.text('Einmalkauf'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pro ist aktiv'), findsOneWidget);
+
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pro: mehr Aufgaben, keine Werbung'), findsNothing);
+    });
+
+    testWidgets('die Schwierigkeitswahl ist erst mit Pro bedienbar',
+        (tester) async {
+      await pumpApp(
+        tester,
+        overrides: [purchaseServiceProvider.overrideWithValue(store)],
+      );
+      await openPracticeSetup(tester);
+
+      expect(find.text('Schwierigkeit'), findsOneWidget);
+      expect(find.widgetWithText(ChoiceChip, 'Schwer'), findsNothing);
+      expect(find.text('Pro ansehen'), findsOneWidget);
+
+      await tester.tap(find.text('Pro ansehen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Einmalkauf'));
+      await tester.pumpAndSettle();
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+
+      expect(find.widgetWithText(ChoiceChip, 'Schwer'), findsOneWidget);
+      expect(find.text('Pro ansehen'), findsNothing);
     });
   });
 

@@ -1,8 +1,12 @@
 import 'package:einstellungstest_trainer/app.dart';
 import 'package:einstellungstest_trainer/firebase_options.dart';
+import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
+import 'package:einstellungstest_trainer/services/ads/admob_ad_service.dart';
 import 'package:einstellungstest_trainer/services/notifications/local_reminder_service.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
+import 'package:einstellungstest_trainer/services/purchase/store_purchase_service.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +30,11 @@ Future<void> main() async {
         // Der Dienst richtet sich beim ersten Zugriff selbst ein; das Laden
         // der Zeitzonen-Datenbank haelt den App-Start dadurch nicht auf.
         reminderServiceProvider.overrideWithValue(LocalReminderService()),
+        // Anzeigen und Kaeufe. Beide Dienste richten sich beim ersten Zugriff
+        // selbst ein; scheitert das, laeuft die App ohne Werbung und ohne
+        // Kaufmoeglichkeit weiter statt gar nicht.
+        adServiceProvider.overrideWithValue(AdMobAdService()),
+        purchaseServiceProvider.overrideWithValue(StorePurchaseService()),
       ],
       child: const EinstellungstestTrainerApp(),
     ),

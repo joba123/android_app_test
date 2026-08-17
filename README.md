@@ -16,8 +16,11 @@ Jedes Modul bietet dieselben drei Trainingsmodi.
 | Modul (Kategorie) | Unterkategorien | Antwortformat | Quelle |
 | --- | --- | --- | --- |
 | **Mathematik** | Grundrechenarten · Dreisatz · Prozentrechnung · Textaufgaben | Zahleneingabe | generiert (unbegrenzt) |
-| **Logisches Denken** | Zahlenreihen (23) · Figurenanalogien (15) · Schlussfolgerungen (8) | Multiple Choice | statisch |
-| **Sprache** | Rechtschreibung (21) · Wortanalogien (15) · Grammatik (6) · Wortschatz & Textverständnis (8) | Multiple Choice | statisch |
+| **Logisches Denken** | Zahlenreihen (23 +6) · Figurenanalogien (15 +4) · Schlussfolgerungen (8 +4) | Multiple Choice | statisch |
+| **Sprache** | Rechtschreibung (21 +6) · Wortanalogien (15 +5) · Grammatik (6 +3) · Wortschatz & Textverständnis (8 +4) | Multiple Choice | statisch |
+
+Die Zahlen in Klammern mit Plus sind der Zusatzbestand für Pro – siehe
+[Monetarisierung](#monetarisierung).
 
 Eine Aufgabe wird entweder per **Multiple Choice** oder per **freier
 Zahleneingabe** beantwortet. Beides steckt in einer versiegelten Hierarchie
@@ -136,7 +139,7 @@ einzelne Aufgabe mit gegebener Antwort, Musterlösung und Rechenweg.
 Zusätzlich gibt es einen Statistik-Screen mit Trefferquote, Sprint-Bestwerten
 und Rundenzahl je Modul sowie den zuletzt abgeschlossenen Sitzungen. Beides wird
 lokal auf dem Gerät gespeichert; der Verlauf ist auf die letzten 50 Sitzungen
-begrenzt. Wer sich anmeldet, bekommt denselben Stand zusätzlich in der Cloud –
+begrenzt (mit Pro 200). Wer sich anmeldet, bekommt denselben Stand zusätzlich in der Cloud –
 siehe [Konto und Cloud-Sync](#konto-und-cloud-sync).
 
 ## State-Management: Riverpod
@@ -177,11 +180,14 @@ lib/
 │   ├── simulation.dart        Testteile, Simulationszustand, Auswertung
 │   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
 │   ├── exam_date.dart         Hinterlegter Testtermin inkl. Countdown
+│   ├── pro_entitlement.dart   Tarife, Berechtigung, Pro-Leistungen
+│   ├── ad_frequency.dart      Taktung der Unterbrecher-Werbung
 │   ├── reminder_settings.dart Erinnerungen: Einstellungen + Terminberechnung
 │   └── module_stats.dart      Persistierter Lernfortschritt
 ├── screens/                   UI-Screens
 │   ├── home_screen.dart       Schnellstart, Module, Gesamtsimulation
-│   ├── settings_screen.dart   Testtermin, Erinnerungen, Weg zum Konto
+│   ├── settings_screen.dart   Pro, Testtermin, Erinnerungen, Werbung, Konto
+│   ├── pro_screen.dart        Kauf-Screen (Tarife, Leistungen, Bedingungen)
 │   ├── account_screen.dart    Anmeldung, Abgleich, Datenschutz
 │   ├── module_screen.dart     Modus-Auswahl innerhalb eines Moduls
 │   ├── practice_setup_screen.dart  Thema/Misch-Modus und Umfang wählen
@@ -197,6 +203,15 @@ lib/
 │   ├── simulation_controller.dart  Mehrteilige Simulation mit Teil-Timern
 │   ├── storage_service.dart   Lokale Persistenz (SharedPreferences)
 │   ├── exam_date_controller.dart  Testtermin (Cloud und Erinnerungen)
+│   ├── ads/                   Werbung
+│   │   ├── ad_service.dart            Schnittstelle + Attrappen
+│   │   ├── ad_config.dart             Anzeigenblöcke (Test/Release)
+│   │   ├── admob_ad_service.dart      AdMob inkl. UMP-Einwilligung
+│   │   └── ad_controller.dart         Taktung und Freigabe
+│   ├── purchase/              Käufe
+│   │   ├── purchase_service.dart      Schnittstelle + Attrappen
+│   │   ├── store_purchase_service.dart in_app_purchase
+│   │   └── entitlement_controller.dart Freischaltung und Kauf-Screen
 │   ├── notifications/         Lokale Erinnerungen
 │   │   ├── reminder_service.dart       Schnittstelle + Ersatz für Tests
 │   │   ├── local_reminder_service.dart flutter_local_notifications
@@ -229,6 +244,7 @@ lib/
     ├── question_validation.dart   Qualitätssicherung für alle Aufgaben
     ├── logic_questions.dart       Statischer Content Logik
     ├── language_questions.dart    Statischer Content Sprache
+    ├── pro_questions.dart         Zusatzbestand für Pro
     ├── question_pool.dart         Zugriff auf den statischen Bestand
     └── simulation_blueprints.dart Baupläne der Testsimulationen
 ```
@@ -264,6 +280,155 @@ ist er gesetzt, zeigt die `QuestionCard` das Bild über dem Aufgabentext. Für d
 Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
 beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
 zusätzlich einen Eintrag in `pubspec.yaml`.
+
+## Monetarisierung
+
+Die App ist kostenlos nutzbar und finanziert sich über Werbung; **Pro**
+entfernt die Werbung und erweitert das Training.
+
+### Der Leitsatz: Pro nimmt nichts weg
+
+Alle drei Module, alle Rundenlängen und alle Testsimulationen bleiben
+kostenlos – auch die 45-Minuten-Gesamtsimulation. Pro kommt obendrauf:
+
+| | Kostenlos | Pro |
+| --- | --- | --- |
+| Module, Rundenlängen, Simulationen | alle | alle |
+| Werbung | Banner im Übungsmodus, gelegentliche Unterbrechung nach dem Sprint | keine |
+| Aufgabenbestand Logik/Sprache | 96 | 96 + 30 |
+| Schwierigkeit gezielt wählbar | – | ja |
+| Sitzungsverlauf | 50 | 200 |
+
+Das ist keine bloße Absichtserklärung, sondern ein Test: `monetization_test`
+prüft, dass **jede** kostenlose Aufgabe auch im Pro-Bestand enthalten ist und
+dass keine Pro-Aufgabe je aus dem freien Bestand stammt. Wandert später eine
+Aufgabe in die falsche Datei, schlägt der Test fehl.
+
+Die Pro-Aufgaben durchlaufen dieselbe Qualitätssicherung wie der freie
+Bestand – bezahlte Aufgaben dürfen nicht schlechter sein.
+
+### Warum `in_app_purchase` und nicht RevenueCat
+
+**Empfehlung: `in_app_purchase`** – aus drei Gründen, die konkret an diesem
+Projekt hängen:
+
+1. **Eine Plattform.** RevenueCats größter Nutzen ist das Vereinheitlichen von
+   Play- und App-Store-Belegen. Solange nur Android ausgeliefert wird, zahlt
+   man für ein Problem, das man nicht hat.
+2. **Datenschutz.** Die App hat eine sehr explizite Haltung dazu (EU-Region,
+   keine überflüssigen Daten). RevenueCat wäre ein weiterer Auftragsverarbeiter,
+   der Kauf- und Gerätedaten erhält – mit AV-Vertrag und einem zusätzlichen
+   Punkt in der Datenschutzerklärung.
+3. **Kosten.** RevenueCat nimmt oberhalb einer Umsatzschwelle einen Anteil.
+   Für eine App, die gerade erst startet, ist das vermeidbar.
+
+Der ehrliche Gegenpunkt: **Abo-Status ist mit `in_app_purchase` allein nicht
+zuverlässig abbildbar.** Kündigungen, Rückerstattungen, Zahlungsprobleme und
+Kulanzzeiträume sieht man nur über die Play Developer API auf einem Server.
+Genau das nimmt RevenueCat einem ab.
+
+Deshalb liegt alles hinter der Schnittstelle `PurchaseService`: Wird die
+Abo-Verwaltung zum Problem, ist RevenueCat eine neue Implementierung dieser
+einen Datei – Screens, Controller und Sperren bleiben unverändert.
+
+Bis dahin gilt lokal eine großzügige Regel: Ein Abo läuft rechnerisch 31 bzw.
+366 Tage, und solange der Store nichts Gegenteiliges meldet, bleibt die
+Freischaltung bestehen. **Im Zweifel zugunsten dessen, der bezahlt hat** – der
+Store korrigiert beim nächsten Abgleich.
+
+### Tarife
+
+| Tarif | Produkt-Kennung | Art |
+| --- | --- | --- |
+| Einmalkauf | `pro_lifetime` | Einmalzahlung, kein Ablauf |
+| Monatlich | `pro_monthly` | Abo |
+| Jährlich | `pro_yearly` | Abo |
+
+Die Kennungen müssen genauso in der Play Console angelegt werden. **Preise
+kommen ausschließlich vom Store** und werden nie in der App zusammengebaut –
+Währung, Format und Steuersatz hängen vom Land ab. Beim Jahresabo wird
+zusätzlich der rechnerische Monatspreis genannt, damit der Vergleich möglich
+ist, ohne dass jemand im Kopf teilen muss.
+
+### Der Kauf-Screen
+
+Vorgabe war „klar und nicht aggressiv". Konkret heißt das hier:
+
+- Kein Countdown, kein „nur heute", keine durchgestrichenen Fantasiepreise.
+- **Kein Tarif ist vorausgewählt** oder als „beliebteste Wahl" markiert. Ein
+  Test prüft, dass die Wörter „Empfohlen" und „Beliebteste" dort nicht
+  vorkommen.
+- Was kostenlos bleibt, steht **vor** den Preisen, nicht im Kleingedruckten.
+- Die Abo-Bedingungen (automatische Verlängerung, Kündigung im Play Store)
+  stehen im Klartext auf derselben Seite.
+- Der Einstieg auf der Startseite ist eine Textzeile ganz unten – kein Dialog,
+  der beim Start aufgeht, und keine Sperre mitten in einer Übungsrunde.
+- Gesperrte Funktionen zeigen keinen Schalter, der beim Antippen einen
+  Kaufdialog aufreißt, sondern einen ruhigen Hinweis mit normalem Link.
+
+### Werbung: wo, wann und wie oft
+
+**Banner** erscheinen ausschließlich im **Übungsmodus** am unteren Rand – und
+erst, wenn tatsächlich eine Anzeige geladen ist. Ein reservierter Leerraum
+würde die Aufgabe nach oben drücken, ohne dass etwas zu sehen wäre.
+
+Bewusst **kein** Banner im Sprint und in der Testsimulation: Dort läuft eine
+Uhr, und eine Anzeige neben einem Countdown wäre gegenüber dem Nutzer unfair.
+
+**Unterbrecher-Anzeigen** laufen nur nach einer abgeschlossenen
+**Sprint-Runde**, nie im Übungsmodus (dort folgt auf die Antwort die Erklärung,
+die nichts verdecken soll) und nie in der Simulation. Die Taktung steckt in
+`InterstitialPolicy` – drei Regeln, alle drei müssen erfüllt sein:
+
+- Die **allererste** Runde bleibt frei. Der erste Eindruck einer Lern-App soll
+  keine Anzeige sein.
+- Danach höchstens **jede dritte** Runde.
+- Und nie zweimal innerhalb von **fünf Minuten**, egal wie schnell geübt wird.
+
+Der Zählerstand wird gespeichert und übersteht einen Neustart – sonst wäre die
+Regel durch Schließen und Öffnen der App auszuhebeln.
+
+### Einwilligung (DSGVO)
+
+Im EWR dürfen ohne Einwilligung keine Anzeigen ausgeliefert werden. Die App
+nutzt dafür Googles **User Messaging Platform**: `canRequestAds` wird von UMP
+beantwortet, nicht von der App geraten. Ohne Einwilligung wird schlicht nichts
+angefordert.
+
+Der Einwilligungsdialog erscheint **nach** dem ersten Frame, nicht vor der
+Startseite. In den Einstellungen gibt es „Datenschutzeinstellungen für
+Werbung", weil eine Einwilligung jederzeit widerrufbar sein muss. Mit Pro
+verschwindet der Abschnitt – dann gibt es nichts einzustellen.
+
+### AdMob und Play Console einrichten
+
+Voreingestellt sind **Googles offizielle Test-Kennungen**, auch im Manifest.
+Sie liefern echte Test-Anzeigen; auf eigenen Anzeigenblöcken zu testen führt
+zur Sperrung des AdMob-Kontos.
+
+Für ein Release:
+
+```bash
+flutter build apk --release \
+  --dart-define=ADMOB_BANNER_ANDROID=ca-app-pub-…/… \
+  --dart-define=ADMOB_INTERSTITIAL_ANDROID=ca-app-pub-…/…
+```
+
+Zusätzlich nötig:
+
+- Die **AdMob-App-ID** in `android/app/src/main/AndroidManifest.xml` ersetzen
+  (`com.google.android.gms.ads.APPLICATION_ID`). Fehlt der Eintrag ganz,
+  stürzt die App beim Start des Ad-SDK ab – deshalb steht dort auch im
+  Testbuild eine gültige ID.
+- In der AdMob-Konsole unter **Privacy & messaging** eine
+  DSGVO-Einwilligungsnachricht anlegen, sonst zeigt UMP kein Formular.
+- Die drei Produkte in der **Play Console** anlegen (Kennungen siehe oben) und
+  die App mindestens in einen Testtrack hochladen – vorher liefert der Store
+  keine Preise aus.
+
+Ohne all das bleibt die App vollständig nutzbar: Ohne Store gibt es keine
+Kaufmöglichkeit, ohne Einwilligung keine Anzeigen. Beides ist ein
+Ausbleiben von Funktionen, kein Fehlerfall.
 
 ## Testtermin und Erinnerungen
 
@@ -465,7 +630,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 269 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 317 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Android-Build gelingt auch **ohne** `google-services.json`: Das
 google-services-Gradle-Plugin wird nicht angewandt, die Konfiguration kommt aus
 Dart.
@@ -502,6 +667,11 @@ Die Tests decken ab:
 - **Konto** – Anmelden mit sofortigem Abgleich, abgebrochene Anmeldung ohne
   Fehlermeldung, Abmelden ohne Datenverlust, Löschen von Cloud, Konto und
   Gerät, sowie der lokale Modus ohne Firebase
+- **Monetarisierung** – Berechtigung (Einmalkauf ohne Ablauf, Abo mit Ablauf,
+  abgelaufenes Abo gilt beim Start nicht mehr), Kauf/Abbruch/Fehlschlag/
+  Wiederherstellung, Werbung endet mit dem Kauf sofort, Taktung der
+  Unterbrechungen inklusive Neustart, Pro-Bestand als echte Erweiterung des
+  freien Bestands, längerer Verlauf, Schwierigkeitswahl
 - **Erinnerungen** – Berechnung der Zeitpunkte inklusive übersprungener
   Vergangenheit und stabiler Kennungen, Vorlaufzeiten und Uhrzeit, verweigerte
   Berechtigung lässt den Schalter aus, ein verschobener Termin verschiebt die
@@ -510,8 +680,10 @@ Die Tests decken ab:
 - **Oberfläche** – Navigation, Auswahl von Übungsumfang und Sprint-Aufgabentyp,
   Fortschrittsanzeige, sofortige Rückmeldung mit Erklärung, Sprint ohne
   Erklärung bis zum Zeitablauf, Auswertung mit Fehlerquote und Zeiten,
-  Zahleneingabefeld inklusive Fehlerfall, Konto-Bildschirm, Testtermin und
-  der Erinnerungs-Abschnitt der Einstellungen
+  Zahleneingabefeld inklusive Fehlerfall, Konto-Bildschirm, Testtermin,
+  der Erinnerungs-Abschnitt der Einstellungen sowie der Kauf-Screen
+  (Tarife ohne Vorauswahl, Abo-Bedingungen sichtbar, Freischaltung nach dem
+  Kauf)
 
 ## Stand und nächste Schritte
 
@@ -529,9 +701,11 @@ Naheliegende nächste Schritte:
 
 - Bild-Assets für Figurenanalogien hinterlegen, danach Matrizen und räumliches
   Denken ergänzen
-- Statischen Bestand für Grammatik und Wortschatz aufstocken (aktuell 6 bzw. 8)
-- Schwierigkeitswahl in der Oberfläche sichtbar machen – die Generatoren können
-  sie bereits, genutzt wird bislang die Mischung
+- Statischen Bestand für Grammatik und Wortschatz aufstocken (aktuell 6 bzw. 8,
+  mit Pro 9 bzw. 12)
+- Abo-Status serverseitig über die Play Developer API prüfen – oder auf
+  RevenueCat wechseln, falls die Abo-Verwaltung zum Problem wird
+  (`PurchaseService` ist dafür die einzige zu ersetzende Datei)
 - Branchen-Profile als Filter über die bestehenden Module legen
 - Rückfrage beim Verlassen einer laufenden Runde über die Android-Zurück-Taste
   (`PopScope`)

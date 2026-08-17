@@ -78,6 +78,7 @@ void main() {
       mode: mode,
       scope: PracticeScope.module(module),
       length: length,
+      difficulty: null,
     );
     final subscription = container.listen(
       quizControllerProvider(config),
@@ -89,7 +90,12 @@ void main() {
 
   /// Wie [keepAlive], aber für beliebige Übungsumfänge.
   QuizConfig keepAliveScope(PracticeScope scope, {int length = 20}) {
-    final config = (mode: SessionMode.practice, scope: scope, length: length);
+    final config = (
+      mode: SessionMode.practice,
+      scope: scope,
+      length: length,
+      difficulty: null,
+    );
     final subscription = container.listen(
       quizControllerProvider(config),
       (_, __) {},
@@ -371,7 +377,12 @@ void main() {
 
   group('Sprint pro Aufgabentyp', () {
     QuizConfig sprintOn(PracticeScope scope) {
-      final config = (mode: SessionMode.sprint, scope: scope, length: 0);
+      final config = (
+        mode: SessionMode.sprint,
+        scope: scope,
+        length: 0,
+        difficulty: null,
+      );
       final subscription = container.listen(
         quizControllerProvider(config),
         (_, __) {},

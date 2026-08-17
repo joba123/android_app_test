@@ -3,6 +3,7 @@ import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
+import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/question_repository.dart';
 import 'package:einstellungstest_trainer/services/storage_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,8 +20,13 @@ final storageServiceProvider = Provider<StorageService>((ref) {
   return StorageService(ref.watch(sharedPreferencesProvider));
 });
 
+/// Zieht Aufgaben – mit oder ohne Pro-Bestand.
+///
+/// Die Freischaltung sitzt hier und nicht an den Aufrufstellen: Wird Pro
+/// gekauft, wird der Provider neu gebaut und jede folgende Runde zieht
+/// automatisch aus dem groesseren Bestand.
 final questionRepositoryProvider = Provider<QuestionRepository>((ref) {
-  return QuestionRepository();
+  return QuestionRepository(proUnlocked: ref.watch(isProProvider));
 });
 
 /// Verlauf der abgeschlossenen Sitzungen, neueste zuerst.
@@ -31,7 +37,10 @@ class SessionHistoryController extends Notifier<List<TrainingSession>> {
   }
 
   Future<void> add(TrainingSession session) async {
-    state = await ref.read(storageServiceProvider).appendSession(session);
+    state = await ref.read(storageServiceProvider).appendSession(
+          session,
+          limit: ref.read(historyLimitProvider),
+        );
   }
 
   void clear() => state = const [];
