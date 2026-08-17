@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/models/module_stats.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
@@ -49,7 +50,6 @@ void main() {
         stats.forModule(TrainingModule.logic).merge(
               addedAnswered: 8,
               addedCorrect: 6,
-              sprintScore: 4,
               completedSession: true,
             ),
       );
@@ -59,8 +59,69 @@ void main() {
 
       expect(restored.answered, 8);
       expect(restored.correct, 6);
-      expect(restored.bestSprintScore, 4);
       expect(restored.sessionsCompleted, 1);
+    });
+  });
+
+  group('Sprint-Bestwerte', () {
+    test('sind zu Beginn leer', () {
+      expect(
+        storage.loadStats().bestSprint(
+              PracticeScope.subCategory(SubCategory.arithmetic),
+            ),
+        0,
+      );
+    });
+
+    test('werden je Aufgabentyp getrennt gespeichert', () async {
+      final arithmetic = PracticeScope.subCategory(SubCategory.arithmetic);
+      final percentage = PracticeScope.subCategory(SubCategory.percentage);
+
+      var stats = TrainingStats.empty()
+          .withSprintResult(arithmetic, 14)
+          .withSprintResult(percentage, 6);
+      await storage.saveStats(stats);
+
+      stats = storage.loadStats();
+      expect(stats.bestSprint(arithmetic), 14);
+      expect(stats.bestSprint(percentage), 6);
+    });
+
+    test('ein Aufgabentyp teilt sich den Bestwert nicht mit seinem Modul',
+        () async {
+      final topic = PracticeScope.subCategory(SubCategory.arithmetic);
+      const wholeModule = PracticeScope.module(TrainingModule.math);
+
+      await storage.saveStats(
+        TrainingStats.empty().withSprintResult(topic, 18),
+      );
+
+      final stats = storage.loadStats();
+      expect(stats.bestSprint(topic), 18);
+      expect(stats.bestSprint(wholeModule), 0);
+      // Für die Modulübersicht zählt trotzdem der beste Lauf im Modul.
+      expect(stats.bestSprintInModule(TrainingModule.math), 18);
+    });
+
+    test('ein schlechteres Ergebnis überschreibt den Bestwert nicht', () {
+      final topic = PracticeScope.subCategory(SubCategory.spelling);
+
+      final stats = TrainingStats.empty()
+          .withSprintResult(topic, 12)
+          .withSprintResult(topic, 9);
+
+      expect(stats.bestSprint(topic), 12);
+    });
+
+    test('Zurücksetzen löscht auch die Bestwerte', () async {
+      final topic = PracticeScope.subCategory(SubCategory.arithmetic);
+      await storage.saveStats(
+        TrainingStats.empty().withSprintResult(topic, 20),
+      );
+
+      await storage.resetStats();
+
+      expect(storage.loadStats().bestSprint(topic), 0);
     });
   });
 

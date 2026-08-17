@@ -1,10 +1,8 @@
-import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
-import 'package:einstellungstest_trainer/models/sub_category.dart';
-import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
+import 'package:einstellungstest_trainer/widgets/scope_selector.dart';
 import 'package:flutter/material.dart';
 
 /// Einstieg in den Übungsmodus: Was soll geübt werden und wie viel?
@@ -67,51 +65,10 @@ class _PracticeSetupScreenState extends State<PracticeSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 14),
-                  _ScopeTile(
-                    title: 'Alle Kategorien gemischt',
-                    subtitle: 'Mathematik, Logik und Sprache im Wechsel – '
-                        'am nächsten am echten Test',
-                    icon: Icons.shuffle,
-                    color: theme.colorScheme.primary,
-                    selected: _scope.isMixed,
-                    onTap: () =>
-                        setState(() => _scope = const PracticeScope.mixed()),
+                  ScopeSelector(
+                    selected: _scope,
+                    onChanged: (scope) => setState(() => _scope = scope),
                   ),
-                  for (final module in TrainingModule.values) ...[
-                    const SizedBox(height: 18),
-                    Text(
-                      module.label,
-                      style: theme.textTheme.labelLarge?.copyWith(
-                        color: module.color,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    _ScopeTile(
-                      title: 'Alle Themen',
-                      subtitle: QuestionPool.describeSize(module),
-                      icon: module.icon,
-                      color: module.color,
-                      selected: _scope.module == module &&
-                          _scope.subCategory == null,
-                      onTap: () => setState(
-                        () => _scope = PracticeScope.module(module),
-                      ),
-                    ),
-                    for (final subCategory in SubCategory.of(module))
-                      _ScopeTile(
-                        title: subCategory.label,
-                        subtitle:
-                            QuestionPool.describeSubCategorySize(subCategory),
-                        icon: Icons.subject,
-                        color: module.color,
-                        indented: true,
-                        selected: _scope.subCategory == subCategory,
-                        onTap: () => setState(
-                          () => _scope = PracticeScope.subCategory(subCategory),
-                        ),
-                      ),
-                  ],
                   const SizedBox(height: 24),
                   Text(
                     'Wie viele Aufgaben?',
@@ -163,87 +120,6 @@ class _PracticeSetupScreenState extends State<PracticeSetupScreen> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Auswählbare Zeile für einen Übungsumfang.
-class _ScopeTile extends StatelessWidget {
-  const _ScopeTile({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-    this.indented = false,
-  });
-
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-  final bool indented;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: EdgeInsets.only(left: indented ? 16 : 0, bottom: 8),
-      child: Material(
-        color: selected
-            ? color.withValues(alpha: 0.10)
-            : theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: selected ? color : theme.colorScheme.outlineVariant,
-                width: selected ? 1.6 : 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  selected ? Icons.radio_button_checked : icon,
-                  size: 20,
-                  color: selected ? color : theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight:
-                              selected ? FontWeight.w700 : FontWeight.w600,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
         ),
       ),
     );

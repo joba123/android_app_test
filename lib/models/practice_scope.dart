@@ -45,6 +45,22 @@ class PracticeScope {
   String get shortLabel =>
       subCategory?.label ?? module?.shortLabel ?? 'Gemischt';
 
+  /// Überschrift einer Sprint-Runde, z. B. "Grundrechenarten Sprint".
+  String get sprintTitle => '$shortLabel Sprint';
+
+  /// Stabiler Schlüssel für die Persistenz, etwa von Sprint-Bestwerten.
+  /// Bewusst unabhängig von Enum-Namen, damit Umbenennungen im Code keine
+  /// gespeicherten Werte entwerten.
+  String get storageKey {
+    final topic = subCategory;
+    if (topic != null) return 'topic:${topic.id}';
+
+    final currentModule = module;
+    if (currentModule != null) return 'module:${currentModule.id}';
+
+    return 'mixed';
+  }
+
   /// Themenfilter für die QuestionRepository. Leer heißt: keine Einschränkung.
   List<SubCategory> get subCategories {
     final topic = subCategory;

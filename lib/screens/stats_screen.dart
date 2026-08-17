@@ -173,7 +173,7 @@ class _ModuleStatsCard extends ConsumerWidget {
               ),
               _MiniStat(
                 label: 'Sprint-Best',
-                value: '${stats.bestSprintScore}',
+                value: '${ref.watch(statsControllerProvider).bestSprintInModule(module)}',
               ),
               _MiniStat(
                 label: 'Runden',

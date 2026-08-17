@@ -1,3 +1,5 @@
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 
 /// Dauerhaft gespeicherter Lernfortschritt pro Modul.
@@ -6,17 +8,12 @@ class ModuleStats {
     required this.module,
     this.answered = 0,
     this.correct = 0,
-    this.bestSprintScore = 0,
     this.sessionsCompleted = 0,
   });
 
   final TrainingModule module;
   final int answered;
   final int correct;
-
-  /// Bestleistung im 60-Sekunden-Sprint: Anzahl richtiger Antworten.
-  final int bestSprintScore;
-
   final int sessionsCompleted;
 
   double get accuracy => answered == 0 ? 0 : correct / answered;
@@ -24,16 +21,12 @@ class ModuleStats {
   ModuleStats merge({
     int addedAnswered = 0,
     int addedCorrect = 0,
-    int? sprintScore,
     bool completedSession = false,
   }) {
     return ModuleStats(
       module: module,
       answered: answered + addedAnswered,
       correct: correct + addedCorrect,
-      bestSprintScore: sprintScore != null && sprintScore > bestSprintScore
-          ? sprintScore
-          : bestSprintScore,
       sessionsCompleted: sessionsCompleted + (completedSession ? 1 : 0),
     );
   }
@@ -42,7 +35,6 @@ class ModuleStats {
         'module': module.id,
         'answered': answered,
         'correct': correct,
-        'bestSprintScore': bestSprintScore,
         'sessionsCompleted': sessionsCompleted,
       };
 
@@ -51,17 +43,27 @@ class ModuleStats {
       module: TrainingModule.fromId(json['module'] as String? ?? 'math'),
       answered: json['answered'] as int? ?? 0,
       correct: json['correct'] as int? ?? 0,
-      bestSprintScore: json['bestSprintScore'] as int? ?? 0,
       sessionsCompleted: json['sessionsCompleted'] as int? ?? 0,
     );
   }
 }
 
-/// Gesamtfortschritt ueber alle Module.
+/// Gesamtfortschritt über alle Module.
 class TrainingStats {
-  const TrainingStats({required this.perModule});
+  const TrainingStats({
+    required this.perModule,
+    this.sprintBests = const {},
+  });
 
   final Map<TrainingModule, ModuleStats> perModule;
+
+  /// Beste Sprint-Ergebnisse, je Aufgabentyp bzw. Modul.
+  ///
+  /// Schlüssel ist [PracticeScope.storageKey]. Bewusst nicht in [ModuleStats]:
+  /// Ein Sprint über "Grundrechenarten" und einer über das ganze Modul
+  /// Mathematik sind nicht dieselbe Disziplin und dürfen sich keinen Bestwert
+  /// teilen.
+  final Map<String, int> sprintBests;
 
   factory TrainingStats.empty() {
     return TrainingStats(
@@ -82,9 +84,34 @@ class TrainingStats {
 
   double get accuracy => totalAnswered == 0 ? 0 : totalCorrect / totalAnswered;
 
+  /// Bestwert für genau diesen Umfang.
+  int bestSprint(PracticeScope scope) => sprintBests[scope.storageKey] ?? 0;
+
+  /// Bester Sprint innerhalb eines Moduls – über das ganze Modul und über
+  /// jeden seiner Aufgabentypen hinweg.
+  int bestSprintInModule(TrainingModule module) {
+    var best = bestSprint(PracticeScope.module(module));
+    for (final subCategory in SubCategory.of(module)) {
+      final value = bestSprint(PracticeScope.subCategory(subCategory));
+      if (value > best) best = value;
+    }
+    return best;
+  }
+
   TrainingStats withModule(ModuleStats stats) {
     return TrainingStats(
       perModule: {...perModule, stats.module: stats},
+      sprintBests: sprintBests,
+    );
+  }
+
+  /// Übernimmt ein Sprint-Ergebnis, wenn es den bisherigen Bestwert übertrifft.
+  TrainingStats withSprintResult(PracticeScope scope, int score) {
+    if (score <= bestSprint(scope)) return this;
+
+    return TrainingStats(
+      perModule: perModule,
+      sprintBests: {...sprintBests, scope.storageKey: score},
     );
   }
 }

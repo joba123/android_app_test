@@ -3,6 +3,7 @@ import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
+import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,7 @@ class QuizResultScreen extends StatelessWidget {
     required this.summary,
     required this.answers,
     required this.onRetry,
+    this.previousSprintBest = 0,
   });
 
   final SessionMode mode;
@@ -27,6 +29,14 @@ class QuizResultScreen extends StatelessWidget {
   final TrainingSession summary;
   final List<AnswerRecord> answers;
   final VoidCallback onRetry;
+
+  /// Bestwert für diesen Aufgabentyp vor der Runde – nur im Sprint relevant.
+  final int previousSprintBest;
+
+  bool get _isSprint => mode == SessionMode.sprint;
+
+  bool get _isNewBest =>
+      _isSprint && summary.correctCount > previousSprintBest;
 
   @override
   Widget build(BuildContext context) {
@@ -43,12 +53,21 @@ class QuizResultScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             _ResultHeadline(
-              title: mode == SessionMode.sprint
-                  ? '${summary.correctCount} richtig in 60 Sekunden'
+              title: _isSprint
+                  ? '${summary.correctCount} richtig in '
+                      '${QuizController.sprintSeconds} Sekunden'
                   : '${summary.correctCount} von ${summary.total} richtig',
-              subtitle: '$scopeLabel · ${mode.label}',
+              subtitle: _isSprint ? scopeLabel : '$scopeLabel · ${mode.label}',
               accuracy: summary.accuracy,
             ),
+            if (_isSprint) ...[
+              const SizedBox(height: 12),
+              _SprintRecordBanner(
+                score: summary.correctCount,
+                previousBest: previousSprintBest,
+                isNewBest: _isNewBest,
+              ),
+            ],
             const SizedBox(height: 18),
             Row(
               children: [
@@ -71,11 +90,19 @@ class QuizResultScreen extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: StatTile(
-                    value: '${summary.skippedCount}',
-                    label: 'offen',
-                    icon: Icons.remove_circle_outline,
-                  ),
+                  child: _isSprint
+                      // Im Sprint ist die Warteschlange absichtlich länger als
+                      // machbar – "offen" wäre hier ohne Aussage.
+                      ? StatTile(
+                          value: '${summary.total}',
+                          label: 'bearbeitet',
+                          icon: Icons.checklist_rtl,
+                        )
+                      : StatTile(
+                          value: '${summary.skippedCount}',
+                          label: 'offen',
+                          icon: Icons.remove_circle_outline,
+                        ),
                 ),
               ],
             ),
@@ -110,8 +137,12 @@ class QuizResultScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Die Fehlerquote bezieht offene Aufgaben mit ein. '
-              'Der Durchschnitt zählt nur tatsächlich bearbeitete Aufgaben.',
+              _isSprint
+                  ? 'Die Fehlerquote bezieht sich auf die bearbeiteten '
+                      'Aufgaben. Der Durchschnitt zählt nur beantwortete.'
+                  : 'Die Fehlerquote bezieht offene Aufgaben mit ein. '
+                      'Der Durchschnitt zählt nur tatsächlich bearbeitete '
+                      'Aufgaben.',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -222,6 +253,66 @@ class SimulationResultScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Zeigt nach einem Sprint, wie das Ergebnis zum bisherigen Bestwert steht.
+class _SprintRecordBanner extends StatelessWidget {
+  const _SprintRecordBanner({
+    required this.score,
+    required this.previousBest,
+    required this.isNewBest,
+  });
+
+  final int score;
+  final int previousBest;
+  final bool isNewBest;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    const gold = Color(0xFFD97706);
+
+    final (Color color, IconData icon, String text) = switch ((
+      isNewBest,
+      previousBest,
+    )) {
+      (true, 0) => (gold, Icons.emoji_events, 'Erster Bestwert: $score richtig'),
+      (true, _) => (
+          gold,
+          Icons.emoji_events,
+          'Neuer Bestwert! Vorher waren es $previousBest.',
+        ),
+      (false, _) => (
+          theme.colorScheme.outline,
+          Icons.flag_outlined,
+          'Bestwert für diesen Aufgabentyp: $previousBest richtig',
+        ),
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              text,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: isNewBest ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

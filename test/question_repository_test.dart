@@ -90,10 +90,24 @@ void main() {
       );
     });
 
-    test('Sprint-Warteschlange ist doppelt so lang wie der Pool', () {
-      final queue = repository.drawSprintQueue(TrainingModule.language);
+    test('Sprint-Warteschlange hat die feste Pufferlänge', () {
+      final queue = repository.drawSprintQueue(
+        const PracticeScope.module(TrainingModule.language),
+      );
 
-      expect(queue.length, QuestionPool.countFor(TrainingModule.language) * 2);
+      expect(queue.length, QuestionRepository.sprintQueueLength);
+    });
+
+    test('Sprint auf einen knappen Aufgabentyp wiederholt statt auszugehen',
+        () {
+      final queue = repository.drawSprintQueue(
+        PracticeScope.subCategory(SubCategory.grammar),
+      );
+
+      expect(queue.length, QuestionRepository.sprintQueueLength);
+      for (final question in queue) {
+        expect(question.subCategory, SubCategory.grammar);
+      }
     });
   });
 
@@ -141,10 +155,15 @@ void main() {
       );
     });
 
-    test('Sprint-Warteschlange hat die feste Pufferlänge', () {
-      final queue = repository.drawSprintQueue(TrainingModule.math);
+    test('Sprint auf einen Aufgabentyp bleibt beim Thema', () {
+      final queue = repository.drawSprintQueue(
+        PracticeScope.subCategory(SubCategory.arithmetic),
+      );
 
       expect(queue.length, QuestionRepository.sprintQueueLength);
+      for (final question in queue) {
+        expect(question.subCategory, SubCategory.arithmetic);
+      }
     });
 
     test('derselbe Seed liefert dieselben Aufgaben', () {

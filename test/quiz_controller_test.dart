@@ -38,7 +38,7 @@ class _FixedRepository extends QuestionRepository {
       questions;
 
   @override
-  List<Question> drawSprintQueue(TrainingModule module) => questions;
+  List<Question> drawSprintQueue(PracticeScope scope) => questions;
 
   @override
   List<Question> drawForPart(SimulationPart part) => questions;
@@ -369,6 +369,115 @@ void main() {
     });
   });
 
+  group('Sprint pro Aufgabentyp', () {
+    QuizConfig sprintOn(PracticeScope scope) {
+      final config = (mode: SessionMode.sprint, scope: scope, length: 0);
+      final subscription = container.listen(
+        quizControllerProvider(config),
+        (_, __) {},
+      );
+      addTearDown(subscription.close);
+      return config;
+    }
+
+    test('zieht ausschließlich Aufgaben des gewählten Typs', () {
+      final config = sprintOn(
+        PracticeScope.subCategory(SubCategory.numberSequences),
+      );
+      final session = container.read(quizControllerProvider(config));
+
+      expect(session.questions, isNotEmpty);
+      for (final question in session.questions) {
+        expect(question.subCategory, SubCategory.numberSequences);
+      }
+    });
+
+    test('die Warteschlange reicht für die volle Minute', () {
+      final config = sprintOn(
+        PracticeScope.subCategory(SubCategory.arithmetic),
+      );
+
+      expect(
+        container.read(quizControllerProvider(config)).totalQuestions,
+        QuestionRepository.sprintQueueLength,
+      );
+    });
+
+    test('deckt während des Sprints keine Lösung auf', () {
+      final config = sprintOn(
+        PracticeScope.subCategory(SubCategory.numberSequences),
+      );
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      controller.answer(
+        wrongResponse(
+          container.read(quizControllerProvider(config)).currentQuestion,
+        ),
+      );
+
+      final session = container.read(quizControllerProvider(config));
+      expect(session.revealed, isFalse);
+      expect(session.currentIndex, 1);
+    });
+
+    test('der Bestwert wird je Aufgabentyp geführt', () async {
+      final topic = PracticeScope.subCategory(SubCategory.numberSequences);
+      final config = sprintOn(topic);
+      final controller = container.read(quizControllerProvider(config).notifier);
+
+      for (var i = 0; i < 3; i++) {
+        controller.answer(
+          correctResponse(
+            container.read(quizControllerProvider(config)).currentQuestion,
+          ),
+        );
+      }
+      controller.finishEarly();
+      await Future<void>.delayed(Duration.zero);
+
+      final stats = container.read(statsControllerProvider);
+      expect(stats.bestSprint(topic), 3);
+      // Das ganze Modul hat einen eigenen, davon unabhängigen Bestwert.
+      expect(
+        stats.bestSprint(const PracticeScope.module(TrainingModule.logic)),
+        0,
+      );
+    });
+
+    test('der Bestwert vor der Runde bleibt für die Auswertung erhalten',
+        () async {
+      final topic = PracticeScope.subCategory(SubCategory.numberSequences);
+
+      // Erste Runde: zwei richtig.
+      final first = sprintOn(topic);
+      var controller = container.read(quizControllerProvider(first).notifier);
+      for (var i = 0; i < 2; i++) {
+        controller.answer(
+          correctResponse(
+            container.read(quizControllerProvider(first)).currentQuestion,
+          ),
+        );
+      }
+      controller.finishEarly();
+      await Future<void>.delayed(Duration.zero);
+
+      // Zweite Runde kennt den alten Bestwert.
+      container.invalidate(quizControllerProvider(first));
+      final second = sprintOn(topic);
+      expect(
+        container.read(quizControllerProvider(second)).previousSprintBest,
+        2,
+      );
+
+      controller = container.read(quizControllerProvider(second).notifier);
+      controller.finishEarly();
+      await Future<void>.delayed(Duration.zero);
+
+      // Null richtig darf den Bestwert nicht drücken.
+      expect(container.read(statsControllerProvider).bestSprint(topic), 2);
+    });
+  });
+
   group('Sprint-Modus', () {
     test('startet mit 60 Sekunden und schaltet ohne Feedback weiter', () {
       final config = keepAlive(SessionMode.sprint, TrainingModule.math);
@@ -412,12 +521,13 @@ void main() {
       // Das Persistieren läuft asynchron an.
       await Future<void>.delayed(Duration.zero);
 
-      final stats = container
-          .read(statsControllerProvider)
-          .forModule(TrainingModule.math);
-      expect(stats.bestSprintScore, 2);
-      expect(stats.answered, 2);
-      expect(stats.correct, 2);
+      final stats = container.read(statsControllerProvider);
+      expect(
+        stats.bestSprint(const PracticeScope.module(TrainingModule.math)),
+        2,
+      );
+      expect(stats.forModule(TrainingModule.math).answered, 2);
+      expect(stats.forModule(TrainingModule.math).correct, 2);
     });
 
     test('legt einen Eintrag im Sitzungsverlauf an', () async {

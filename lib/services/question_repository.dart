@@ -105,19 +105,34 @@ class QuestionRepository {
     return drawn..shuffle(_random);
   }
 
-  /// Sprint-Modus: In 60 Sekunden soll die Warteschlange nicht ausgehen.
-  /// Bei statischem Content wird der Pool dafür zweimal gemischt angehängt.
-  List<Question> drawSprintQueue(TrainingModule module) {
+  /// Sprint-Modus: eine Warteschlange fester Länge für den gewählten
+  /// Aufgabentyp.
+  ///
+  /// Die Länge ist großzügig bemessen, damit in 60 Sekunden garantiert nicht
+  /// die Aufgaben ausgehen. Bei statischem Content mit wenigen Aufgaben wird
+  /// der Pool dafür mehrfach – jeweils neu gemischt – angehängt; einzelne
+  /// Aufgaben können in einer Runde dann wiederkehren.
+  List<Question> drawSprintQueue(PracticeScope scope) {
+    final module = scope.module;
+    if (module == null) return drawMixed(count: sprintQueueLength);
+
     if (QuestionPool.isGenerated(module)) {
-      return _math.generate(count: sprintQueueLength);
+      return _math.generate(
+        count: sprintQueueLength,
+        subCategories: scope.subCategories,
+      );
     }
 
-    final firstRound = QuestionPool.forModule(module)..shuffle(_random);
-    final secondRound = QuestionPool.forModule(module)..shuffle(_random);
-    return [
-      for (final question in [...firstRound, ...secondRound])
-        _shuffleOptions(question),
-    ];
+    final pool = QuestionPool.forSubCategories(module, scope.subCategories);
+    if (pool.isEmpty) return const [];
+
+    final queue = <Question>[];
+    while (queue.length < sprintQueueLength) {
+      final round = [...pool]..shuffle(_random);
+      queue.addAll(round.map(_shuffleOptions));
+    }
+
+    return queue.take(sprintQueueLength).toList();
   }
 
   /// Testsimulation: Aufgaben für genau einen Testteil.

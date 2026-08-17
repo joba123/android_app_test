@@ -17,6 +17,7 @@ class StorageService {
   final SharedPreferences _prefs;
 
   static const String _statsKey = 'training_stats_v1';
+  static const String _sprintBestsKey = 'sprint_bests_v1';
   static const String _sessionsKey = 'training_sessions_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
@@ -26,14 +27,18 @@ class StorageService {
   // --- Aggregierter Fortschritt ---
 
   TrainingStats loadStats() {
+    var stats = TrainingStats(
+      perModule: TrainingStats.empty().perModule,
+      sprintBests: _loadSprintBests(),
+    );
+
     final raw = _prefs.getString(_statsKey);
-    if (raw == null || raw.isEmpty) return TrainingStats.empty();
+    if (raw == null || raw.isEmpty) return stats;
 
     try {
       final decoded = jsonDecode(raw);
-      if (decoded is! List) return TrainingStats.empty();
+      if (decoded is! List) return stats;
 
-      var stats = TrainingStats.empty();
       for (final entry in decoded) {
         if (entry is Map<String, dynamic>) {
           stats = stats.withModule(ModuleStats.fromJson(entry));
@@ -42,15 +47,34 @@ class StorageService {
       return stats;
     } on FormatException {
       // Beschädigte Daten sollen die App nicht blockieren.
-      return TrainingStats.empty();
+      return stats;
+    }
+  }
+
+  Map<String, int> _loadSprintBests() {
+    final raw = _prefs.getString(_sprintBestsKey);
+    if (raw == null || raw.isEmpty) return const {};
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) return const {};
+
+      return {
+        for (final entry in decoded.entries)
+          if (entry.key is String && entry.value is int)
+            entry.key as String: entry.value as int,
+      };
+    } on FormatException {
+      return const {};
     }
   }
 
   Future<void> saveStats(TrainingStats stats) async {
-    final payload = jsonEncode(
-      [for (final entry in stats.perModule.values) entry.toJson()],
+    await _prefs.setString(
+      _statsKey,
+      jsonEncode([for (final entry in stats.perModule.values) entry.toJson()]),
     );
-    await _prefs.setString(_statsKey, payload);
+    await _prefs.setString(_sprintBestsKey, jsonEncode(stats.sprintBests));
   }
 
   // --- Sitzungsverlauf ---
@@ -94,6 +118,7 @@ class StorageService {
 
   Future<void> resetStats() async {
     await _prefs.remove(_statsKey);
+    await _prefs.remove(_sprintBestsKey);
     await _prefs.remove(_sessionsKey);
   }
 }

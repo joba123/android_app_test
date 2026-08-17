@@ -26,6 +26,7 @@ class QuizSession {
     this.remainingSeconds,
     this.status = SessionStatus.running,
     this.summary,
+    this.previousSprintBest = 0,
   });
 
   final SessionMode mode;
@@ -56,6 +57,10 @@ class QuizSession {
   /// Auswertung der Runde. Steht erst fest, wenn [status] auf
   /// [SessionStatus.finished] gewechselt ist.
   final TrainingSession? summary;
+
+  /// Sprint-Bestwert für diesen Aufgabentyp, wie er **vor** dieser Runde
+  /// stand. Nur im Sprint gesetzt.
+  final int previousSprintBest;
 
   Question get currentQuestion => questions[currentIndex];
 
@@ -103,6 +108,7 @@ class QuizSession {
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       status: status ?? this.status,
       summary: summary ?? this.summary,
+      previousSprintBest: previousSprintBest,
     );
   }
 }

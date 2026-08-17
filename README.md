@@ -85,9 +85,17 @@ Fortschritt steht durchgehend im Kopfbereich („Aufgabe 5/20"). Am Ende folgt d
 Auswertung mit Trefferquote, **Fehlerquote**, **Ø Zeit pro Aufgabe**,
 Gesamtdauer und – bei gemischten Runden – einer Aufschlüsselung nach Thema.
 
-**Sprint-Modus** – 60 Sekunden, so viele richtige Antworten wie möglich. Kein
-Feedback zwischendurch, direktes Weiterschalten nach jedem Tipp. Pro Modul wird
-ein Bestwert gespeichert.
+**Sprint-Modus** – 60 Sekunden auf **einen Aufgabentyp**, der vorher gewählt
+wird („Grundrechenarten Sprint", „Zahlenreihen Sprint", …). Der Countdown läuft
+sichtbar mit, Aufgaben kommen automatisch nacheinander. Bewusst **keine
+Erklärung während des Sprints** – das Feedback kommt erst in der Auswertung, mit
+bearbeiteten Aufgaben, Fehlerquote und Ø Zeit pro Aufgabe.
+
+Jeder Aufgabentyp führt seinen **eigenen Bestwert**: Ein Sprint über
+Grundrechenarten und einer über das ganze Modul Mathematik sind nicht dieselbe
+Disziplin und teilen sich deshalb keinen Rekord. Einen Misch-Modus gibt es hier
+absichtlich nicht – Kopfrechnen und Textverständnis in einer Runde wären nicht
+vergleichbar.
 
 **Testsimulation** – Realitätsnaher Durchlauf über **mindestens 30 Minuten**,
 aufgeteilt in mehrere Testteile mit jeweils fest vorgegebener Bearbeitungszeit.
@@ -150,6 +158,7 @@ lib/
 │   ├── home_screen.dart       Schnellstart, Module, Gesamtsimulation
 │   ├── module_screen.dart     Modus-Auswahl innerhalb eines Moduls
 │   ├── practice_setup_screen.dart  Thema/Misch-Modus und Umfang wählen
+│   ├── sprint_setup_screen.dart    Aufgabentyp für den Sprint wählen
 │   ├── quiz_screen.dart       Übungs- und Sprint-Modus
 │   ├── simulation_screen.dart Briefing → Bearbeitung → Ergebnis
 │   ├── result_screen.dart     Auswertungen (Runde und Simulation)
@@ -162,6 +171,7 @@ lib/
 │   └── storage_service.dart   Lokale Persistenz (SharedPreferences)
 ├── widgets/                   Wiederverwendbare Bausteine
 │   ├── module_card.dart       Modul- und Modus-Kacheln
+│   ├── scope_selector.dart    Auswahlliste, geteilt von Übung und Sprint
 │   ├── question_card.dart     Aufgabenkarte + Erklärungsbox
 │   ├── answer_option_tile.dart  Antwortoption mit Zustandsfarben
 │   ├── timer_bar.dart         Countdown-Anzeige
@@ -243,7 +253,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 165 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 180 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Release-Build ist vorerst mit dem Debug-Key signiert, damit er ohne weitere
 Einrichtung durchläuft – vor einer Veröffentlichung muss in
 `android/app/build.gradle` ein echter Release-Keystore hinterlegt werden.
@@ -269,8 +279,9 @@ Die Tests decken ab:
   für jede Simulation
 - **Ablauf** – beide Quiz-Modi, der mehrteilige Simulationsablauf mit
   Zeitablauf und Auswertung, Persistenz von Fortschritt und Verlauf
-- **Oberfläche** – Navigation, Auswahl des Übungsumfangs, Fortschrittsanzeige,
-  sofortige Rückmeldung mit Erklärung, Auswertung mit Fehlerquote und Zeiten,
+- **Oberfläche** – Navigation, Auswahl von Übungsumfang und Sprint-Aufgabentyp,
+  Fortschrittsanzeige, sofortige Rückmeldung mit Erklärung, Sprint ohne
+  Erklärung bis zum Zeitablauf, Auswertung mit Fehlerquote und Zeiten,
   Zahleneingabefeld inklusive Fehlerfall
 
 ## Stand und nächste Schritte

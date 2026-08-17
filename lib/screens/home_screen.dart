@@ -4,8 +4,10 @@ import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/module_screen.dart';
 import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
+import 'package:einstellungstest_trainer/screens/sprint_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/stats_screen.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/module_card.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:flutter/material.dart';
@@ -92,6 +94,19 @@ class HomeScreen extends ConsumerWidget {
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const PracticeSetupScreen(),
+                ),
+              ),
+            ),
+            ModeCard(
+              title: 'Sprint-Modus',
+              subtitle: '60 Sekunden auf einen Aufgabentyp – '
+                  'Auswertung erst danach.',
+              meta: '${QuizController.sprintSeconds} Sek',
+              icon: Icons.bolt_outlined,
+              color: const Color(0xFFD97706),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const SprintSetupScreen(),
                 ),
               ),
             ),

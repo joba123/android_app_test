@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/models/module_stats.dart';
+import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
@@ -53,7 +54,10 @@ class StatsController extends Notifier<TrainingStats> {
   ///
   /// Die Ergebnisse werden nach Modul gruppiert, damit auch die
   /// modulübergreifende Gesamtsimulation korrekt einzahlt.
-  Future<void> record(TrainingSession session) async {
+  ///
+  /// [scope] wird für Sprint-Bestwerte gebraucht: Die werden je Aufgabentyp
+  /// geführt, und diese Information steckt nicht in der [TrainingSession].
+  Future<void> record(TrainingSession session, {PracticeScope? scope}) async {
     final grouped = <TrainingModule, List<QuestionResult>>{};
     for (final result in session.results) {
       grouped.putIfAbsent(result.module, () => []).add(result);
@@ -62,17 +66,18 @@ class StatsController extends Notifier<TrainingStats> {
     var updated = state;
     for (final entry in grouped.entries) {
       final current = updated.forModule(entry.key);
-      final isSprintForThisModule =
-          session.mode == SessionMode.sprint && session.module == entry.key;
 
       updated = updated.withModule(
         current.merge(
           addedAnswered: entry.value.where((result) => result.answered).length,
           addedCorrect: entry.value.where((result) => result.correct).length,
-          sprintScore: isSprintForThisModule ? session.correctCount : null,
           completedSession: true,
         ),
       );
+    }
+
+    if (session.mode == SessionMode.sprint && scope != null) {
+      updated = updated.withSprintResult(scope, session.correctCount);
     }
 
     state = updated;

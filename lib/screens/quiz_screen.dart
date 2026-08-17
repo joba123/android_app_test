@@ -44,6 +44,7 @@ class QuizScreen extends ConsumerWidget {
           scopeLabel: scope.label,
           summary: summary,
           answers: session.answers,
+          previousSprintBest: session.previousSprintBest,
           onRetry: () => ref.invalidate(quizControllerProvider(_config)),
         );
       }
@@ -57,9 +58,12 @@ class QuizScreen extends ConsumerWidget {
     final question = session.currentQuestion;
     final isSprint = mode == SessionMode.sprint;
 
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('${scope.shortLabel} · ${mode.label}'),
+        title: Text(
+          isSprint ? scope.sprintTitle : '${scope.shortLabel} · ${mode.label}',
+        ),
         actions: [
           TextButton(
             onPressed: () => _confirmExit(context, controller),

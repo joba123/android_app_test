@@ -171,6 +171,94 @@ void main() {
     });
   });
 
+  group('Sprint', () {
+    /// Startseite → Sprint-Modus → Auswahl des Aufgabentyps.
+    Future<void> openSprintSetup(WidgetTester tester) async {
+      await tester.tap(find.text('Sprint-Modus'));
+      await tester.pumpAndSettle();
+    }
+
+    /// Route-Wechsel abwarten, ohne auf den laufenden Countdown zu warten –
+    /// pumpAndSettle würde bei einem periodischen Timer nie zurückkehren.
+    Future<void> settleRoute(WidgetTester tester) async {
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+    }
+
+    testWidgets('lässt den Aufgabentyp wählen, aber nicht mischen',
+        (tester) async {
+      await pumpApp(tester);
+      await openSprintSetup(tester);
+
+      expect(find.text('Welchen Aufgabentyp?'), findsOneWidget);
+      expect(find.text('Grundrechenarten'), findsOneWidget);
+      expect(find.text('Zahlenreihen'), findsOneWidget);
+      // Ein Sprint misst das Tempo in einer Disziplin – kein Misch-Modus.
+      expect(find.text('Alle Kategorien gemischt'), findsNothing);
+      // Ohne Umfangswahl: die Runde dauert immer 60 Sekunden.
+      expect(find.text('10 Aufgaben'), findsNothing);
+    });
+
+    testWidgets('zeigt den Aufgabentyp im Titel der Runde', (tester) async {
+      await pumpApp(tester);
+      await openSprintSetup(tester);
+
+      await tester.tap(find.text('Zahlenreihen'));
+      await tester.pumpAndSettle();
+      expect(find.text('Zahlenreihen Sprint'), findsOneWidget);
+
+      await tester.tap(find.text('Sprint starten'));
+      await settleRoute(tester);
+
+      expect(find.text('Zahlenreihen Sprint'), findsOneWidget);
+      expect(find.text('Sprint läuft'), findsOneWidget);
+    });
+
+    testWidgets('schaltet ohne Erklärung direkt weiter', (tester) async {
+      await pumpApp(tester);
+      await openSprintSetup(tester);
+
+      await tester.tap(find.text('Zahlenreihen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sprint starten'));
+      await settleRoute(tester);
+
+      expect(find.text('0 richtig · 0 bearbeitet'), findsOneWidget);
+
+      await tester.tap(find.text('A'));
+      await tester.pump();
+
+      // Kein Feedback, kein "Weiter" – die nächste Aufgabe steht sofort da.
+      expect(find.byType(ExplanationBox), findsNothing);
+      expect(find.text('Weiter'), findsNothing);
+      expect(find.textContaining('1 bearbeitet'), findsOneWidget);
+    });
+
+    testWidgets('wertet nach Ablauf der Zeit aus', (tester) async {
+      await pumpApp(tester);
+      await openSprintSetup(tester);
+
+      await tester.tap(find.text('Zahlenreihen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Sprint starten'));
+      await settleRoute(tester);
+
+      await tester.tap(find.text('A'));
+      await tester.pump();
+
+      // Die volle Minute im Zeitraffer verstreichen lassen.
+      for (var second = 0; second < 61; second++) {
+        await tester.pump(const Duration(seconds: 1));
+      }
+      await tester.pumpAndSettle();
+
+      expect(find.text('bearbeitet'), findsOneWidget);
+      expect(find.text('Fehlerquote'), findsOneWidget);
+      expect(find.text('Ø pro Aufgabe'), findsOneWidget);
+      expect(find.textContaining('Bestwert'), findsWidgets);
+    });
+  });
+
   testWidgets('Modul-Screen bietet alle drei Trainingsmodi an', (tester) async {
     await pumpApp(tester);
 

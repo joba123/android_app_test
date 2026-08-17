@@ -1,10 +1,9 @@
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
-import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
-import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
+import 'package:einstellungstest_trainer/screens/sprint_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
@@ -80,7 +79,7 @@ class ModuleScreen extends ConsumerWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: StatTile(
-                    value: '${stats.bestSprintScore}',
+                    value: '${ref.watch(statsControllerProvider).bestSprintInModule(module)}',
                     label: 'Sprint-Bestwert',
                     icon: Icons.bolt_outlined,
                     color: const Color(0xFFD97706),
@@ -115,15 +114,14 @@ class ModuleScreen extends ConsumerWidget {
             ModeCard(
               title: 'Sprint-Modus',
               subtitle: 'So viele Aufgaben wie möglich in 60 Sekunden. '
-                  'Kein Feedback zwischendurch – nur Tempo.',
+                  'Aufgabentyp wählbar, jeder mit eigenem Bestwert.',
               meta: '${QuizController.sprintSeconds} Sek',
               icon: Icons.bolt_outlined,
               color: const Color(0xFFD97706),
               onTap: () => Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => QuizScreen(
-                    mode: SessionMode.sprint,
-                    scope: PracticeScope.module(module),
+                  builder: (_) => SprintSetupScreen(
+                    initialScope: PracticeScope.module(module),
                   ),
                 ),
               ),

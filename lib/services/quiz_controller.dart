@@ -4,7 +4,6 @@ import 'package:einstellungstest_trainer/models/answer_record.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
-import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,27 +34,32 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
   @override
   QuizSession build(QuizConfig arg) {
     final repository = ref.watch(questionRepositoryProvider);
+    final isSprint = arg.mode == SessionMode.sprint;
 
-    // Der Sprint läuft immer auf genau einem Modul – eine gemischte Variante
-    // gibt es dort nicht, deshalb der Rückfall auf Mathematik.
-    final questions = arg.mode == SessionMode.sprint
-        ? repository.drawSprintQueue(arg.scope.module ?? TrainingModule.math)
+    final questions = isSprint
+        ? repository.drawSprintQueue(arg.scope)
         : repository.drawForScope(arg.scope, count: arg.length);
 
     ref.onDispose(() => _timer?.cancel());
 
+    // Bestwert vor der Runde festhalten, damit die Auswertung eine
+    // Verbesserung erkennen kann – nach dem Verbuchen wäre er bereits
+    // überschrieben.
+    final previousBest = isSprint
+        ? ref.read(statsControllerProvider).bestSprint(arg.scope)
+        : 0;
+
     final now = DateTime.now();
     _questionStartedAt = now;
-    if (arg.mode == SessionMode.sprint) {
-      _startTimer();
-    }
+    if (isSprint) _startTimer();
 
     return QuizSession(
       mode: arg.mode,
       scope: arg.scope,
       questions: questions,
       startedAt: now,
-      remainingSeconds: arg.mode == SessionMode.sprint ? sprintSeconds : null,
+      remainingSeconds: isSprint ? sprintSeconds : null,
+      previousSprintBest: previousBest,
     );
   }
 
@@ -173,7 +177,12 @@ class QuizController extends AutoDisposeFamilyNotifier<QuizSession, QuizConfig> 
       summary: summary,
     );
 
-    unawaited(ref.read(statsControllerProvider.notifier).record(summary));
+    unawaited(
+      ref.read(statsControllerProvider.notifier).record(
+        summary,
+        scope: state.scope,
+      ),
+    );
   }
 }
 
