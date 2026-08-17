@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/module_stats.dart';
+import 'package:einstellungstest_trainer/models/reminder_settings.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -21,6 +22,7 @@ class StorageService {
   static const String _sprintBestsKey = 'sprint_bests_v1';
   static const String _sessionsKey = 'training_sessions_v1';
   static const String _examDateKey = 'exam_date_v1';
+  static const String _reminderSettingsKey = 'reminder_settings_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -141,6 +143,28 @@ class StorageService {
     await _prefs.setString(_examDateKey, jsonEncode(examDate.toJson()));
   }
 
+  // --- Erinnerungen ---
+
+  ReminderSettings loadReminderSettings() {
+    final raw = _prefs.getString(_reminderSettingsKey);
+    if (raw == null || raw.isEmpty) return const ReminderSettings();
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return const ReminderSettings();
+      return ReminderSettings.fromJson(decoded);
+    } on FormatException {
+      return const ReminderSettings();
+    }
+  }
+
+  Future<void> saveReminderSettings(ReminderSettings settings) async {
+    await _prefs.setString(
+      _reminderSettingsKey,
+      jsonEncode(settings.toJson()),
+    );
+  }
+
   Future<void> resetStats() async {
     await _prefs.remove(_statsKey);
     await _prefs.remove(_sprintBestsKey);
@@ -152,6 +176,7 @@ class StorageService {
   Future<void> resetEverything() async {
     await resetStats();
     await _prefs.remove(_examDateKey);
+    await _prefs.remove(_reminderSettingsKey);
   }
 
   /// Ersetzt die gespeicherten Sitzungen vollständig – nach einem Abgleich

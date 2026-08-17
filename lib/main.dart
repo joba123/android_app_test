@@ -1,5 +1,7 @@
 import 'package:einstellungstest_trainer/app.dart';
 import 'package:einstellungstest_trainer/firebase_options.dart';
+import 'package:einstellungstest_trainer/services/notifications/local_reminder_service.dart';
+import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -21,6 +23,9 @@ Future<void> main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(prefs),
         firebaseReadyProvider.overrideWithValue(firebaseReady),
+        // Der Dienst richtet sich beim ersten Zugriff selbst ein; das Laden
+        // der Zeitzonen-Datenbank haelt den App-Start dadurch nicht auf.
+        reminderServiceProvider.overrideWithValue(LocalReminderService()),
       ],
       child: const EinstellungstestTrainerApp(),
     ),

@@ -1,4 +1,3 @@
-import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/services/auth/account_controller.dart';
 import 'package:einstellungstest_trainer/services/auth/auth_service.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
@@ -35,23 +34,6 @@ class AccountScreen extends ConsumerWidget {
               _SignedOutCard(available: auth.isAvailable, busy: account.busy)
             else
               _SignedInCard(user: user, busy: account.busy),
-            const SizedBox(height: 24),
-            Text(
-              'Testtermin',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Wird mit deinem Konto abgeglichen und ist damit auf allen '
-              'Geräten verfügbar.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const _ExamDateCard(),
             const SizedBox(height: 24),
             Text(
               'Datenschutz',
@@ -294,97 +276,6 @@ class _SignedInCard extends ConsumerWidget {
     if (confirmed ?? false) {
       await ref.read(accountControllerProvider.notifier).deleteAccount();
     }
-  }
-}
-
-/// Testtermin setzen, ändern, entfernen.
-class _ExamDateCard extends ConsumerWidget {
-  const _ExamDateCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final examDate = ref.watch(examDateProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (examDate == null)
-            Text(
-              'Noch kein Termin hinterlegt.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            )
-          else ...[
-            Text(
-              _formatDate(examDate.date),
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              [
-                examDate.describe(DateTime.now()),
-                if (examDate.label != null) examDate.label!,
-              ].join(' · '),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _pick(context, ref, examDate),
-                  child: Text(examDate == null ? 'Termin setzen' : 'Ändern'),
-                ),
-              ),
-              if (examDate != null) ...[
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: () => ref.read(examDateProvider.notifier).clear(),
-                  child: const Text('Entfernen'),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatDate(DateTime value) {
-    return '${value.day.toString().padLeft(2, '0')}.'
-        '${value.month.toString().padLeft(2, '0')}.${value.year}';
-  }
-
-  Future<void> _pick(
-    BuildContext context,
-    WidgetRef ref,
-    ExamDate? current,
-  ) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current?.date ?? now.add(const Duration(days: 30)),
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: now.add(const Duration(days: 730)),
-      helpText: 'Wann ist dein Einstellungstest?',
-    );
-
-    if (picked == null) return;
-    await ref.read(examDateProvider.notifier).set(picked, label: current?.label);
   }
 }
 

@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/services/auth/auth_service.dart';
+import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/sync/cloud_sync_service.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';

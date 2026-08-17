@@ -36,6 +36,17 @@ class ExamDate {
     };
   }
 
+  /// Vergleicht Termin und Beschriftung, nicht den Änderungszeitstempel.
+  ///
+  /// Ein Abgleich, der denselben Termin zurückbringt, soll die Erinnerungen
+  /// nicht ohne Grund neu planen.
+  @override
+  bool operator ==(Object other) =>
+      other is ExamDate && other.date == date && other.label == label;
+
+  @override
+  int get hashCode => Object.hash(date, label);
+
   Map<String, dynamic> toJson() => {
         'date': date.toUtc().toIso8601String(),
         'updatedAt': updatedAt.toUtc().toIso8601String(),
@@ -48,8 +59,11 @@ class ExamDate {
 
     return ExamDate(
       date: date.toLocal(),
+      // Wie beim Datum zurück in die lokale Zone: Gespeichert wird in UTC,
+      // gearbeitet wird lokal.
       updatedAt:
-          DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? date,
+          DateTime.tryParse(json['updatedAt'] as String? ?? '')?.toLocal() ??
+              date.toLocal(),
       label: json['label'] as String?,
     );
   }

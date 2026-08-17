@@ -1,4 +1,6 @@
+import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/module_stats.dart';
+import 'package:einstellungstest_trainer/models/reminder_settings.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
@@ -171,16 +173,82 @@ void main() {
     });
   });
 
+  group('Testtermin und Erinnerungen', () {
+    test('Testtermin übersteht Speichern und Laden', () async {
+      final examDate = ExamDate(
+        date: DateTime(2026, 9, 14),
+        updatedAt: DateTime(2026, 8, 1),
+        label: 'Polizei NRW',
+      );
+
+      await storage.saveExamDate(examDate);
+      final restored = storage.loadExamDate();
+
+      expect(restored?.date, examDate.date);
+      expect(restored?.label, 'Polizei NRW');
+      expect(restored?.updatedAt, examDate.updatedAt);
+    });
+
+    test('ohne Termin ist nichts hinterlegt', () async {
+      expect(storage.loadExamDate(), isNull);
+
+      await storage.saveExamDate(
+        ExamDate(date: DateTime(2026, 9, 14), updatedAt: DateTime(2026, 8, 1)),
+      );
+      await storage.saveExamDate(null);
+
+      expect(storage.loadExamDate(), isNull);
+    });
+
+    test('Erinnerungen sind voreingestellt aus', () {
+      final settings = storage.loadReminderSettings();
+
+      expect(settings.enabled, isFalse);
+      expect(settings.leadDays, ReminderSettings.defaultLeadDays);
+    });
+
+    test('Erinnerungen überstehen Speichern und Laden', () async {
+      const settings = ReminderSettings(
+        enabled: true,
+        leadDays: {30, 3},
+        hour: 9,
+        minute: 30,
+      );
+
+      await storage.saveReminderSettings(settings);
+
+      expect(storage.loadReminderSettings(), settings);
+    });
+
+    test('Alles-Zurücksetzen entfernt auch Termin und Erinnerungen', () async {
+      await storage.saveExamDate(
+        ExamDate(date: DateTime(2026, 9, 14), updatedAt: DateTime(2026, 8, 1)),
+      );
+      await storage.saveReminderSettings(
+        const ReminderSettings(enabled: true),
+      );
+
+      await storage.resetEverything();
+
+      expect(storage.loadExamDate(), isNull);
+      expect(storage.loadReminderSettings().enabled, isFalse);
+    });
+  });
+
   group('Robustheit', () {
     test('beschädigte Daten blockieren die App nicht', () async {
       SharedPreferences.setMockInitialValues({
         'training_stats_v1': 'kein JSON',
         'training_sessions_v1': '{"auch":"kein Array"}',
+        'exam_date_v1': 'auch kein JSON',
+        'reminder_settings_v1': '[]',
       });
       final broken = StorageService(await SharedPreferences.getInstance());
 
       expect(broken.loadStats().totalAnswered, 0);
       expect(broken.loadSessions(), isEmpty);
+      expect(broken.loadExamDate(), isNull);
+      expect(broken.loadReminderSettings().enabled, isFalse);
     });
 
     test('Zurücksetzen löscht Fortschritt und Verlauf', () async {

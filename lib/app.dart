@@ -1,8 +1,30 @@
 import 'package:einstellungstest_trainer/screens/home_screen.dart';
+import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class EinstellungstestTrainerApp extends StatelessWidget {
+class EinstellungstestTrainerApp extends ConsumerStatefulWidget {
   const EinstellungstestTrainerApp({super.key});
+
+  @override
+  ConsumerState<EinstellungstestTrainerApp> createState() =>
+      _EinstellungstestTrainerAppState();
+}
+
+class _EinstellungstestTrainerAppState
+    extends ConsumerState<EinstellungstestTrainerApp> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Beim Start einmal neu planen. Android verwirft geplante Alarme unter
+    // anderem beim Neustart des Geraets; ausserdem koennen Erinnerungen
+    // inzwischen in der Vergangenheit liegen oder der Termin auf einem
+    // anderen Geraet verschoben worden sein.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(reminderControllerProvider.notifier).reschedule();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {

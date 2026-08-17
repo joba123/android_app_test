@@ -2,15 +2,15 @@ import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
 import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
-import 'package:einstellungstest_trainer/screens/account_screen.dart';
 import 'package:einstellungstest_trainer/screens/module_screen.dart';
 import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
+import 'package:einstellungstest_trainer/screens/settings_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
 import 'package:einstellungstest_trainer/screens/sprint_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/stats_screen.dart';
+import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
-import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
 import 'package:einstellungstest_trainer/widgets/module_card.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:flutter/material.dart';
@@ -24,19 +24,16 @@ class HomeScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final stats = ref.watch(statsControllerProvider);
     final examDate = ref.watch(examDateProvider);
-    final signedIn = ref.watch(authUserProvider).value != null;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Einstellungstest Trainer'),
         actions: [
           IconButton(
-            tooltip: signedIn ? 'Konto' : 'Anmelden & Testtermin',
-            icon: Icon(
-              signedIn ? Icons.cloud_done_outlined : Icons.account_circle_outlined,
-            ),
+            tooltip: 'Einstellungen',
+            icon: const Icon(Icons.settings_outlined),
             onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const AccountScreen()),
+              MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
             ),
           ),
           IconButton(
@@ -199,7 +196,7 @@ class _ExamCountdown extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const AccountScreen()),
+          MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),

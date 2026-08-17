@@ -177,10 +177,12 @@ lib/
 │   ├── simulation.dart        Testteile, Simulationszustand, Auswertung
 │   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
 │   ├── exam_date.dart         Hinterlegter Testtermin inkl. Countdown
+│   ├── reminder_settings.dart Erinnerungen: Einstellungen + Terminberechnung
 │   └── module_stats.dart      Persistierter Lernfortschritt
 ├── screens/                   UI-Screens
 │   ├── home_screen.dart       Schnellstart, Module, Gesamtsimulation
-│   ├── account_screen.dart    Anmeldung, Abgleich, Testtermin, Datenschutz
+│   ├── settings_screen.dart   Testtermin, Erinnerungen, Weg zum Konto
+│   ├── account_screen.dart    Anmeldung, Abgleich, Datenschutz
 │   ├── module_screen.dart     Modus-Auswahl innerhalb eines Moduls
 │   ├── practice_setup_screen.dart  Thema/Misch-Modus und Umfang wählen
 │   ├── sprint_setup_screen.dart    Aufgabentyp für den Sprint wählen
@@ -194,6 +196,11 @@ lib/
 │   ├── quiz_controller.dart   Übung & Sprint inkl. 60-Sek-Timer
 │   ├── simulation_controller.dart  Mehrteilige Simulation mit Teil-Timern
 │   ├── storage_service.dart   Lokale Persistenz (SharedPreferences)
+│   ├── exam_date_controller.dart  Testtermin (Cloud und Erinnerungen)
+│   ├── notifications/         Lokale Erinnerungen
+│   │   ├── reminder_service.dart       Schnittstelle + Ersatz für Tests
+│   │   ├── local_reminder_service.dart flutter_local_notifications
+│   │   └── reminder_controller.dart    Einstellungen und Planung
 │   ├── auth/                  Anmeldung
 │   │   ├── auth_service.dart          Schnittstelle + lokaler Modus
 │   │   ├── firebase_auth_service.dart Google/Apple über Firebase Auth
@@ -257,6 +264,70 @@ ist er gesetzt, zeigt die `QuestionCard` das Bild über dem Aufgabentext. Für d
 Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
 beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
 zusätzlich einen Eintrag in `pubspec.yaml`.
+
+## Testtermin und Erinnerungen
+
+In den **Einstellungen** lässt sich der Termin des anstehenden Einstellungstests
+hinterlegen (optional mit Beschriftung, z. B. „Polizei NRW"). Er hat zwei
+Wirkungen: Auf der Startseite steht ein Countdown („Noch 23 Tage"), und die App
+kann rechtzeitig ans Üben erinnern.
+
+**Erinnerungen sind voreingestellt aus.** Ungefragt Benachrichtigungen zu
+schicken wäre übergriffig – und unter Android 13+ müsste ohnehin erst die
+Berechtigung erfragt werden. Beim Einschalten fragt die App danach; wird sie
+verweigert, bleibt der Schalter aus, statt ein Versprechen zu geben, das die App
+nicht halten kann.
+
+Voreingestellt sind **7 Tage vorher** und **1 Tag vorher**, jeweils um 18 Uhr.
+Beides ist änderbar: Vorlaufzeiten aus 30/14/7/3/1 Tagen (mindestens eine bleibt
+gesetzt) und eine frei wählbare Uhrzeit. Der Einstellungen-Bildschirm zeigt
+dabei nicht nur die Schalter, sondern auch die konkreten Zeitpunkte, die daraus
+folgen.
+
+Der Text richtet sich nach dem Abstand: eine Woche vorher „Eine Übungsrunde am
+Tag hält dich im Rhythmus", drei Tage vorher der Hinweis auf eine
+Testsimulation, am Vortag „Morgen ist dein Einstellungstest".
+
+### Wie die Planung aufgebaut ist
+
+`planReminders()` in `lib/models/reminder_settings.dart` ist eine **reine
+Funktion**: Termin + Einstellungen + „jetzt" ergeben die Liste der Erinnerungen,
+fertig formuliert. Das ist der Teil, der stimmen muss, und er lässt sich ohne
+Emulator prüfen. Die Bibliothek kommt erst danach ins Spiel.
+
+Zwei Regeln stecken darin:
+
+- **Vergangenes wird übersprungen.** Wer den Termin drei Tage vorher einträgt,
+  bekommt keine „Noch 7 Tage"-Meldung mehr – die würde sonst beim Planen
+  entweder abgelehnt oder sofort ausgelöst.
+- **Die Kennung hängt an der Vorlaufzeit, nicht am Datum.** Erneutes Planen
+  ersetzt damit den bestehenden Eintrag, statt einen zweiten anzulegen.
+
+Jede Änderung – am Termin, an den Vorlaufzeiten, an der Uhrzeit – baut die
+geplanten Benachrichtigungen vollständig neu auf. Punktuelle Änderungen wären
+der Fall, in dem ein verschobener Termin eine alte Erinnerung zurücklässt.
+Das gilt auch für einen Termin, den der **Cloud-Abgleich von einem anderen
+Gerät mitbringt**: `ExamDateController` plant danach ebenso neu.
+
+Beim App-Start wird einmal neu geplant. Android verwirft geplante Alarme unter
+anderem beim Neustart des Geräts; dafür ist zusätzlich der Boot-Receiver von
+`flutter_local_notifications` im Manifest eingetragen.
+
+### Warum diese Bibliothek und diese Einstellungen
+
+`flutter_local_notifications` (19.5) ist der De-facto-Standard für lokale
+Benachrichtigungen in Flutter. Dazu kommen `timezone` und `flutter_timezone`:
+Ein geplanter Zeitpunkt braucht eine echte Zonenangabe, sonst läge die
+Erinnerung im Sommer eine Stunde daneben und auf Reisen mehr.
+
+Geplant wird bewusst **ungenau** (`inexactAllowWhileIdle`). Ein exakter Alarm
+braucht seit Android 13 die Sonderberechtigung `SCHEDULE_EXACT_ALARM`, die
+Google im Play Store nur für Wecker- und Kalender-Apps freigibt. Für eine
+Erinnerung am Abend sind ein paar Minuten Abweichung ohne Belang.
+
+Alles bleibt **auf dem Gerät**: Es gibt keinen Push-Dienst, keinen Server und
+keine Gerätekennung. Die einzige Verbindung nach außen ist der optionale
+Cloud-Abgleich des Termins selbst.
 
 ## Konto und Cloud-Sync
 
@@ -379,7 +450,10 @@ Android-Build immer über `flutter build` laufen und nicht über ein direkt
 aufgerufenes `gradle`.
 
 Für den Android-Build werden zusätzlich das Android SDK (Platform 35,
-Build-Tools 35) und JDK 17 benötigt.
+Build-Tools 35) und JDK 17 benötigt. `flutter_local_notifications` verlangt
+**Core Library Desugaring**; es ist in `android/app/build.gradle` bereits
+aktiviert, zusammen mit den Berechtigungen `POST_NOTIFICATIONS` und
+`RECEIVE_BOOT_COMPLETED` im Manifest.
 
 ### Build & Tests
 
@@ -391,7 +465,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 228 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 269 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Android-Build gelingt auch **ohne** `google-services.json`: Das
 google-services-Gradle-Plugin wird nicht angewandt, die Konfiguration kommt aus
 Dart.
@@ -428,10 +502,16 @@ Die Tests decken ab:
 - **Konto** – Anmelden mit sofortigem Abgleich, abgebrochene Anmeldung ohne
   Fehlermeldung, Abmelden ohne Datenverlust, Löschen von Cloud, Konto und
   Gerät, sowie der lokale Modus ohne Firebase
+- **Erinnerungen** – Berechnung der Zeitpunkte inklusive übersprungener
+  Vergangenheit und stabiler Kennungen, Vorlaufzeiten und Uhrzeit, verweigerte
+  Berechtigung lässt den Schalter aus, ein verschobener Termin verschiebt die
+  Erinnerungen mit, ein entfernter Termin räumt sie ab, ein aus der Cloud
+  übernommener Termin plant neu, ein unveränderter plant nicht erneut
 - **Oberfläche** – Navigation, Auswahl von Übungsumfang und Sprint-Aufgabentyp,
   Fortschrittsanzeige, sofortige Rückmeldung mit Erklärung, Sprint ohne
   Erklärung bis zum Zeitablauf, Auswertung mit Fehlerquote und Zeiten,
-  Zahleneingabefeld inklusive Fehlerfall, Konto-Bildschirm und Testtermin
+  Zahleneingabefeld inklusive Fehlerfall, Konto-Bildschirm, Testtermin und
+  der Erinnerungs-Abschnitt der Einstellungen
 
 ## Stand und nächste Schritte
 
@@ -462,4 +542,5 @@ Naheliegende nächste Schritte:
   Anmeldung ist fertig verdrahtet und wartet nur auf die Konfiguration
 - Abgleich im Hintergrund anstoßen (nach jeder Sitzung, nicht nur beim
   Anmelden und auf Knopfdruck)
-- Erinnerung vor dem hinterlegten Testtermin (lokale Benachrichtigung)
+- Antippen einer Erinnerung direkt in die passende Übungsrunde führen lassen
+  (die Benachrichtigung öffnet bislang nur die App)

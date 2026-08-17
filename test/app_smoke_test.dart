@@ -1,5 +1,7 @@
 import 'package:einstellungstest_trainer/app.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
+import 'package:einstellungstest_trainer/services/notifications/reminder_service.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
@@ -14,7 +16,10 @@ void main() {
   /// Die Standardgröße von 800x600 ist niedriger als ein echtes Handy-Display:
   /// Die ListView würde die unteren Karten gar nicht erst bauen und die
   /// Assertions liefen ins Leere.
-  Future<void> pumpApp(WidgetTester tester) async {
+  Future<void> pumpApp(
+    WidgetTester tester, {
+    List<Override> overrides = const [],
+  }) async {
     tester.view.physicalSize = const Size(1000, 2600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -24,7 +29,10 @@ void main() {
 
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [sharedPreferencesProvider.overrideWithValue(prefs)],
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(prefs),
+          ...overrides,
+        ],
         child: const EinstellungstestTrainerApp(),
       ),
     );
@@ -418,10 +426,17 @@ void main() {
     });
   });
 
-  group('Konto & Sicherung', () {
-    /// Startseite → Konto.
+  group('Einstellungen', () {
+    /// Startseite → Einstellungen.
+    Future<void> openSettings(WidgetTester tester) async {
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+    }
+
+    /// Einstellungen → Konto & Sicherung.
     Future<void> openAccount(WidgetTester tester) async {
-      await tester.tap(find.byIcon(Icons.account_circle_outlined));
+      await openSettings(tester);
+      await tester.tap(find.text('Lokaler Modus'));
       await tester.pumpAndSettle();
     }
 
@@ -453,7 +468,7 @@ void main() {
     testWidgets('der gesetzte Testtermin erscheint auf der Startseite',
         (tester) async {
       await pumpApp(tester);
-      await openAccount(tester);
+      await openSettings(tester);
 
       expect(find.text('Noch kein Termin hinterlegt.'), findsOneWidget);
 
@@ -469,6 +484,108 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Noch 30 Tage'), findsOneWidget);
+    });
+  });
+
+  group('Erinnerungen', () {
+    late InMemoryReminderService reminders;
+
+    setUp(() => reminders = InMemoryReminderService());
+
+    /// Startseite → Einstellungen, mit einem Erinnerungsdienst, der ohne
+    /// Platform-Channels auskommt.
+    Future<void> openSettings(WidgetTester tester) async {
+      await pumpApp(
+        tester,
+        overrides: [reminderServiceProvider.overrideWithValue(reminders)],
+      );
+      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await tester.pumpAndSettle();
+    }
+
+    /// Testtermin auf „in 30 Tagen" setzen.
+    Future<void> setExamDate(WidgetTester tester) async {
+      await tester.tap(find.text('Termin setzen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('sind zunächst aus und zeigen keine Details', (tester) async {
+      await openSettings(tester);
+
+      expect(find.text('Ans Üben erinnern'), findsOneWidget);
+      expect(find.text('Wann vorher?'), findsNothing);
+      expect(reminders.scheduled, isEmpty);
+    });
+
+    testWidgets('planen nach dem Einschalten die Erinnerungen',
+        (tester) async {
+      await openSettings(tester);
+      await setExamDate(tester);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(reminders.permissionRequested, isTrue);
+      expect(reminders.scheduled.map((entry) => entry.leadDays), [7, 1]);
+      // Die Oberfläche zeigt dieselben Zeitpunkte an.
+      expect(find.textContaining('7 Tage vorher'), findsOneWidget);
+      expect(find.textContaining('1 Tag vorher'), findsOneWidget);
+    });
+
+    testWidgets('erklären ohne Termin, dass noch nichts geplant ist',
+        (tester) async {
+      await openSettings(tester);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.textContaining('Sobald ein Testtermin hinterlegt ist'),
+        findsOneWidget,
+      );
+      expect(reminders.scheduled, isEmpty);
+    });
+
+    testWidgets('eine weitere Vorlaufzeit wird sofort übernommen',
+        (tester) async {
+      await openSettings(tester);
+      await setExamDate(tester);
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.widgetWithText(FilterChip, '3 Tage'));
+      await tester.pumpAndSettle();
+
+      expect(reminders.scheduled.map((entry) => entry.leadDays), [7, 3, 1]);
+    });
+
+    testWidgets('bleiben aus, wenn die Berechtigung fehlt', (tester) async {
+      reminders.grantPermission = false;
+      await openSettings(tester);
+      await setExamDate(tester);
+
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Ohne die Berechtigung'), findsOneWidget);
+      expect(find.text('Wann vorher?'), findsNothing);
+      expect(reminders.scheduled, isEmpty);
+    });
+
+    testWidgets('ein entfernter Termin nimmt die Erinnerungen zurück',
+        (tester) async {
+      await openSettings(tester);
+      await setExamDate(tester);
+      await tester.tap(find.byType(Switch));
+      await tester.pumpAndSettle();
+      expect(reminders.scheduled, isNotEmpty);
+
+      await tester.tap(find.text('Entfernen'));
+      await tester.pumpAndSettle();
+
+      expect(reminders.scheduled, isEmpty);
     });
   });
 
