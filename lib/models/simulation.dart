@@ -2,16 +2,21 @@ import 'package:einstellungstest_trainer/models/answer_record.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/models/training_session.dart';
 
-/// Ein Testteil innerhalb einer Simulation, z. B. "Teil 2: Dreisatz & Prozent".
+/// Ein Testteil innerhalb einer Simulation, z. B. "Teil 2: Sprache".
 ///
 /// Jeder Teil hat eine feste Bearbeitungszeit. Läuft sie ab, wird der Teil
 /// automatisch abgeschlossen – offene Aufgaben zählen als nicht beantwortet.
 /// Genau dieses Verhalten macht die Simulation realitätsnah.
+///
+/// Ein Teil kann mehrere Unterkategorien und damit auch mehrere Module
+/// umfassen (etwa "Schlussfolgerungen & Wortschatz"). Das Modul wird deshalb
+/// aus den Unterkategorien abgeleitet und nicht zusätzlich gespeichert – wie
+/// schon bei [Question].
 class SimulationPart {
   const SimulationPart({
     required this.title,
-    required this.module,
     required this.subCategories,
     required this.questionCount,
     required this.duration,
@@ -19,15 +24,31 @@ class SimulationPart {
   });
 
   final String title;
-  final TrainingModule module;
 
-  /// Unterkategorien, aus denen die Aufgaben dieses Teils gezogen werden.
-  /// Leere Liste bedeutet: alle Unterkategorien des Moduls sind zugelassen.
+  /// Themen, aus denen die Aufgaben dieses Teils gezogen werden.
+  /// Darf nicht leer sein – ein Test im Aufgabenpool wacht darüber.
   final List<SubCategory> subCategories;
 
   final int questionCount;
   final Duration duration;
   final String instructions;
+
+  /// Alle Module, die dieser Teil berührt.
+  Set<TrainingModule> get modules =>
+      {for (final subCategory in subCategories) subCategory.module};
+
+  /// Das Modul des Teils – `null`, wenn er mehrere umfasst.
+  TrainingModule? get primaryModule {
+    final all = modules;
+    return all.length == 1 ? all.first : null;
+  }
+
+  /// Kurzbezeichnung der abgedeckten Bereiche für Kopfzeilen.
+  String get moduleLabel {
+    final single = primaryModule;
+    if (single != null) return single.shortLabel;
+    return modules.map((module) => module.shortLabel).join(' + ');
+  }
 
   /// Durchschnittlich verfügbare Zeit pro Aufgabe – wird im Briefing vor dem
   /// Teil angezeigt.
@@ -79,6 +100,10 @@ enum SimulationStage {
   /// Teil wird bearbeitet.
   running,
 
+  /// Unterbrochen. Im echten Test nicht möglich – die Oberfläche weist
+  /// deutlich darauf hin und die Auswertung vermerkt es.
+  paused,
+
   /// Alle Teile abgeschlossen.
   finished,
 }
@@ -95,6 +120,9 @@ class SimulationSession {
     this.response,
     this.remainingSeconds = 0,
     this.stage = SimulationStage.briefing,
+    this.pauseCount = 0,
+    this.pausedDuration = Duration.zero,
+    this.summary,
   });
 
   final SimulationBlueprint blueprint;
@@ -113,6 +141,17 @@ class SimulationSession {
   final int remainingSeconds;
   final SimulationStage stage;
 
+  /// Wie oft unterbrochen wurde. Steht in der Auswertung, damit ein
+  /// pausierter Durchlauf nicht mit einem durchgezogenen verwechselt wird.
+  final int pauseCount;
+
+  /// Gesamte Pausenzeit – wird aus der Netto-Bearbeitungszeit herausgerechnet.
+  final Duration pausedDuration;
+
+  /// Auswertung. Steht erst fest, wenn [stage] auf
+  /// [SimulationStage.finished] gewechselt ist.
+  final TrainingSession? summary;
+
   LoadedPart get currentPart => loadedParts[partIndex];
 
   SimulationPart get currentPartSpec => currentPart.part;
@@ -123,6 +162,8 @@ class SimulationSession {
 
   bool get isLastQuestionInPart =>
       questionIndex >= currentPart.questions.length - 1;
+
+  bool get wasPaused => pauseCount > 0;
 
   int get correctCount => answers.where((answer) => answer.isCorrect).length;
 
@@ -177,6 +218,9 @@ class SimulationSession {
     bool clearResponse = false,
     int? remainingSeconds,
     SimulationStage? stage,
+    int? pauseCount,
+    Duration? pausedDuration,
+    TrainingSession? summary,
   }) {
     return SimulationSession(
       blueprint: blueprint,
@@ -188,6 +232,9 @@ class SimulationSession {
       response: clearResponse ? null : (response ?? this.response),
       remainingSeconds: remainingSeconds ?? this.remainingSeconds,
       stage: stage ?? this.stage,
+      pauseCount: pauseCount ?? this.pauseCount,
+      pausedDuration: pausedDuration ?? this.pausedDuration,
+      summary: summary ?? this.summary,
     );
   }
 }
@@ -207,4 +254,24 @@ class PartResult {
   int get total => answers.length;
 
   double get accuracy => total == 0 ? 0 : correctCount / total;
+
+  double get errorRate => total == 0 ? 0 : 1 - accuracy;
+
+  /// Reine Bearbeitungszeit dieses Teils.
+  Duration get timeSpent => answers.fold(
+        Duration.zero,
+        (sum, answer) => sum + answer.timeSpent,
+      );
+
+  /// Durchschnittszeit über die tatsächlich bearbeiteten Aufgaben.
+  Duration get averageTimePerQuestion {
+    final answered = answers.where((answer) => answer.isAnswered).toList();
+    if (answered.isEmpty) return Duration.zero;
+
+    final totalMs = answered.fold<int>(
+      0,
+      (sum, answer) => sum + answer.timeSpent.inMilliseconds,
+    );
+    return Duration(milliseconds: totalMs ~/ answered.length);
+  }
 }

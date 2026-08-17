@@ -9,10 +9,18 @@ import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Fuehrt durch eine mehrteilige Testsimulation.
+/// Was beim Versuch, die Simulation zu verlassen, gewählt wurde.
+enum _InterruptChoice { resume, pause, abort }
+
+/// Führt durch eine mehrteilige Testsimulation.
 ///
-/// Ablauf je Teil: Briefing (Zeit laeuft noch nicht) -> Bearbeitung mit
-/// Countdown -> automatischer Uebergang zum naechsten Teil.
+/// Ablauf je Teil: Briefing (Zeit läuft noch nicht) → Bearbeitung mit
+/// Countdown → automatischer Übergang zum nächsten Teil. Während des Laufs
+/// gibt es keine Lösungen und keine Zwischenauswertung.
+///
+/// Verlassen ist nur über eine ausdrückliche Rückfrage möglich – auch über die
+/// Zurück-Taste. Pausieren geht, wird aber deutlich als unrealistisch
+/// gekennzeichnet und in der Auswertung vermerkt.
 class SimulationScreen extends ConsumerWidget {
   const SimulationScreen({super.key, required this.blueprint});
 
@@ -24,23 +32,128 @@ class SimulationScreen extends ConsumerWidget {
     final session = ref.watch(provider);
     final controller = ref.read(provider.notifier);
 
-    return switch (session.stage) {
-      SimulationStage.briefing => _BriefingView(
+    if (session.stage == SimulationStage.finished) {
+      final summary = session.summary;
+      if (summary != null) {
+        return SimulationResultScreen(
           session: session,
-          onStart: controller.startPart,
-        ),
-      SimulationStage.running => _RunningView(
-          session: session,
-          onSelectOption: controller.selectOption,
-          onSubmitNumber: controller.submitNumber,
-          onSkip: controller.skip,
-          onAbort: () => _confirmAbort(context, controller),
-        ),
-      SimulationStage.finished => SimulationResultScreen(
-          session: session,
+          summary: summary,
           onRetry: () => ref.invalidate(provider),
+        );
+      }
+    }
+
+    // Solange die Simulation läuft, ist ein stilles Verlassen nicht möglich –
+    // sonst wäre der Durchlauf mit einem Wisch weg.
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleInterrupt(context, controller, session);
+      },
+      child: switch (session.stage) {
+        SimulationStage.briefing => _BriefingView(
+            session: session,
+            onStart: controller.startPart,
+            onLeave: () => _handleInterrupt(context, controller, session),
+          ),
+        SimulationStage.running => _RunningView(
+            session: session,
+            onSelectOption: controller.selectOption,
+            onSubmitNumber: controller.submitNumber,
+            onSkip: controller.skip,
+            onPause: () => _confirmPause(context, controller),
+            onLeave: () => _handleInterrupt(context, controller, session),
+          ),
+        SimulationStage.paused => _PausedView(
+            session: session,
+            onResume: controller.resume,
+            onAbort: () => _confirmAbort(context, controller),
+          ),
+        // Wird oben abgefangen; hier nur der Vollständigkeit halber.
+        SimulationStage.finished => const SizedBox.shrink(),
+      },
+    );
+  }
+
+  /// Rückfrage beim Verlassen – über die Zurück-Taste wie über den Button.
+  Future<void> _handleInterrupt(
+    BuildContext context,
+    SimulationController controller,
+    SimulationSession session,
+  ) async {
+    final isRunning = session.stage == SimulationStage.running;
+
+    final choice = await showDialog<_InterruptChoice>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Simulation verlassen?'),
+        content: Text(
+          isRunning
+              ? 'Die Uhr läuft. Im echten Einstellungstest gibt es weder Pause '
+                  'noch Abbruch – beides verfälscht dein Ergebnis.'
+              : 'Wenn du jetzt gehst, ist der Durchlauf beendet und wird mit '
+                  'den bisherigen Antworten gewertet.',
         ),
-    };
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(_InterruptChoice.resume),
+            child: const Text('Weitermachen'),
+          ),
+          if (isRunning)
+            TextButton(
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(_InterruptChoice.pause),
+              child: const Text('Pausieren'),
+            ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(_InterruptChoice.abort),
+            child: const Text('Abbrechen'),
+          ),
+        ],
+      ),
+    );
+
+    switch (choice) {
+      case _InterruptChoice.pause:
+        controller.pause();
+      case _InterruptChoice.abort:
+        controller.abort();
+      case _InterruptChoice.resume:
+      case null:
+        break;
+    }
+  }
+
+  Future<void> _confirmPause(
+    BuildContext context,
+    SimulationController controller,
+  ) async {
+    final shouldPause = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.warning_amber_rounded),
+        title: const Text('Wirklich pausieren?'),
+        content: const Text(
+          'Im echten Einstellungstest kannst du nicht pausieren. '
+          'Die Unterbrechung wird in deiner Auswertung vermerkt, damit du das '
+          'Ergebnis richtig einordnen kannst.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Weitermachen'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Trotzdem pausieren'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldPause ?? false) controller.pause();
   }
 
   Future<void> _confirmAbort(
@@ -58,7 +171,7 @@ class SimulationScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Weitermachen'),
+            child: const Text('Zurück'),
           ),
           FilledButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
@@ -72,12 +185,17 @@ class SimulationScreen extends ConsumerWidget {
   }
 }
 
-/// Briefing vor einem Testteil - hier laeuft die Uhr noch nicht.
+/// Briefing vor einem Testteil – hier läuft die Uhr noch nicht.
 class _BriefingView extends StatelessWidget {
-  const _BriefingView({required this.session, required this.onStart});
+  const _BriefingView({
+    required this.session,
+    required this.onStart,
+    required this.onLeave,
+  });
 
   final SimulationSession session;
   final VoidCallback onStart;
+  final VoidCallback onLeave;
 
   @override
   Widget build(BuildContext context) {
@@ -88,14 +206,39 @@ class _BriefingView extends StatelessWidget {
     final isFirst = session.partIndex == 0;
 
     return Scaffold(
-      appBar: AppBar(title: Text(session.blueprint.title)),
+      appBar: AppBar(
+        title: Text(session.blueprint.title),
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          tooltip: 'Simulation verlassen',
+          onPressed: onLeave,
+        ),
+      ),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (!isFirst)
+              if (isFirst)
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.error.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Text(
+                    '$totalParts Testteile, '
+                    '${session.blueprint.totalDuration.inMinutes} Minuten, '
+                    '${session.blueprint.totalQuestions} Aufgaben. '
+                    'Keine Lösungen, keine Zwischenergebnisse – '
+                    'die Auswertung kommt erst ganz am Ende.',
+                    style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
+                  ),
+                )
+              else
                 Container(
                   width: double.infinity,
                   margin: const EdgeInsets.only(bottom: 16),
@@ -151,6 +294,12 @@ class _BriefingView extends StatelessWidget {
                       icon: Icons.speed_outlined,
                       label: 'Ø pro Aufgabe',
                       value: '${part.timePerQuestion.inSeconds} Sekunden',
+                    ),
+                    const Divider(height: 20),
+                    _BriefingRow(
+                      icon: Icons.category_outlined,
+                      label: 'Bereiche',
+                      value: part.moduleLabel,
                     ),
                   ],
                 ),
@@ -224,14 +373,16 @@ class _RunningView extends StatelessWidget {
     required this.onSelectOption,
     required this.onSubmitNumber,
     required this.onSkip,
-    required this.onAbort,
+    required this.onPause,
+    required this.onLeave,
   });
 
   final SimulationSession session;
   final ValueChanged<int> onSelectOption;
   final bool Function(String input) onSubmitNumber;
   final VoidCallback onSkip;
-  final VoidCallback onAbort;
+  final VoidCallback onPause;
+  final VoidCallback onLeave;
 
   /// Je nach Antwortformat der Aufgabe: Optionsliste oder Zahleneingabe.
   /// In der Simulation gibt es kein Feedback – die Lösung bleibt verdeckt.
@@ -270,11 +421,17 @@ class _RunningView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Teil ${session.partIndex + 1}: ${part.module.shortLabel}'),
+        automaticallyImplyLeading: false,
+        title: Text('Teil ${session.partIndex + 1}: ${part.moduleLabel}'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.pause_circle_outline),
+            tooltip: 'Pausieren',
+            onPressed: onPause,
+          ),
           TextButton(
-            onPressed: onAbort,
-            child: const Text('Abbrechen'),
+            onPressed: onLeave,
+            child: const Text('Beenden'),
           ),
         ],
       ),
@@ -329,6 +486,103 @@ class _RunningView extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Unterbrochene Simulation – bewusst unbequem gestaltet.
+class _PausedView extends StatelessWidget {
+  const _PausedView({
+    required this.session,
+    required this.onResume,
+    required this.onAbort,
+  });
+
+  final SimulationSession session;
+  final VoidCallback onResume;
+  final VoidCallback onAbort;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Scaffold(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Icon(
+                Icons.pause_circle_outline,
+                size: 56,
+                color: theme.colorScheme.error,
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Simulation pausiert',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Im echten Einstellungstest gibt es diese Möglichkeit nicht. '
+                'Deine Auswertung vermerkt die Unterbrechung, damit du das '
+                'Ergebnis richtig einordnen kannst.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surfaceContainerLow,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Column(
+                  children: [
+                    _BriefingRow(
+                      icon: Icons.flag_outlined,
+                      label: 'Aktueller Teil',
+                      value: '${session.partIndex + 1} '
+                          'von ${session.loadedParts.length}',
+                    ),
+                    const Divider(height: 20),
+                    _BriefingRow(
+                      icon: Icons.schedule_outlined,
+                      label: 'Restzeit im Teil',
+                      value: formatMmSs(session.remainingSeconds),
+                    ),
+                    const Divider(height: 20),
+                    _BriefingRow(
+                      icon: Icons.pause_outlined,
+                      label: 'Unterbrechungen',
+                      value: '${session.pauseCount}',
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              FilledButton(
+                onPressed: onResume,
+                child: const Text('Weiter im Test'),
+              ),
+              const SizedBox(height: 10),
+              OutlinedButton(
+                onPressed: onAbort,
+                child: const Text('Simulation abbrechen'),
+              ),
+            ],
+          ),
         ),
       ),
     );

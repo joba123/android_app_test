@@ -112,17 +112,29 @@ void main() {
       }
     });
 
-    test('ziehen nur aus Unterkategorien des eigenen Moduls', () {
+    test('jeder Teil hat mindestens ein Thema', () {
       for (final blueprint in SimulationBlueprints.all) {
         for (final part in blueprint.parts) {
-          for (final subCategory in part.subCategories) {
-            expect(
-              subCategory.module,
-              part.module,
-              reason: '${blueprint.title} / ${part.title}: '
-                  '${subCategory.label} gehört nicht zu ${part.module.label}',
-            );
-          }
+          expect(
+            part.subCategories,
+            isNotEmpty,
+            reason: '${blueprint.title} / ${part.title} hat keine Themen',
+          );
+        }
+      }
+    });
+
+    test('modulgebundene Simulationen bleiben bei ihrem Modul', () {
+      for (final blueprint in SimulationBlueprints.all) {
+        final module = blueprint.module;
+        if (module == null) continue;
+
+        for (final part in blueprint.parts) {
+          expect(
+            part.modules,
+            {module},
+            reason: '${blueprint.title} / ${part.title} verlässt das Modul',
+          );
         }
       }
     });
@@ -130,19 +142,44 @@ void main() {
     test('fordern nie mehr Aufgaben an, als der statische Pool hergibt', () {
       for (final blueprint in SimulationBlueprints.all) {
         for (final part in blueprint.parts) {
-          // Generierte Module haben keine Obergrenze.
-          if (QuestionPool.isGenerated(part.module)) continue;
+          var available = 0;
+          var unlimited = false;
 
-          final available = QuestionPool.forSubCategories(
-            part.module,
-            part.subCategories,
-          ).length;
+          for (final module in part.modules) {
+            if (QuestionPool.isGenerated(module)) {
+              unlimited = true;
+              continue;
+            }
+            available += QuestionPool.forSubCategories(
+              module,
+              part.subCategories
+                  .where((topic) => topic.module == module)
+                  .toList(),
+            ).length;
+          }
+
+          // Generierte Module liefern beliebig viel nach.
+          if (unlimited) continue;
 
           expect(
             available,
             greaterThanOrEqualTo(part.questionCount),
             reason: '${blueprint.title} / ${part.title}: '
                 '$available verfügbar, ${part.questionCount} angefordert',
+          );
+        }
+      }
+    });
+
+    test('die Taktung bleibt in einem realistischen Rahmen', () {
+      for (final blueprint in SimulationBlueprints.all) {
+        for (final part in blueprint.parts) {
+          final seconds = part.timePerQuestion.inSeconds;
+          expect(
+            seconds,
+            inInclusiveRange(15, 95),
+            reason: '${blueprint.title} / ${part.title}: '
+                '$seconds s pro Aufgabe ist unrealistisch',
           );
         }
       }

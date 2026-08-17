@@ -273,24 +273,149 @@ void main() {
     expect(find.text('Prozentrechnung'), findsOneWidget);
   });
 
-  testWidgets('Testsimulation startet mit einem Briefing statt sofort',
-      (tester) async {
-    await pumpApp(tester);
+  group('Testsimulation', () {
+    /// Startseite → Modul → Testsimulation, Briefing des ersten Teils.
+    Future<void> openSimulation(WidgetTester tester) async {
+      await tester.tap(find.text('Mathematik'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Testsimulation'));
+      await tester.pumpAndSettle();
+    }
 
-    await tester.tap(find.text('Mathematik'));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Testsimulation'));
-    await tester.pumpAndSettle();
+    testWidgets('startet mit einem Briefing statt sofort', (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
 
-    expect(find.text('Teil 1 von 3'), findsOneWidget);
-    expect(find.text('Teil starten'), findsOneWidget);
-    // Vor dem Start läuft noch kein Countdown.
-    expect(find.text('Überspringen'), findsNothing);
+      expect(find.text('Teil 1 von 3'), findsOneWidget);
+      expect(find.text('Teil starten'), findsOneWidget);
+      // Vor dem Start läuft noch kein Countdown.
+      expect(find.text('Überspringen'), findsNothing);
 
-    await tester.tap(find.text('Teil starten'));
-    await tester.pump();
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
 
-    expect(find.text('Überspringen'), findsOneWidget);
+      expect(find.text('Überspringen'), findsOneWidget);
+    });
+
+    testWidgets('nennt im Briefing Aufgabenzahl, Zeit und Taktung',
+        (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
+
+      expect(find.text('Bearbeitungszeit'), findsOneWidget);
+      expect(find.text('Ø pro Aufgabe'), findsOneWidget);
+      expect(find.text('Bereiche'), findsOneWidget);
+      expect(find.text('10 Minuten'), findsOneWidget);
+      expect(find.text('30 Sekunden'), findsOneWidget);
+    });
+
+    testWidgets('zeigt während des Laufs keine Lösung', (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
+
+      // Grundrechenarten sind Zahleneingaben.
+      await tester.enterText(find.byType(TextField), '12345');
+      await tester.tap(find.text('Prüfen'));
+      await tester.pump();
+
+      expect(find.byType(ExplanationBox), findsNothing);
+      expect(find.textContaining('Richtig wäre'), findsNothing);
+      // Die nächste Aufgabe steht sofort da.
+      expect(find.text('Aufgabe 2 von 20'), findsOneWidget);
+    });
+
+    testWidgets('warnt deutlich, bevor pausiert wird', (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.pause_circle_outline));
+      await tester.pump();
+
+      expect(find.text('Wirklich pausieren?'), findsOneWidget);
+      expect(
+        find.textContaining('kannst du nicht pausieren'),
+        findsOneWidget,
+      );
+
+      // Ablehnen lässt den Test weiterlaufen.
+      await tester.tap(find.text('Weitermachen'));
+      await tester.pump();
+      expect(find.text('Überspringen'), findsOneWidget);
+
+      // Bestätigen führt in den Pausenzustand.
+      await tester.tap(find.byIcon(Icons.pause_circle_outline));
+      await tester.pump();
+      await tester.tap(find.text('Trotzdem pausieren'));
+      await tester.pump();
+
+      expect(find.text('Simulation pausiert'), findsOneWidget);
+      expect(find.text('Weiter im Test'), findsOneWidget);
+    });
+
+    testWidgets('die Zurück-Taste bricht nicht still ab', (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
+
+      // Android-Zurück auslösen.
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+
+      expect(find.text('Simulation verlassen?'), findsOneWidget);
+
+      await tester.tap(find.text('Weitermachen'));
+      await tester.pump();
+      // Immer noch im laufenden Teil.
+      expect(find.text('Überspringen'), findsOneWidget);
+    });
+
+    testWidgets('wertet nach dem Abbruch vollständig aus', (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
+
+      await tester.tap(find.text('Beenden'));
+      await tester.pump();
+      await tester.tap(find.text('Abbrechen'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Testergebnis'), findsOneWidget);
+      expect(find.text('Fehlerquote nach Kategorie'), findsOneWidget);
+      expect(find.text('Ergebnis nach Testteilen'), findsOneWidget);
+      expect(find.text('Fehlerquote'), findsOneWidget);
+      expect(find.text('Ø pro Aufgabe'), findsOneWidget);
+      expect(find.text('nicht bearbeitet'), findsOneWidget);
+    });
+
+    testWidgets('vermerkt eine Unterbrechung in der Auswertung',
+        (tester) async {
+      await pumpApp(tester);
+      await openSimulation(tester);
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.pause_circle_outline));
+      await tester.pump();
+      await tester.tap(find.text('Trotzdem pausieren'));
+      await tester.pump();
+
+      await tester.tap(find.text('Simulation abbrechen'));
+      await tester.pump();
+      await tester.tap(find.text('Abbrechen'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('einmal unterbrochen'), findsOneWidget);
+      expect(
+        find.textContaining('nur eingeschränkt vergleichbar'),
+        findsOneWidget,
+      );
+    });
   });
 
   group('Eingabefeld für Zahlen', () {

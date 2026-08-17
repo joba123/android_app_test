@@ -145,6 +145,19 @@ class TrainingSession {
     return grouped;
   }
 
+  /// Ergebnisse gruppiert nach Kategorie (Modul).
+  Map<TrainingModule, List<QuestionResult>> get resultsByModule {
+    final grouped = <TrainingModule, List<QuestionResult>>{};
+    for (final result in results) {
+      grouped.putIfAbsent(result.module, () => []).add(result);
+    }
+    return grouped;
+  }
+
+  /// Fehlerquote: alles, was nicht richtig war, bezogen auf die gestellten
+  /// Aufgaben. Übersprungene zählen mit – im Test sind sie schlicht falsch.
+  double get errorRate => total == 0 ? 0 : 1 - accuracy;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'mode': mode.id,

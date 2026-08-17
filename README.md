@@ -97,20 +97,41 @@ Disziplin und teilen sich deshalb keinen Rekord. Einen Misch-Modus gibt es hier
 absichtlich nicht – Kopfrechnen und Textverständnis in einer Runde wären nicht
 vergleichbar.
 
-**Testsimulation** – Realitätsnaher Durchlauf über **mindestens 30 Minuten**,
-aufgeteilt in mehrere Testteile mit jeweils fest vorgegebener Bearbeitungszeit.
-Vor jedem Teil gibt es ein kurzes Briefing (Aufgabenzahl, Zeit, Ø Zeit pro
-Aufgabe) – die Uhr läuft erst nach dem Start. Läuft die Zeit eines Teils ab,
-zählen die offenen Aufgaben als nicht beantwortet und es geht automatisch zum
-nächsten Teil weiter. Ein Zurück gibt es nicht. Am Ende steht eine Auswertung
-pro Testteil und pro Aufgabe.
+**Testsimulation** – das Kernfeature. Fester Ablauf über mehrere Testteile mit
+je eigenem Zeitlimit. Vor jedem Teil ein kurzes Briefing (Aufgabenzahl, Zeit,
+Ø Zeit pro Aufgabe, abgedeckte Bereiche) – die Uhr läuft erst nach dem Start.
+Läuft die Zeit eines Teils ab, zählen die offenen Aufgaben als nicht
+beantwortet und es geht automatisch weiter.
 
-| Simulation | Aufbau | Dauer |
-| --- | --- | --- |
-| Mathematik | 8 + 10 + 12 Min | 30 Min |
-| Logisches Denken | 10 + 8 + 14 Min | 32 Min |
-| Sprache | 8 + 10 + 14 Min | 32 Min |
-| **Gesamtsimulation** | 3 × 14 Min (alle Module) | 42 Min |
+Während des Laufs gibt es **keine Lösungen und keine Zwischenauswertung** –
+genau wie im echten Test. Die Zahlen erscheinen erst, wenn alle Teile durch
+sind.
+
+Die Taktung orientiert sich an realen Auswahlverfahren, wo die Testteile kurz
+und scharf gestellt sind:
+
+| Gesamtsimulation | Themen | Aufgaben | Zeit | pro Aufgabe |
+| --- | --- | --- | --- | --- |
+| Teil 1 Mathematik | Grundrechnen, Dreisatz, Prozent | 20 | 15 Min | 45 s |
+| Teil 2 Sprache | Rechtschreibung, Wortanalogien | 26 | 9 Min | 20 s |
+| Teil 3 Logisches Denken | Zahlenreihen, Figurenanalogien | 20 | 15 Min | 45 s |
+| Teil 4 Textverständnis | Schlussfolgerungen, Wortschatz | 8 | 6 Min | 45 s |
+| **Gesamt** | | **74** | **45 Min** | |
+
+Dazu drei kürzere Simulationen für einzelne Module (je 30 Minuten): Mathematik
+46 Aufgaben, Logik 36, Sprache 39.
+
+**Unterbrechen** ist bewusst unbequem: Die Zurück-Taste wird abgefangen und
+fragt nach. Pausieren geht, aber nur nach einer ausdrücklichen Warnung, dass
+das im echten Test nicht möglich ist – und die Auswertung vermerkt jede
+Unterbrechung samt Pausendauer, damit ein pausierter Durchlauf nicht mit einem
+durchgezogenen verwechselt wird. Die Pausenzeit wird aus der gemessenen
+Bearbeitungszeit der laufenden Aufgabe herausgerechnet.
+
+Die **Auswertung am Ende** zeigt Gesamtergebnis und Fehlerquote,
+**Fehlerquote je Kategorie** mit Ø Zeit pro Aufgabe, eine Aufschlüsselung nach
+Thema, das Ergebnis je Testteil (Fehlerquote, Ø Zeit, Zeitlimit) sowie jede
+einzelne Aufgabe mit gegebener Antwort, Musterlösung und Rechenweg.
 
 Zusätzlich gibt es einen Statistik-Screen mit Trefferquote, Sprint-Bestwerten
 und Rundenzahl je Modul sowie den zuletzt abgeschlossenen Sitzungen. Beides wird
@@ -253,7 +274,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 180 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 198 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Release-Build ist vorerst mit dem Debug-Key signiert, damit er ohne weitere
 Einrichtung durchläuft – vor einer Veröffentlichung muss in
 `android/app/build.gradle` ein echter Release-Keystore hinterlegt werden.

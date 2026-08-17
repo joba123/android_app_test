@@ -2,6 +2,7 @@ import 'package:einstellungstest_trainer/models/answer_record.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/simulation.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
+import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
@@ -186,24 +187,27 @@ class QuizResultScreen extends StatelessWidget {
   }
 }
 
-/// Auswertung einer kompletten Testsimulation, aufgeschlüsselt nach Teilen.
+/// Auswertung einer kompletten Testsimulation.
+///
+/// Erst hier bekommt der Nutzer überhaupt Zahlen zu sehen – während des Laufs
+/// gibt es bewusst keinerlei Rückmeldung.
 class SimulationResultScreen extends StatelessWidget {
   const SimulationResultScreen({
     super.key,
     required this.session,
+    required this.summary,
     required this.onRetry,
   });
 
   final SimulationSession session;
+  final TrainingSession summary;
   final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final results = session.partResults;
-    final total = session.answers.length;
-    final correct = session.correctCount;
-    final accuracy = total == 0 ? 0.0 : correct / total;
+    final byModule = summary.resultsByModule;
+    final byTopic = summary.resultsBySubCategory;
 
     return Scaffold(
       appBar: AppBar(
@@ -215,10 +219,84 @@ class SimulationResultScreen extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [
             _ResultHeadline(
-              title: '$correct von $total richtig',
+              title: '${summary.correctCount} von ${summary.total} richtig',
               subtitle: session.blueprint.title,
-              accuracy: accuracy,
+              accuracy: summary.accuracy,
             ),
+            if (session.wasPaused) ...[
+              const SizedBox(height: 12),
+              _PauseNotice(
+                pauseCount: session.pauseCount,
+                pausedDuration: session.pausedDuration,
+              ),
+            ],
+            const SizedBox(height: 18),
+
+            // --- Gesamtergebnis ---
+            Row(
+              children: [
+                Expanded(
+                  child: StatTile(
+                    value: '${((1 - summary.accuracy) * 100).round()} %',
+                    label: 'Fehlerquote',
+                    icon: Icons.percent,
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatTile(
+                    value: formatShortDuration(summary.averageTimePerQuestion),
+                    label: 'Ø pro Aufgabe',
+                    icon: Icons.speed_outlined,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: StatTile(
+                    value: '${summary.skippedCount}',
+                    label: 'nicht bearbeitet',
+                    icon: Icons.remove_circle_outline,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Nicht bearbeitete Aufgaben zählen als Fehler – im echten Test '
+              'ist das nicht anders.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+
+            // --- Fehlerquote pro Kategorie ---
+            const SizedBox(height: 26),
+            Text(
+              'Fehlerquote nach Kategorie',
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final entry in byModule.entries)
+              _CategoryRow(module: entry.key, results: entry.value),
+
+            // --- Aufschlüsselung nach Thema ---
+            if (byTopic.length > 1) ...[
+              const SizedBox(height: 22),
+              Text(
+                'Im Detail nach Thema',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              for (final entry in byTopic.entries)
+                _TopicRow(subCategory: entry.key, results: entry.value),
+            ],
+
+            // --- Ergebnis je Testteil ---
             const SizedBox(height: 22),
             Text(
               'Ergebnis nach Testteilen',
@@ -227,7 +305,10 @@ class SimulationResultScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            for (final result in results) _PartResultCard(result: result),
+            for (final result in session.partResults)
+              _PartResultCard(result: result),
+
+            // --- Aufgabendurchsicht ---
             const SizedBox(height: 22),
             Text(
               'Alle Aufgaben',
@@ -253,6 +334,131 @@ class SimulationResultScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Vermerk über Unterbrechungen – ohne den wäre das Ergebnis nicht mit einem
+/// durchgezogenen Durchlauf vergleichbar.
+class _PauseNotice extends StatelessWidget {
+  const _PauseNotice({
+    required this.pauseCount,
+    required this.pausedDuration,
+  });
+
+  final int pauseCount;
+  final Duration pausedDuration;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final color = theme.colorScheme.error;
+    final times = pauseCount == 1 ? 'einmal' : '$pauseCount-mal';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.warning_amber_rounded, color: color, size: 20),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Dieser Durchlauf wurde $times unterbrochen '
+              '(${formatShortDuration(pausedDuration)} Pause). '
+              'Im echten Test ist das nicht möglich – das Ergebnis ist '
+              'entsprechend nur eingeschränkt vergleichbar.',
+              style: theme.textTheme.bodySmall?.copyWith(height: 1.45),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Fehlerquote einer Kategorie (Modul).
+class _CategoryRow extends StatelessWidget {
+  const _CategoryRow({required this.module, required this.results});
+
+  final TrainingModule module;
+  final List<QuestionResult> results;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final correct = results.where((result) => result.correct).length;
+    final errorRate = results.isEmpty ? 0.0 : 1 - correct / results.length;
+
+    final answered = results.where((result) => result.answered).toList();
+    final averageMs = answered.isEmpty
+        ? 0
+        : answered.fold<int>(
+              0,
+              (sum, result) => sum + result.timeSpent.inMilliseconds,
+            ) ~/
+            answered.length;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(module.icon, size: 18, color: module.color),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  module.label,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Text(
+                '${(errorRate * 100).round()} % Fehler',
+                style: theme.textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: errorRate > 0.5
+                      ? theme.colorScheme.error
+                      : module.color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(99),
+            child: LinearProgressIndicator(
+              value: results.isEmpty ? 0 : correct / results.length,
+              minHeight: 6,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(module.color),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '$correct von ${results.length} richtig · '
+            'Ø ${formatShortDuration(Duration(milliseconds: averageMs))} '
+            'pro Aufgabe',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -448,6 +654,8 @@ class _PartResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // Ein Teil kann mehrere Module umfassen – dann gibt es keine Modulfarbe.
+    final color = result.part.primaryModule?.color ?? theme.colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -474,7 +682,7 @@ class _PartResultCard extends StatelessWidget {
                 '${result.correctCount}/${result.total}',
                 style: theme.textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: result.part.module.color,
+                  color: color,
                 ),
               ),
             ],
@@ -486,8 +694,16 @@ class _PartResultCard extends StatelessWidget {
               value: result.accuracy,
               minHeight: 6,
               backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              valueColor:
-                  AlwaysStoppedAnimation<Color>(result.part.module.color),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            '${(result.errorRate * 100).round()} % Fehler · '
+            'Ø ${formatShortDuration(result.averageTimePerQuestion)} '
+            'pro Aufgabe · ${result.part.duration.inMinutes} Min Limit',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
         ],

@@ -19,6 +19,7 @@ class SimulationController
     extends AutoDisposeFamilyNotifier<SimulationSession, String> {
   Timer? _timer;
   DateTime _questionStartedAt = DateTime.now();
+  DateTime? _pausedAt;
 
   @override
   SimulationSession build(String blueprintId) {
@@ -51,6 +52,41 @@ class SimulationController
     state = state.copyWith(
       stage: SimulationStage.running,
       remainingSeconds: state.currentPartSpec.duration.inSeconds,
+    );
+    _startTimer();
+  }
+
+  /// Unterbricht den laufenden Teil.
+  ///
+  /// Im echten Test gibt es das nicht – die Oberfläche warnt vorher deutlich
+  /// davor, und die Auswertung vermerkt jede Unterbrechung.
+  void pause() {
+    if (state.stage != SimulationStage.running) return;
+
+    _timer?.cancel();
+    _pausedAt = DateTime.now();
+    state = state.copyWith(
+      stage: SimulationStage.paused,
+      pauseCount: state.pauseCount + 1,
+    );
+  }
+
+  /// Setzt nach einer Unterbrechung fort.
+  void resume() {
+    if (state.stage != SimulationStage.paused) return;
+
+    final pausedAt = _pausedAt;
+    final pausedFor =
+        pausedAt == null ? Duration.zero : DateTime.now().difference(pausedAt);
+    _pausedAt = null;
+
+    // Die Pause darf die Bearbeitungszeit der aktuellen Aufgabe nicht
+    // aufblähen – deshalb wandert ihr Startzeitpunkt mit.
+    _questionStartedAt = _questionStartedAt.add(pausedFor);
+
+    state = state.copyWith(
+      stage: SimulationStage.running,
+      pausedDuration: state.pausedDuration + pausedFor,
     );
     _startTimer();
   }
@@ -140,20 +176,22 @@ class SimulationController
     }
 
     if (state.isLastPart) {
-      state = state.copyWith(
-        answers: answers,
-        stage: SimulationStage.finished,
-        clearResponse: true,
-      );
-
-      final session = TrainingSession.fromAnswers(
+      final summary = TrainingSession.fromAnswers(
         mode: SessionMode.simulation,
         module: state.blueprint.module,
         startedAt: state.startedAt,
         finishedAt: DateTime.now(),
         answers: answers,
       );
-      unawaited(ref.read(statsControllerProvider.notifier).record(session));
+
+      state = state.copyWith(
+        answers: answers,
+        stage: SimulationStage.finished,
+        clearResponse: true,
+        summary: summary,
+      );
+
+      unawaited(ref.read(statsControllerProvider.notifier).record(summary));
       return;
     }
 
@@ -171,6 +209,7 @@ class SimulationController
   /// Simulation vorzeitig beenden – alle offenen Aufgaben zählen als falsch.
   void abort() {
     _timer?.cancel();
+    _pausedAt = null;
     while (state.stage != SimulationStage.finished) {
       _completeCurrentPart();
     }

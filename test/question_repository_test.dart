@@ -256,10 +256,8 @@ void main() {
           reason: '${blueprint.title} / ${part.title}',
         );
         for (final question in drawn) {
-          expect(question.module, part.module);
-          if (part.subCategories.isNotEmpty) {
-            expect(part.subCategories, contains(question.subCategory));
-          }
+          expect(part.modules, contains(question.module));
+          expect(part.subCategories, contains(question.subCategory));
         }
       }
     }

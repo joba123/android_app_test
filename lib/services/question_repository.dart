@@ -136,12 +136,42 @@ class QuestionRepository {
   }
 
   /// Testsimulation: Aufgaben für genau einen Testteil.
+  ///
+  /// Ein Teil kann mehrere Module berühren (etwa "Schlussfolgerungen &
+  /// Wortschatz"). In dem Fall wird die Aufgabenzahl gleichmäßig auf die
+  /// beteiligten Module verteilt und anschließend gemischt.
   List<Question> drawForPart(SimulationPart part) {
-    return draw(
-      module: part.module,
-      count: part.questionCount,
-      subCategories: part.subCategories,
-    );
+    final byModule = <TrainingModule, List<SubCategory>>{};
+    for (final subCategory in part.subCategories) {
+      byModule.putIfAbsent(subCategory.module, () => []).add(subCategory);
+    }
+
+    if (byModule.length == 1) {
+      final entry = byModule.entries.first;
+      return draw(
+        module: entry.key,
+        count: part.questionCount,
+        subCategories: entry.value,
+      );
+    }
+
+    final modules = byModule.keys.toList();
+    final shares = {for (final module in modules) module: 0};
+    for (var index = 0; index < part.questionCount; index++) {
+      final module = modules[index % modules.length];
+      shares[module] = shares[module]! + 1;
+    }
+
+    final drawn = [
+      for (final entry in byModule.entries)
+        ...draw(
+          module: entry.key,
+          count: shares[entry.key]!,
+          subCategories: entry.value,
+        ),
+    ];
+
+    return drawn..shuffle(_random);
   }
 
   Question _shuffleOptions(Question question) {
