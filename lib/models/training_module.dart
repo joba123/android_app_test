@@ -21,7 +21,10 @@ enum TrainingModule {
     shortLabel: 'Logik',
     description: 'Zahlenreihen, Analogien, Muster und Schlussfolgerungen',
     icon: Icons.extension_outlined,
-    color: Color(0xFF7A4FE0),
+    // Rostrot statt des frueheren Lila: Lila und das Blau von Mathematik
+    // waren fuer Rot-Gruen-Blinde nicht zu unterscheiden (Delta E 2,3 unter
+    // Deuteranopie). Diese Palette besteht die Pruefung in hell und dunkel.
+    color: Color(0xFFC2410C),
   ),
   language(
     id: 'language',

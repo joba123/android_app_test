@@ -1,6 +1,7 @@
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/widgets/progress_section.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +51,7 @@ class StatsScreen extends ConsumerWidget {
                 ),
               ],
             ),
+            const ProgressSection(),
             const SizedBox(height: 24),
             Text(
               'Nach Modul',

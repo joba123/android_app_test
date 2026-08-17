@@ -181,6 +181,7 @@ lib/
 │   ├── training_session.dart  Abgeschlossene Sitzung für den Verlauf
 │   ├── exam_date.dart         Hinterlegter Testtermin inkl. Countdown
 │   ├── review_book.dart       Fehler-Gedaechtnis und Themenstaerke
+│   ├── progress_trend.dart    Verlauf, Wochenraster, Serie, Vergleich
 │   ├── pro_entitlement.dart   Tarife, Berechtigung, Pro-Leistungen
 │   ├── ad_frequency.dart      Taktung der Unterbrecher-Werbung
 │   ├── reminder_settings.dart Erinnerungen: Einstellungen + Terminberechnung
@@ -230,6 +231,8 @@ lib/
 ├── widgets/                   Wiederverwendbare Bausteine
 │   ├── module_card.dart       Modul- und Modus-Kacheln
 │   ├── review_card.dart       Einstieg in die Fehler-Wiederholung
+│   ├── progress_section.dart  Vergleich, Serie und Verlauf
+│   ├── trend_chart.dart       Wochenbalken der Trefferquote
 │   ├── scope_selector.dart    Auswahlliste, geteilt von Übung und Sprint
 │   ├── question_card.dart     Aufgabenkarte + Erklärungsbox
 │   ├── answer_option_tile.dart  Antwortoption mit Zustandsfarben
@@ -282,6 +285,62 @@ ist er gesetzt, zeigt die `QuestionCard` das Bild über dem Aufgabentext. Für d
 Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
 beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
 zusätzlich einen Eintrag in `pubspec.yaml`.
+
+## Fortschritt über Zeit
+
+„Bin ich besser geworden?" ist die Frage, die vor einer Prüfung zählt – nicht
+„wie gut bin ich". Der Statistik-Screen beantwortet sie in drei Stufen:
+
+**Der direkte Vergleich.** Letzte 7 Tage gegen die 7 davor, als Satz statt als
+Zahlenkolonne: „Du bist besser geworden – Letzte 7 Tage: 78 % · die 7 davor:
+61 % (17 Punkte mehr)."
+
+**Die Serie.** Wie viele Tage in Folge geübt wurde. Gestern zählt noch mit: Wer
+abends übt und morgens nachsieht, hat seine Serie nicht verloren, nur weil ein
+neuer Tag angebrochen ist.
+
+**Der Verlauf.** Trefferquote je Woche über die letzten acht Wochen.
+
+### Was der Abschnitt nicht behauptet
+
+Drei Regeln stehen gegen die Versuchung, aus dünnen Daten eine Entwicklung zu
+machen:
+
+- **Unter zwei aussagekräftigen Wochen bleibt der Abschnitt ganz aus.** Ein
+  einzelner Balken ist kein Verlauf.
+- **Wochen unter fünf Antworten zählen nicht mit.** Eine Quote aus zwei
+  Aufgaben ist Zufall, kein Messwert.
+- **Unter drei Prozentpunkten Unterschied heißt es „stabil".** Eine Aufgabe
+  mehr richtig ist kein Trend.
+- **Ohne Daten im Vorzeitraum gibt es keinen Vergleich** – sonst würde aus dem
+  Nichts eine Verbesserung behauptet.
+
+Wochen ohne Übung bleiben als leere Lücke im Diagramm stehen. Sie zu
+überspringen würde den Verlauf schöner aussehen lassen, als er war.
+
+### Zur Gestaltung des Diagramms
+
+Eine einzelne Messreihe über die Zeit – deshalb **eine** Farbe statt einer
+Palette und keine Legende: Die Überschrift benennt, was gezeigt wird. Balken
+mit abgerundetem oberem Ende, an der Grundlinie verankert, 4 px Radius,
+2 px Abstand. Beschriftet wird **nur der jüngste aussagekräftige Balken** –
+eine Zahl über jedem wäre Rauschen. Zahlen tragen Textfarben, nie die Farbe
+des Balkens.
+
+Die Höhe bezieht sich auf die beste Woche statt starr auf 100 %: Bei durchweg
+hohen Quoten wäre eine 0–100-Skala flach und nichtssagend.
+
+### Ein Befund zur Barrierefreiheit
+
+Beim Prüfen der Modulfarben mit dem Paletten-Validator fiel auf, dass
+Mathematik-Blau (`#2F6FED`) und das frühere Logik-Lila (`#7A4FE0`) für
+Rot-Grün-Blinde praktisch identisch waren: ΔE 2,3 unter Deuteranopie, und
+selbst mit vollem Farbsehen nur 10,7 – unter der Schwelle von 15. Das betraf
+nicht nur das neue Diagramm, sondern die bestehenden Modulkarten.
+
+Logik trägt jetzt Rostrot (`#C2410C`). Die Palette besteht alle sechs
+Prüfungen in hell **und** dunkel; der schlechteste Nachbarabstand liegt bei
+ΔE 10,2 unter Deuteranopie und 28,0 bei normalem Farbsehen.
 
 ## Fehler-Wiederholung
 
@@ -688,7 +747,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 354 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 390 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Android-Build gelingt auch **ohne** `google-services.json`: Das
 google-services-Gradle-Plugin wird nicht angewandt, die Konfiguration kommt aus
 Dart.
@@ -725,6 +784,11 @@ Die Tests decken ab:
 - **Konto** – Anmelden mit sofortigem Abgleich, abgebrochene Anmeldung ohne
   Fehlermeldung, Abmelden ohne Datenverlust, Löschen von Cloud, Konto und
   Gerät, sowie der lokale Modus ohne Firebase
+- **Fortschritt über Zeit** – Wochenraster inklusive Montagsgrenze und
+  Luecken, Vergleich zweier Zeitfenster ohne Ueberschneidung, kleine
+  Schwankungen als „stabil", kein Vergleich ohne Vorzeitraum, Serie mit
+  Kulanz fuer gestern, Darstellung erst ab genug Verlauf, kein Ueberlauf im
+  Dunkelmodus und auf 320 Punkten Breite
 - **Fehler-Wiederholung** – wachsende Abstaende und Ruecksetzen bei einem
   Fehler, gekonnte Aufgaben verschwinden, uebersprungene zaehlen nicht,
   generierte Mathe-Aufgaben landen nur auf der Themen-Ebene, Schwachstellen
@@ -770,9 +834,9 @@ Naheliegende nächste Schritte:
   RevenueCat wechseln, falls die Abo-Verwaltung zum Problem wird
   (`PurchaseService` ist dafür die einzige zu ersetzende Datei)
 - Branchen-Profile als Filter über die bestehenden Module legen
-- Auswertung über mehrere Sitzungen hinweg (Verlaufskurven je Unterkategorie) –
-  die Daten dafür liegen bereits in `TrainingSession`, ab einer größeren
-  Historie lohnt der Wechsel von SharedPreferences auf eine lokale Datenbank
+- Verlaufskurven je Unterkategorie (bisher nur gesamt und je Modul); ab einer
+  größeren Historie lohnt der Wechsel von SharedPreferences auf eine lokale
+  Datenbank
 - Firebase-Projekt anlegen und `firebase_options.dart` erzeugen – die
   Anmeldung ist fertig verdrahtet und wartet nur auf die Konfiguration
 - Abgleich im Hintergrund anstoßen (nach jeder Sitzung, nicht nur beim
