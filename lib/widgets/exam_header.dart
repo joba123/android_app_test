@@ -14,14 +14,21 @@ class ExamHeader extends StatelessWidget {
     super.key,
     required this.examDate,
     required this.onTapDate,
-    this.trailing,
+    this.accuracy,
+    this.answered = 0,
+    this.streak = 0,
   });
 
   final ExamDate? examDate;
   final VoidCallback onTapDate;
 
-  /// Aktionen oben rechts, etwa Einstellungen und Statistik.
-  final Widget? trailing;
+  /// Gesamtquote, `null` solange nichts geuebt wurde.
+  final double? accuracy;
+  final int answered;
+
+  /// Uebungstage in Folge – tritt an die Stelle des Countdowns, wenn kein
+  /// Termin hinterlegt ist.
+  final int streak;
 
   @override
   Widget build(BuildContext context) {
@@ -49,26 +56,31 @@ class ExamHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      date == null
-                          ? 'Einstellungstest Trainer'
-                          : 'Prüfungstermin · ${_formatDate(date.date)}',
-                      style: MonoText.kicker.copyWith(
-                        color: tokens.onInk.withValues(alpha: 0.65),
-                      ),
-                    ),
-                  ),
-                  if (trailing != null) trailing!,
-                ],
+              Text(
+                // Versalien wie bei allen Abschnittsbeschriftungen – der
+                // Kicker ist eine Beschriftung, kein Satz.
+                (date == null ? 'Deine Übung' : 'Bis zur Prüfung')
+                    .toUpperCase(),
+                style: MonoText.kicker.copyWith(
+                  color: tokens.onInk.withValues(alpha: 0.65),
+                ),
               ),
               const SizedBox(height: Gap.md),
-              if (date == null)
-                _NoDate(onTap: onTapDate)
-              else
-                _Countdown(examDate: date, now: now, onTap: onTapDate),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: date == null
+                        ? _Streak(days: streak, onTap: onTapDate)
+                        : _Countdown(
+                            examDate: date,
+                            now: now,
+                            onTap: onTapDate,
+                          ),
+                  ),
+                  if (answered > 0) _Quota(accuracy: accuracy, answered: answered),
+                ],
+              ),
             ],
           ),
         ),
@@ -76,14 +88,11 @@ class ExamHeader extends StatelessWidget {
     );
   }
 
-  static String _formatDate(DateTime value) {
-    const months = [
-      'Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Okt', 'Nov', 'Dez',
-    ];
-    return '${value.day}. ${months[value.month - 1]} ${value.year}';
-  }
 }
+
+String _date(DateTime value) =>
+    '${value.day.toString().padLeft(2, '0')}.'
+    '${value.month.toString().padLeft(2, '0')}.${value.year}';
 
 class _Countdown extends StatelessWidget {
   const _Countdown({
@@ -137,24 +146,28 @@ class _Countdown extends StatelessWidget {
                 ),
             ],
           ),
-          if (examDate.label != null) ...[
-            const SizedBox(height: Gap.xs),
-            Text(
-              examDate.label!,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: tokens.onInk.withValues(alpha: 0.7),
-              ),
+          const SizedBox(height: 2),
+          Text(
+            [
+              _date(examDate.date),
+              if (examDate.label != null) examDate.label!,
+            ].join(' · '),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: tokens.onInk.withValues(alpha: 0.6),
             ),
-          ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _NoDate extends StatelessWidget {
-  const _NoDate({required this.onTap});
+/// Ohne Termin zaehlt die Serie – auch ohne Pruefungsdruck ein Grund,
+/// wiederzukommen.
+class _Streak extends StatelessWidget {
+  const _Streak({required this.days, required this.onTap});
 
+  final int days;
   final VoidCallback onTap;
 
   @override
@@ -162,31 +175,62 @@ class _NoDate extends StatelessWidget {
     final theme = Theme.of(context);
     final tokens = context.tokens;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Bereit für den nächsten Test?',
+    if (days == 0) {
+      return GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Text(
+          'Leg los',
           style: theme.textTheme.headlineSmall?.copyWith(color: tokens.onInk),
         ),
-        const SizedBox(height: Gap.sm),
-        Text(
-          'Trage deinen Prüfungstermin ein – dann siehst du hier, wie viel '
-          'Zeit bleibt.',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: tokens.onInk.withValues(alpha: 0.7),
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        Text('$days', style: MonoText.display.copyWith(color: tokens.onInk)),
+        const SizedBox(width: Gap.sm),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 4),
+          child: Text(
+            days == 1 ? 'Tag in Folge' : 'Tage in Folge',
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: tokens.onInk.withValues(alpha: 0.8),
+            ),
           ),
         ),
-        const SizedBox(height: Gap.md),
-        OutlinedButton(
-          onPressed: onTap,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: tokens.onInk,
-            side: BorderSide(color: tokens.onInk.withValues(alpha: 0.4)),
-            minimumSize: const Size(0, 44),
-            padding: const EdgeInsets.symmetric(horizontal: Gap.card),
+      ],
+    );
+  }
+}
+
+/// Die Gesamtquote rechts in der Kopfflaeche – zwei Zeilen, keine Kachel.
+class _Quota extends StatelessWidget {
+  const _Quota({required this.accuracy, required this.answered});
+
+  final double? accuracy;
+  final int answered;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          accuracy == null ? '–' : '${(accuracy! * 100).round()} %',
+          style: MonoText.metric.copyWith(color: tokens.onInk),
+        ),
+        Text(
+          'Quote · $answered Aufg.',
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: tokens.onInk.withValues(alpha: 0.6),
           ),
-          child: const Text('Termin eintragen'),
         ),
       ],
     );

@@ -29,6 +29,7 @@ class StorageService {
   static const String _entitlementKey = 'pro_entitlement_v1';
   static const String _adFrequencyKey = 'ad_frequency_v1';
   static const String _reviewBookKey = 'review_book_v1';
+  static const String _onboardingKey = 'onboarding_done_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -237,6 +238,15 @@ class StorageService {
 
   Future<void> saveReviewBook(ReviewBook book) async {
     await _prefs.setString(_reviewBookKey, jsonEncode(book.toJson()));
+  }
+
+  // --- Einfuehrung ---
+
+  /// Ob die Einfuehrung schon durchlaufen wurde.
+  bool get onboardingDone => _prefs.getBool(_onboardingKey) ?? false;
+
+  Future<void> setOnboardingDone(bool done) async {
+    await _prefs.setBool(_onboardingKey, done);
   }
 
   Future<void> resetStats() async {

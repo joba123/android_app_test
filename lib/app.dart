@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:einstellungstest_trainer/screens/home_screen.dart';
+import 'package:einstellungstest_trainer/screens/app_shell.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
@@ -57,7 +57,7 @@ class _EinstellungstestTrainerAppState
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
-      home: const HomeScreen(),
+      home: const AppShell(),
     );
   }
 }

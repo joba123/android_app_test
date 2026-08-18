@@ -98,6 +98,13 @@ class TrainingStats {
     return best;
   }
 
+  /// Der beste Sprint ueberhaupt, egal in welchem Umfang.
+  ///
+  /// Die Startseite zeigt nur diese eine Zahl – welcher Aufgabentyp dahinter
+  /// steckt, steht in der Statistik.
+  int get bestSprintOverall =>
+      sprintBests.values.fold(0, (best, value) => value > best ? value : best);
+
   TrainingStats withModule(ModuleStats stats) {
     return TrainingStats(
       perModule: {...perModule, stats.module: stats},

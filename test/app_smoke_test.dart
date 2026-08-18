@@ -21,12 +21,18 @@ void main() {
   Future<void> pumpApp(
     WidgetTester tester, {
     List<Override> overrides = const [],
+    bool onboarded = true,
   }) async {
     tester.view.physicalSize = const Size(1000, 2600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
 
-    SharedPreferences.setMockInitialValues({});
+    // Die Einfuehrung laeuft nur beim allerersten Start. Fuer die uebrigen
+    // Tests wird sie uebersprungen, sonst muesste sich jeder Test erst
+    // durchklicken.
+    SharedPreferences.setMockInitialValues(
+      onboarded ? {'onboarding_done_v1': true} : {},
+    );
     final prefs = await SharedPreferences.getInstance();
 
     await tester.pumpWidget(
@@ -51,21 +57,103 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Startseite → Übungsmodus → Auswahlbildschirm.
+  /// Startseite → „anderes Thema" → Auswahlbildschirm.
+  ///
+  /// Der fruehere Einstieg ueber eine „Uebungsmodus"-Karte gibt es nicht
+  /// mehr: Die Startseite schlaegt eine Runde vor, und wer etwas anderes
+  /// will, geht ueber diesen Link.
   Future<void> openPracticeSetup(WidgetTester tester) async {
-    await tester.tap(find.text('Übungsmodus'));
+    await tester.tap(find.text('anderes Thema'));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('Startseite listet Schnellstart, Module und Gesamtsimulation',
+  /// Wechselt auf den Reiter „Mehr".
+  Future<void> openMore(WidgetTester tester) async {
+    await tester.tap(find.text('Mehr'));
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('Startseite macht genau einen Vorschlag', (tester) async {
+    await pumpApp(tester);
+
+    // Ein Vorschlag mit einem Knopf – keine Liste von Moeglichkeiten.
+    expect(find.text('HEUTE DRAN'), findsOneWidget);
+    expect(find.text('Los'), findsOneWidget);
+    expect(find.text('10 Aufgaben zum Einstieg'), findsOneWidget);
+    expect(find.text('quer durch alle drei Bereiche'), findsOneWidget);
+  });
+
+  testWidgets('Startseite zeigt Module nur noch als Zeilen', (tester) async {
+    await pumpApp(tester);
+
+    expect(find.text('STAND JE MODUL'), findsOneWidget);
+    // Die Zeilen tragen die Kurzform, nicht den vollen Modulnamen.
+    expect(find.text('Mathe'), findsOneWidget);
+    expect(find.text('Logik'), findsOneWidget);
+    expect(find.text('Sprache'), findsOneWidget);
+    // Die frueheren Beschreibungstexte sind weg.
+    expect(
+      find.textContaining('Zahlenreihen, Analogien'),
+      findsNothing,
+    );
+  });
+
+  testWidgets('eine Modulzeile startet sofort eine Runde', (tester) async {
+    await pumpApp(tester);
+
+    await tester.tap(find.text('Mathe'));
+    await tester.pumpAndSettle();
+
+    // Kein Zwischenbildschirm mehr.
+    expect(find.text('Aufgabe 1/20'), findsOneWidget);
+  });
+
+  testWidgets('die untere Leiste fuehrt zu Statistik und Mehr',
       (tester) async {
     await pumpApp(tester);
 
-    expect(find.text('Übungsmodus'), findsOneWidget);
-    expect(find.text('Mathematik'), findsOneWidget);
-    expect(find.text('Logisches Denken'), findsOneWidget);
-    expect(find.text('Sprache'), findsOneWidget);
-    expect(find.text('Gesamtsimulation'), findsOneWidget);
+    expect(find.text('Start'), findsOneWidget);
+    expect(find.text('Statistik'), findsWidgets);
+    expect(find.text('Mehr'), findsOneWidget);
+
+    await openMore(tester);
+    expect(find.text('Prüfungstermin'), findsOneWidget);
+    expect(find.text('So funktioniert die App'), findsOneWidget);
+  });
+
+  group('Einführung', () {
+    testWidgets('erscheint beim allerersten Start', (tester) async {
+      await pumpApp(tester, onboarded: false);
+
+      expect(find.text('Drei Wege zum Test'), findsOneWidget);
+      expect(find.text('Weiter'), findsOneWidget);
+    });
+
+    testWidgets('fragt nach dem Prüfungstermin und endet in einer Runde',
+        (tester) async {
+      await pumpApp(tester, onboarded: false);
+
+      await tester.tap(find.text('Weiter'));
+      await tester.pumpAndSettle();
+      expect(find.text('Hast du schon einen Termin?'), findsOneWidget);
+
+      await tester.tap(find.text('Nein, ich übe erst mal'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dann legen wir los'), findsOneWidget);
+
+      await tester.tap(find.text('Erste Runde starten'));
+      await tester.pumpAndSettle();
+
+      // Direkt in die erste Runde, nicht auf die Startseite.
+      expect(find.text('Aufgabe 1/10'), findsOneWidget);
+    });
+
+    testWidgets('laeuft nach dem Durchlaufen nicht erneut', (tester) async {
+      await pumpApp(tester);
+
+      expect(find.text('Drei Wege zum Test'), findsNothing);
+      expect(find.text('HEUTE DRAN'), findsOneWidget);
+    });
   });
 
   group('Auswahl des Übungsumfangs', () {
@@ -194,7 +282,7 @@ void main() {
   group('Sprint', () {
     /// Startseite → Sprint-Modus → Auswahl des Aufgabentyps.
     Future<void> openSprintSetup(WidgetTester tester) async {
-      await tester.tap(find.text('Sprint-Modus'));
+      await tester.tap(find.text('Sprint · 60 s'));
       await tester.pumpAndSettle();
     }
 
@@ -279,26 +367,10 @@ void main() {
     });
   });
 
-  testWidgets('Modul-Screen bietet alle drei Trainingsmodi an', (tester) async {
-    await pumpApp(tester);
-
-    await tester.tap(find.text('Mathematik'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('Übungsmodus'), findsOneWidget);
-    expect(find.text('Sprint-Modus'), findsOneWidget);
-    expect(find.text('Testsimulation'), findsOneWidget);
-    // Die Unterkategorien des Moduls werden als Themenchips gezeigt.
-    expect(find.text('Dreisatz'), findsOneWidget);
-    expect(find.text('Prozentrechnung'), findsOneWidget);
-  });
-
   group('Testsimulation', () {
     /// Startseite → Modul → Testsimulation, Briefing des ersten Teils.
     Future<void> openSimulation(WidgetTester tester) async {
-      await tester.tap(find.text('Mathematik'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Testsimulation'));
+      await tester.tap(find.text('Gesamtsimulation'));
       await tester.pumpAndSettle();
     }
 
@@ -306,7 +378,7 @@ void main() {
       await pumpApp(tester);
       await openSimulation(tester);
 
-      expect(find.text('Teil 1 von 3'), findsOneWidget);
+      expect(find.text('Teil 1 von 4'), findsOneWidget);
       expect(find.text('Teil starten'), findsOneWidget);
       // Vor dem Start läuft noch kein Countdown.
       expect(find.text('Überspringen'), findsNothing);
@@ -325,8 +397,9 @@ void main() {
       expect(find.text('Bearbeitungszeit'), findsOneWidget);
       expect(find.text('Ø pro Aufgabe'), findsOneWidget);
       expect(find.text('Bereiche'), findsOneWidget);
-      expect(find.text('10 Minuten'), findsOneWidget);
-      expect(find.text('30 Sekunden'), findsOneWidget);
+      // Teil 1 der Gesamtsimulation: 20 Aufgaben in 15 Minuten.
+      expect(find.text('15 Minuten'), findsOneWidget);
+      expect(find.text('45 Sekunden'), findsOneWidget);
     });
 
     testWidgets('zeigt während des Laufs keine Lösung', (tester) async {
@@ -439,16 +512,17 @@ void main() {
   });
 
   group('Einstellungen', () {
-    /// Startseite → Einstellungen.
+    /// Mehr → Prüfungstermin führt in die Einstellungen.
     Future<void> openSettings(WidgetTester tester) async {
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await openMore(tester);
+      await tester.tap(find.text('Prüfungstermin'));
       await tester.pumpAndSettle();
     }
 
-    /// Einstellungen → Konto & Sicherung.
+    /// Mehr → Anmeldung und Abgleich.
     Future<void> openAccount(WidgetTester tester) async {
-      await openSettings(tester);
-      await tester.tap(find.text('Lokaler Modus'));
+      await openMore(tester);
+      await tester.tap(find.text('Anmeldung und Abgleich'));
       await tester.pumpAndSettle();
     }
 
@@ -494,12 +568,14 @@ void main() {
       expect(find.text('Noch 30 Tage'), findsOneWidget);
 
       await goBack(tester);
+      await tester.tap(find.text('Start'));
+      await tester.pumpAndSettle();
 
       // ... in der Kopfflaeche der Startseite dagegen getrennt: die Zahl in
       // Mono, das Wort daneben in Prosa.
       expect(find.text('30'), findsOneWidget);
       expect(find.text('Tage'), findsOneWidget);
-      expect(find.textContaining('Prüfungstermin'), findsOneWidget);
+      expect(find.text('BIS ZUR PRÜFUNG'), findsOneWidget);
     });
   });
 
@@ -515,7 +591,8 @@ void main() {
         tester,
         overrides: [reminderServiceProvider.overrideWithValue(reminders)],
       );
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await openMore(tester);
+      await tester.tap(find.text('Erinnerungen'));
       await tester.pumpAndSettle();
     }
 
@@ -638,8 +715,10 @@ void main() {
       await tester.pumpAndSettle();
       await goBack(tester);
 
-      expect(find.text('Deine Fehler wiederholen'), findsOneWidget);
-      expect(find.textContaining('stehen an'), findsOneWidget);
+      // Der Vorschlag hat sich der Lage angepasst: keine Einstiegsrunde mehr.
+      expect(find.text('10 Aufgaben zum Einstieg'), findsNothing);
+      expect(find.text('HEUTE DRAN'), findsOneWidget);
+      expect(find.text('Los'), findsOneWidget);
     });
 
     testWidgets('startet eine Runde aus den eigenen Fehlern', (tester) async {
@@ -663,10 +742,8 @@ void main() {
       await tester.pumpAndSettle();
       await goBack(tester);
 
-      await tester.tap(find.text('Deine Fehler wiederholen'));
+      await tester.tap(find.text('Los'));
       await tester.pumpAndSettle();
-
-      expect(find.textContaining('Deine Fehler'), findsWidgets);
       // Bewusst ohne feste Aufgabenzahl: Wie viele Aufgaben anstehen, haengt
       // davon ab, wie viele der zufaellig angeordneten Optionen zufaellig
       // richtig waren. Der Prueferpunkt ist, dass die Runde ueberhaupt aus
@@ -678,7 +755,8 @@ void main() {
   group('Deutsche Beschriftungen', () {
     testWidgets('die Datumsauswahl ist auf Deutsch', (tester) async {
       await pumpApp(tester);
-      await tester.tap(find.byIcon(Icons.settings_outlined));
+      await openMore(tester);
+      await tester.tap(find.text('Prüfungstermin'));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Termin setzen'));
@@ -703,7 +781,8 @@ void main() {
         tester,
         overrides: [purchaseServiceProvider.overrideWithValue(store)],
       );
-      await tester.tap(find.text('Pro: mehr Aufgaben, keine Werbung'));
+      await openMore(tester);
+      await tester.tap(find.text('Pro'));
       await tester.pumpAndSettle();
     }
 
@@ -757,7 +836,8 @@ void main() {
 
       await goBack(tester);
 
-      expect(find.text('Pro: mehr Aufgaben, keine Werbung'), findsNothing);
+      // Die Zeile unter „Mehr" meldet den Zustand direkt.
+      expect(find.text('aktiv'), findsOneWidget);
     });
 
     testWidgets('die Schwierigkeitswahl ist erst mit Pro bedienbar',
