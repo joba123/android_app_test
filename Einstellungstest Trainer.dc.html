@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#e9e6e0;font-family:"IBM Plex Sans",system-ui,sans-serif}
+a{color:#2F6FED}a:hover{color:#1B4FB8}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}
+.dv-tid{font:600 10px "IBM Plex Mono",monospace;padding:3px 7px;background:#14181F;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 "IBM Plex Sans",sans-serif;color:#14181F}
+.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px "IBM Plex Mono",monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#14181F;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dv-card{max-width:100%;background:#fff;border:1px solid rgba(0,0,0,.08);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.06);overflow:hidden}
+.dv-opt:target .dv-oid{background:#2F6FED;color:#fff}
+.dv-next{margin:22px 0 0;font:12px/1.5 "IBM Plex Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style></helmet>
+
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Einstellungstest Trainer — Richtung „Prüfungsbogen", Grundlagen und Screens</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Grundlagen: Annahmen, Tokens, Komponenten, App-Icon</div>
+<div class="dv-card" style="width:1180px;background:#F7F5F1;border:1px solid #DFD9D0;color:#14181F">
+
+<div style="padding:32px 36px 28px;display:flex;flex-direction:column;gap:10px;background:#16233A;color:#F7F5F1">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8FA3C4">Designrichtung</div>
+<div style="font:600 30px/36px 'IBM Plex Sans',sans-serif">Prüfungsbogen, nicht Spielbrett</div>
+<div style="font:400 16px/24px 'IBM Plex Sans',sans-serif;color:#C6D0E0;max-width:760px;text-wrap:pretty">Amtliche Sachlichkeit als Handschrift: Papierflächen statt Karten-Teppich, Mono-Ziffern für alles Gemessene, Modulfarbe nur als Datenmarke. Rangfolge entsteht über Fläche und Dunkelheit — nicht über Rahmen.</div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#DFD9D0">
+<div style="background:#F7F5F1;padding:22px 24px;display:flex;flex-direction:column;gap:8px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Annahme 01</div>
+<div style="font:600 17px/24px 'IBM Plex Sans',sans-serif">Der Termin ist der Anker</div>
+<div style="font:400 14px/21px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Wer einen Prüfungstermin hinterlegt hat, öffnet die App wegen des Countdowns. Er sitzt darum in der dunklen Kopffläche, nicht in einer Karte unter anderen.</div>
+</div>
+<div style="background:#F7F5F1;padding:22px 24px;display:flex;flex-direction:column;gap:8px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Annahme 02</div>
+<div style="font:600 17px/24px 'IBM Plex Sans',sans-serif">Zwei Register: Üben und Prüfen</div>
+<div style="font:400 14px/21px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Üben ist hell, erklärend, unterbrechbar. Die Simulation ist immer dunkel — auch im Hellmodus — ohne Karten, ohne Rückmeldung. Der Moduswechsel ist körperlich spürbar.</div>
+</div>
+<div style="background:#F7F5F1;padding:22px 24px;display:flex;flex-direction:column;gap:8px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Annahme 03</div>
+<div style="font:600 17px/24px 'IBM Plex Sans',sans-serif">Verwaltungskram wird flach</div>
+<div style="font:400 14px/21px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Einstellungen, Konto, Datenschutz sind Listenzeilen auf Papier — keine Karten. Karten bekommt nur, was Daten trägt oder eine Handlung auslöst.</div>
+</div>
+</div>
+
+<div style="height:1px;background:#DFD9D0"></div>
+
+<div style="padding:28px 36px 8px;display:flex;flex-direction:column;gap:4px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Blatt 1</div>
+<div style="font:600 22px/28px 'IBM Plex Sans',sans-serif">Design-Tokens</div>
+</div>
+
+<div style="padding:16px 36px 8px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Farbrollen — hell</div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#F7F5F1"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">surface #F7F5F1<br>Papiergrund</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#FFFFFF;border-bottom:1px solid #DFD9D0"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">surfaceRaised #FFFFFF<br>Datenkarte</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#EFEBE4"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">surfaceSunk #EFEBE4<br>Rille, Balkengrund</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#16233A"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">primary #16233A<br>Tinte, Hauptaktion</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#14181F"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">onSurface #14181F</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#4A5260"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">onSurfaceVar #4A5260</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#DFD9D0"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">outline #DFD9D0<br>Haarlinie 1 dp</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;overflow:hidden"><div style="height:36px;background:#2F6FED"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">interactive #2F6FED<br>Links, Fokus</div></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Farbrollen — dunkel</div>
+<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#0E1116"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">surface #0E1116</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#171B22;border-bottom:1px solid #2C333D"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">surfaceRaised #171B22</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#1F242C"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">surfaceSunk #1F242C</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#E7EAEF"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">primary #E7EAEF<br>helle Tinte</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#EDEFF2"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">onSurface #EDEFF2</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#A7B0BC"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">onSurfaceVar #A7B0BC</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#2C333D"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">outline #2C333D</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:6px;overflow:hidden"><div style="height:36px;background:#6C9BFF"></div><div style="padding:7px 9px;font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#A7B0BC">interactive #6C9BFF</div></div>
+</div>
+</div>
+</div>
+
+<div style="padding:20px 36px 8px;display:grid;grid-template-columns:1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Modulfarben (unverändert) und Rückmeldung</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:9px 12px"><span style="width:14px;height:14px;border-radius:3px;background:#2F6FED"></span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;flex:1">Mathematik</span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">hell #2F6FED · dunkel #6C9BFF</span></div>
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:9px 12px"><span style="width:14px;height:14px;border-radius:3px;background:#C2410C"></span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;flex:1">Logisches Denken</span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">hell #C2410C · dunkel #F08B4C</span></div>
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:9px 12px"><span style="width:14px;height:14px;border-radius:3px;background:#0E9F6E"></span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;flex:1">Sprache</span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">hell #0E9F6E · dunkel #37C79A</span></div>
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:9px 12px"><span style="width:14px;height:14px;border-radius:3px;background:#146B45"></span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;flex:1">Richtig — immer mit ✓ und Wort</span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">#146B45 · dunkel #2FA875</span></div>
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:9px 12px"><span style="width:14px;height:14px;border-radius:3px;background:#A61B1B"></span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;flex:1">Falsch — immer mit ✕ und Wort</span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">#A61B1B · dunkel #F1705F</span></div>
+<div style="font:400 12.5px/18px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Begründung: Die Seed-Farbe wandert von #2F6FED auf die Tinte #16233A, damit Blau eindeutig „Mathematik" heißt und nicht gleichzeitig Markenfarbe ist. Rückmeldungsrot #A61B1B liegt bewusst dunkler und weniger orange als das Logik-Orange #C2410C; zusätzlich trägt jede Rückmeldung Glyphe und Wort, ist also ohne Farbe lesbar.</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Typo-Skala — IBM Plex Sans + IBM Plex Mono</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:600 44px/48px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums">78 %</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">display 44/48 SemiBold, tabular</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:600 26px/32px 'IBM Plex Sans',sans-serif">Noch 23 Tage</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">headline 26/32 SemiBold</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:600 20px/26px 'IBM Plex Sans',sans-serif">Deine Fehler wiederholen</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">title 20/26 SemiBold</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:400 16px/24px 'IBM Plex Sans',sans-serif">Aufgabentext, Erklärung, Fließtext</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">body 16/24 Regular</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#4A5260">Sekundärtext, Hinweise</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">bodySmall 14/20</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 13px/16px 'IBM Plex Sans',sans-serif">Knopfschrift, Chip</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">label 13/16 Medium</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase">Übungsmodus · Teil 1 von 4</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">kicker mono 11/14, +12 % Laufweite</span></div>
+<div style="display:flex;align-items:baseline;gap:14px"><span style="font:600 40px/44px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">00:41</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">timer mono 40/44 (Sprint 56/60)</span></div>
+</div>
+<div style="font:400 12.5px/18px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Begründung: Alles Gemessene — Zeit, Zähler, Quoten, Aufgabennummern — steht in Mono mit Tabellenziffern, damit Zahlen beim Hochzählen nicht zappeln. Prosa bleibt Plex Sans. Diese Trennung ist die eigentliche Handschrift und ersetzt Roboto vollständig.</div>
+</div>
+</div>
+
+<div style="padding:20px 36px 32px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Abstandsraster (4 dp)</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:7px">
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:4px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">4 — Glyphe zu Wort</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:8px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">8 — Zeile zu Zeile</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:12px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">12 — Karten im Stapel</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:16px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">16 — Karteninnenrand</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:20px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">20 — Screen-Seitenrand</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:24px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">24 — Abschnitt zu Abschnitt</span></div>
+<div style="display:flex;align-items:center;gap:10px"><span style="height:8px;width:32px;background:#16233A"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">32 — vor Kopffläche-Ende</span></div>
+<div style="font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260">Ab 320 dp Breite: Seitenrand fällt auf 16, zweispaltige Kennzahlen brechen auf eine Spalte um.</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Eckradien</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:28px;background:#EFEBE4;border:1px solid #DFD9D0;border-radius:4px"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">4 — Eingabe, Antwortoption</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:28px;background:#EFEBE4;border:1px solid #DFD9D0;border-radius:10px"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">10 — Datenkarte</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:28px;background:#EFEBE4;border:1px solid #DFD9D0;border-radius:20px"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">20 — Kopffläche, Hauptknopf</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:28px;background:#EFEBE4;border:1px solid #DFD9D0;border-radius:999px"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">999 — Chip, Pille</span></div>
+<div style="font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Begründung: Vier Radien statt eines — kleiner Radius heißt „hier wird eingegeben", großer heißt „hier wird gestartet". Das ersetzt die gleichförmigen M3-Karten als Rangordnung.</div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:600 13px/18px 'IBM Plex Sans',sans-serif">Elevation</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:52px;height:30px;background:#F7F5F1;border-radius:6px"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">0 — Fläche auf Fläche</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:52px;height:30px;background:#fff;border:1px solid #DFD9D0;border-radius:6px"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">1 — nur Haarlinie</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:52px;height:30px;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(20,24,31,.10)"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">2 — klebende Leiste</span></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:52px;height:30px;background:#fff;border-radius:6px;box-shadow:0 8px 24px rgba(20,24,31,.18)"></span><span style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#4A5260">3 — Dialog, Sheet</span></div>
+<div style="font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Begründung: Karten werfen keinen Schatten, nur schwebende Dinge tun das. Im Dunkelmodus ersetzt Flächenhelligkeit den Schatten (0E1116 → 171B22 → 1F242C).</div>
+</div>
+</div>
+</div>
+
+<div style="height:1px;background:#DFD9D0"></div>
+
+<div style="padding:28px 36px 8px;display:flex;flex-direction:column;gap:4px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Blatt 2</div>
+<div style="font:600 22px/28px 'IBM Plex Sans',sans-serif">Komponenten</div>
+</div>
+
+<div style="padding:16px 36px 32px;display:grid;grid-template-columns:repeat(3,1fr);gap:24px">
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Knöpfe · 52 dp / 48 dp</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px/20px 'IBM Plex Sans',sans-serif">Übung starten</div>
+<div style="height:52px;border-radius:20px;background:#EFEBE4;color:#7C838F;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Übung starten</div>
+<div style="height:48px;border-radius:20px;background:transparent;border:1.5px solid #16233A;color:#16233A;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Sprint · 60 Sekunden</div>
+<div style="height:48px;border-radius:20px;display:flex;align-items:center;justify-content:center;font:500 15px/20px 'IBM Plex Sans',sans-serif;color:#2F6FED">Später erinnern</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Karte + Modulkarte</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:6px"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Datenkarte</div><div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#4A5260">Haarlinie, Radius 10, kein Schatten.</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #2F6FED;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+<div style="flex:1;display:flex;flex-direction:column;gap:3px"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Mathematik</div><div style="font:500 11.5px/14px 'IBM Plex Mono',monospace;color:#7C838F">4 Themen · 312 Aufgaben</div></div>
+<div style="text-align:right"><div style="font:600 20px/24px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">74 %</div><div style="font:500 10.5px/13px 'IBM Plex Mono',monospace;color:#7C838F">Quote</div></div>
+</div>
+<div style="font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Modulfarbe sitzt als 3-dp-Oberkante, nicht als linker Akzentstreifen — und nie als Flächenfüllung, damit die Farbe eine Datenmarke bleibt.</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Antwortoption · vier Zustände</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:8px">
+<div style="min-height:52px;border:1.5px solid #DFD9D0;border-radius:4px;background:#fff;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#EFEBE4;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Mono',monospace;color:#4A5260">A</span><span style="font:400 15px/21px 'IBM Plex Sans',sans-serif;flex:1">1 240 €</span></div>
+<div style="min-height:52px;border:1.5px solid #16233A;border-radius:4px;background:#EFEBE4;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Mono',monospace">B</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1">1 320 €</span><span style="font:500 10.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#4A5260">gewählt</span></div>
+<div style="min-height:52px;border:1.5px solid #146B45;border-radius:4px;background:#E9F4EE;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#146B45;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✓</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1">1 320 €</span><span style="font:600 10.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#146B45">richtig</span></div>
+<div style="min-height:52px;border:1.5px solid #A61B1B;border-radius:4px;background:#FBECEA;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#A61B1B;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1;text-decoration:line-through;text-decoration-color:#A61B1B">1 180 €</span><span style="font:600 10.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#A61B1B">falsch</span></div>
+<div style="font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Vier Unterscheidungen pro Zustand: Farbe, Glyphe, Wort und Textauszeichnung. Farbenblind und im Sonnenlicht gleich lesbar.</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Auswahl-Chip · 44 dp in 48-dp-Reihe</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+<span style="height:44px;padding:0 18px;border-radius:999px;border:1.5px solid #DFD9D0;display:inline-flex;align-items:center;font:500 14px/1 'IBM Plex Sans',sans-serif">10</span>
+<span style="height:44px;padding:0 18px;border-radius:999px;background:#16233A;color:#fff;display:inline-flex;align-items:center;gap:7px;font:500 14px/1 'IBM Plex Sans',sans-serif">✓ 20</span>
+<span style="height:44px;padding:0 18px;border-radius:999px;border:1.5px solid #DFD9D0;display:inline-flex;align-items:center;font:500 14px/1 'IBM Plex Sans',sans-serif">30</span>
+<span style="height:44px;padding:0 18px;border-radius:999px;border:1.5px dashed #DFD9D0;color:#7C838F;display:inline-flex;align-items:center;gap:7px;font:500 14px/1 'IBM Plex Sans',sans-serif">Schwer <span style="font:600 10px/1 'IBM Plex Mono',monospace;letter-spacing:.1em">PRO</span></span>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Kennzahl-Kachel · Countdown · Balken</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="background:#F7F5F1;border-radius:10px;padding:12px 14px"><div style="font:600 24px/28px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">1 847</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7C838F">Aufgaben gelöst</div></div>
+<div style="background:#F7F5F1;border-radius:10px;padding:12px 14px"><div style="font:600 24px/28px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">71 %</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7C838F">Trefferquote</div></div>
+</div>
+<div style="background:#16233A;border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between"><div><div style="font:600 26px/30px 'IBM Plex Mono',monospace;color:#fff;font-variant-numeric:tabular-nums">00:41</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8FA3C4">Restzeit</div></div><div style="width:74px;height:6px;border-radius:999px;background:#2E3B52;overflow:hidden"><div style="width:68%;height:6px;background:#fff"></div></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><div style="display:flex;justify-content:space-between;font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F"><span>Aufgabe 5/20</span><span>25 %</span></div><div style="height:6px;border-radius:999px;background:#EFEBE4;overflow:hidden"><div style="width:25%;height:6px;background:#16233A"></div></div></div>
+<div style="display:flex;align-items:flex-end;gap:6px;height:78px;padding-top:6px">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:38%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W1</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:48%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W2</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:44%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W3</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:58%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W4</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:62%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W5</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:70%;background:#16233A;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W6</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:76%;background:#16233A;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W7</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:82%;background:#16233A;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W8</span></div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">App-Icon · Vorschlag</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:14px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:84px;height:84px;border-radius:20px;background:#16233A;position:relative;overflow:hidden"><span style="position:absolute;left:26px;top:44px;width:16px;height:5px;border-radius:2px;background:#fff;transform:rotate(45deg);transform-origin:left center"></span><span style="position:absolute;left:37px;top:50px;width:30px;height:5px;border-radius:2px;background:#fff;transform:rotate(-52deg);transform-origin:left center"></span><span style="position:absolute;left:0;bottom:0;width:100%;height:5px;background:#2F6FED"></span><span style="position:absolute;left:33%;bottom:0;width:34%;height:5px;background:#C2410C"></span><span style="position:absolute;left:67%;bottom:0;width:33%;height:5px;background:#0E9F6E"></span></div><span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#7C838F">Empfehlung</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:60px;height:60px;border-radius:14px;background:#16233A;position:relative;overflow:hidden"><span style="position:absolute;left:18px;top:31px;width:12px;height:4px;border-radius:2px;background:#fff;transform:rotate(45deg);transform-origin:left center"></span><span style="position:absolute;left:26px;top:36px;width:22px;height:4px;border-radius:2px;background:#fff;transform:rotate(-52deg);transform-origin:left center"></span><span style="position:absolute;left:0;bottom:0;width:100%;height:4px;background:#2F6FED"></span><span style="position:absolute;left:33%;bottom:0;width:34%;height:4px;background:#C2410C"></span><span style="position:absolute;left:67%;bottom:0;width:33%;height:4px;background:#0E9F6E"></span></div><span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#7C838F">48 dp</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;align-items:center"><div style="width:60px;height:60px;border-radius:14px;background:#F7F5F1;border:1px solid #DFD9D0;position:relative;overflow:hidden"><span style="position:absolute;left:18px;top:31px;width:12px;height:4px;border-radius:2px;background:#16233A;transform:rotate(45deg);transform-origin:left center"></span><span style="position:absolute;left:26px;top:36px;width:22px;height:4px;border-radius:2px;background:#16233A;transform:rotate(-52deg);transform-origin:left center"></span><span style="position:absolute;left:0;bottom:0;width:100%;height:4px;background:#2F6FED"></span><span style="position:absolute;left:33%;bottom:0;width:34%;height:4px;background:#C2410C"></span><span style="position:absolute;left:67%;bottom:0;width:33%;height:4px;background:#0E9F6E"></span></div><span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;color:#7C838F">Papier-Variante</span></div>
+</div>
+<div style="font:400 12.5px/18px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Haken als Prüfzeichen auf Tinte, darunter die drei Modulfarben als durchgehende Fußleiste — lesbar bei 48 dp, funktioniert als adaptives Icon (Zeichen im 72-dp-Sicherheitskreis, Fußleiste im Vordergrund-Layer). Kein Maskottchen, kein Verlauf: das Icon soll auf dem Homescreen zwischen Behörden-Apps stehen können.</div>
+</div>
+</div>
+
+</div>
+</div>
+</div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Hauptrichtung — Screens 1–4: Startseite, Übungs-Auswahl, Übungsrunde, Sprint</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">01 Startseite · hell</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="background:#16233A;padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#8FA3C4"><span>20:14</span><span>▮▮▮ 84 %</span></div>
+<div style="background:#16233A;padding:14px 20px 30px;border-radius:0 0 20px 20px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8FA3C4">Prüfungstermin · 14. Sep 2026</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#9FB6DA">ändern</span></div>
+<div style="font:600 34px/38px 'IBM Plex Sans',sans-serif;color:#fff;font-variant-numeric:tabular-nums">Noch 23 Tage</div>
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#C6D0E0">Polizei NRW · Mittlerer Dienst</div>
+</div>
+<div style="padding:0 20px;margin-top:-18px">
+<div style="background:#fff;border-radius:10px;padding:16px;box-shadow:0 1px 2px rgba(20,24,31,.10);display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:4px;background:#FBECEA;color:#A61B1B;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#A61B1B">Fehlerspeicher</span></div>
+<div style="font:600 20px/26px 'IBM Plex Sans',sans-serif">34 Fehler wiederholen</div>
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#4A5260">Schwächstes Thema: <strong style="font-weight:600">Dreisatz</strong> — 41 % Trefferquote</div>
+<div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Fehler jetzt durchgehen</div>
+</div>
+</div>
+<div style="padding:20px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div style="background:#EFEBE4;border-radius:10px;padding:12px 14px"><div style="font:600 26px/30px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">1 847</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7C838F">Aufgaben gelöst</div></div>
+<div style="background:#EFEBE4;border-radius:10px;padding:12px 14px"><div style="font:600 26px/30px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">71 %</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7C838F">Trefferquote</div></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Schnellstart</div>
+<div style="display:flex;gap:10px">
+<div style="flex:1;height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:600 15px/18px 'IBM Plex Sans',sans-serif">Übung</span><span style="font:500 10px/12px 'IBM Plex Mono',monospace;color:#9FB6DA">20 Aufgaben</span></div>
+<div style="flex:1;height:52px;border-radius:20px;border:1.5px solid #16233A;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:600 15px/18px 'IBM Plex Sans',sans-serif">Sprint</span><span style="font:500 10px/12px 'IBM Plex Mono',monospace;color:#7C838F">60 Sekunden</span></div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Module</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#2F6FED">alle Themen</span></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #2F6FED;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Mathematik</div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">Dreisatz · Prozent · Textaufgaben · Reihen</div></div><div style="text-align:right"><div style="font:600 18px/22px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">74 %</div></div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #C2410C;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Logisches Denken</div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">Zahlenreihen · Matrizen · Analogien</div></div><div style="text-align:right"><div style="font:600 18px/22px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">68 %</div></div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #0E9F6E;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Sprache</div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">Rechtschreibung · Grammatik · Wortschatz</div></div><div style="text-align:right"><div style="font:600 18px/22px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">81 %</div></div></div>
+</div>
+<div style="padding:24px 20px 0">
+<div style="background:#0E1116;border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:999px;background:#F1705F"></span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#F1705F">Ernstfall</span></div>
+<div style="font:600 20px/26px 'IBM Plex Sans',sans-serif;color:#fff">Gesamtsimulation</div>
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#A7B0BC">4 Teile · 96 Minuten · keine Lösungen während des Tests</div>
+<div style="height:52px;border-radius:20px;background:#fff;color:#0E1116;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Simulation beginnen</div>
+</div>
+</div>
+<div style="padding:20px;display:flex;align-items:center;gap:10px"><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.12em;padding:3px 6px;border:1px solid #B08A2E;border-radius:4px;color:#8C6B1F">PRO</span><span style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260;flex:1">Schwierigkeitswahl und Statistik ohne Werbung.</span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;color:#2F6FED">ansehen</span></div>
+<div style="display:flex;border-top:1px solid #DFD9D0;background:#fff;padding:6px 0 12px">
+<div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><span style="width:16px;height:16px;border-radius:3px;background:#16233A"></span><span style="font:500 11px/13px 'IBM Plex Sans',sans-serif;color:#16233A">Start</span></div>
+<div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><span style="display:flex;align-items:flex-end;gap:2px;height:16px"><span style="width:4px;height:8px;background:#7C838F"></span><span style="width:4px;height:12px;background:#7C838F"></span><span style="width:4px;height:16px;background:#7C838F"></span></span><span style="font:500 11px/13px 'IBM Plex Sans',sans-serif;color:#7C838F">Statistik</span></div>
+<div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><span style="width:16px;height:16px;border-radius:999px;border:2px solid #7C838F"></span><span style="font:500 11px/13px 'IBM Plex Sans',sans-serif;color:#7C838F">Mehr</span></div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">02 Übungs-Auswahl</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:16</span><span>▮▮▮ 84 %</span></div>
+<div style="padding:8px 20px 16px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid #DFD9D0">
+<div style="display:flex;align-items:center;gap:12px"><span style="font:400 20px/1 'IBM Plex Sans',sans-serif;color:#4A5260">←</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Übungsmodus</span></div>
+<div style="font:600 26px/32px 'IBM Plex Sans',sans-serif;padding-left:32px">Was möchtest du üben?</div>
+</div>
+<div style="padding:16px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="background:#16233A;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif;color:#fff">Misch-Modus</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#A9BBD8">Aufgaben aus allen drei Modulen</div></div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#fff">›</span></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #2F6FED;border-radius:10px;overflow:hidden">
+<div style="padding:12px 16px 10px;display:flex;justify-content:space-between;align-items:baseline"><span style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Mathematik</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">74 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;justify-content:space-between;min-height:48px;align-items:center"><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Dreisatz</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#A61B1B">41 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;justify-content:space-between;min-height:48px;align-items:center"><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Prozentrechnung</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">72 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;justify-content:space-between;min-height:48px;align-items:center"><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Textaufgaben</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">78 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;justify-content:space-between;min-height:48px;align-items:center"><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Zahlenreihen</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">69 %</span></div>
+</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #C2410C;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;min-height:48px"><span style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Logisches Denken</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">3 Themen · 68 % ›</span></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-top:3px solid #0E9F6E;border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;min-height:48px"><span style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Sprache</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">3 Themen · 81 % ›</span></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Rundenlänge</div>
+<div style="display:flex;gap:8px">
+<span style="height:44px;flex:1;border-radius:999px;border:1.5px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif">10</span>
+<span style="height:44px;flex:1;border-radius:999px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font:500 14px/1 'IBM Plex Sans',sans-serif">✓ 20</span>
+<span style="height:44px;flex:1;border-radius:999px;border:1.5px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif">30</span>
+</div>
+</div>
+<div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Schwierigkeit</span><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.12em;padding:2px 5px;border:1px solid #B08A2E;border-radius:4px;color:#8C6B1F">PRO</span></div>
+<div style="display:flex;gap:8px">
+<span style="height:44px;flex:1;border-radius:999px;border:1.5px dashed #DFD9D0;color:#7C838F;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif">Leicht</span>
+<span style="height:44px;flex:1;border-radius:999px;border:1.5px dashed #DFD9D0;color:#7C838F;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif">Mittel</span>
+<span style="height:44px;flex:1;border-radius:999px;border:1.5px dashed #DFD9D0;color:#7C838F;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif">Schwer</span>
+</div>
+<div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#7C838F">Ohne Pro üben Sie auf gemischter Schwierigkeit — alle Aufgaben bleiben verfügbar.</div>
+</div>
+<div style="padding:24px 20px 20px;border-top:1px solid #DFD9D0;margin-top:24px;background:#fff;box-shadow:0 -1px 2px rgba(20,24,31,.06)">
+<div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px;font:600 15px/20px 'IBM Plex Sans',sans-serif">20 Aufgaben starten</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">03 Übungsrunde · Rückmeldung</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:22</span><span>▮▮▮ 83 %</span></div>
+<div style="padding:10px 20px 14px;display:flex;flex-direction:column;gap:8px;background:#fff;border-bottom:1px solid #DFD9D0">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Aufgabe 5/20 · Mathematik</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#4A5260">beenden</span></div>
+<div style="height:6px;border-radius:999px;background:#EFEBE4;overflow:hidden"><div style="width:25%;height:6px;background:#2F6FED"></div></div>
+</div>
+<div style="padding:20px 20px 0">
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:18px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2F6FED;margin-bottom:8px">Dreisatz</div>
+<div style="font:400 17px/25px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Drei Sachbearbeiter bearbeiten 156 Anträge in 4 Tagen. Wie viele Anträge bearbeiten fünf Sachbearbeiter in 6 Tagen?</div>
+</div>
+</div>
+<div style="padding:14px 20px 0;display:flex;flex-direction:column;gap:8px">
+<div style="min-height:52px;border:1.5px solid #DFD9D0;border-radius:4px;background:#fff;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#EFEBE4;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Mono',monospace;color:#4A5260">A</span><span style="font:400 15px/21px 'IBM Plex Sans',sans-serif;flex:1">312 Anträge</span></div>
+<div style="min-height:52px;border:1.5px solid #A61B1B;border-radius:4px;background:#FBECEA;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#A61B1B;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1;text-decoration:line-through;text-decoration-color:#A61B1B">360 Anträge</span><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#A61B1B">deine Antwort</span></div>
+<div style="min-height:52px;border:1.5px solid #146B45;border-radius:4px;background:#E9F4EE;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#146B45;color:#fff;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✓</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1">390 Anträge</span><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#146B45">richtig</span></div>
+<div style="min-height:52px;border:1.5px solid #DFD9D0;border-radius:4px;background:#fff;display:flex;align-items:center;gap:12px;padding:8px 14px;opacity:.55"><span style="width:26px;height:26px;border-radius:4px;background:#EFEBE4;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Mono',monospace;color:#4A5260">D</span><span style="font:400 15px/21px 'IBM Plex Sans',sans-serif;flex:1">468 Anträge</span></div>
+</div>
+<div style="padding:16px 20px 0">
+<div style="background:#fff;border:1px solid #DFD9D0;border-left:4px solid #A61B1B;border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:24px;height:24px;border-radius:999px;background:#A61B1B;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:600 17px/22px 'IBM Plex Sans',sans-serif;color:#A61B1B">Leider falsch</span></div>
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Rechenweg</div>
+<div style="font:400 15px/23px 'IBM Plex Sans',sans-serif;text-wrap:pretty">1 Sachbearbeiter · 1 Tag: 156 ÷ 3 ÷ 4 = <strong style="font-family:'IBM Plex Mono',monospace;font-weight:600">13</strong><br>5 Sachbearbeiter · 6 Tage: 13 × 5 × 6 = <strong style="font-family:'IBM Plex Mono',monospace;font-weight:600">390</strong></div>
+<div style="font:400 13px/19px 'IBM Plex Sans',sans-serif;color:#4A5260;border-top:1px solid #EFEBE4;padding-top:10px">Typischer Fehler: 360 entsteht, wenn nur die Tage verdoppelt statt beide Größen einzeln umgerechnet werden.</div>
+</div>
+</div>
+<div style="padding:16px 20px 12px"><div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;font:600 15px/20px 'IBM Plex Sans',sans-serif">Weiter <span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#9FB6DA">6/20</span></div></div>
+<div style="margin:0 20px 16px;height:50px;background:#EFEBE4;border:1px dashed #CFC7BB;border-radius:4px;display:flex;align-items:center;justify-content:center;font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#9A9384">WERBEBANNER 320 × 50 · nur ohne Pro</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">04 Sprint-Runde · live</span>
+<div style="width:360px;background:#FDF6F0;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:31</span><span>▮▮▮ 82 %</span></div>
+<div style="padding:12px 20px 18px;background:#C2410C;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#FBD5B5">Sprint · Misch-Modus</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#FBD5B5">abbrechen</span></div>
+<div style="display:flex;align-items:flex-end;justify-content:space-between">
+<div style="font:600 56px/56px 'IBM Plex Mono',monospace;color:#fff;font-variant-numeric:tabular-nums">{{ sprintTime }}</div>
+<div style="text-align:right;padding-bottom:6px"><div style="font:600 17px/22px 'IBM Plex Mono',monospace;color:#fff;font-variant-numeric:tabular-nums">7 richtig · 9 bearbeitet</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#FBD5B5">Live-Zähler</div></div>
+</div>
+<div style="height:8px;border-radius:999px;background:#8F3009;overflow:hidden"><div style="height:8px;background:#fff;width:{{ sprintPct }}"></div></div>
+</div>
+<div style="padding:22px 20px 0">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#C2410C;margin-bottom:10px">Aufgabe 10 · Zahlenreihe</div>
+<div style="font:600 30px/38px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums">4 · 9 · 19 · 39 · ?</div>
+</div>
+<div style="padding:22px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="min-height:60px;border:1.5px solid #E4D6C9;border-radius:4px;background:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px"><span style="width:24px;height:24px;border-radius:4px;background:#F4E7DA;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Mono',monospace;color:#8A6A4F">A</span><span style="font:500 19px/24px 'IBM Plex Mono',monospace">59</span></div>
+<div style="min-height:60px;border:1.5px solid #E4D6C9;border-radius:4px;background:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px"><span style="width:24px;height:24px;border-radius:4px;background:#F4E7DA;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Mono',monospace;color:#8A6A4F">B</span><span style="font:500 19px/24px 'IBM Plex Mono',monospace">78</span></div>
+<div style="min-height:60px;border:1.5px solid #E4D6C9;border-radius:4px;background:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px"><span style="width:24px;height:24px;border-radius:4px;background:#F4E7DA;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Mono',monospace;color:#8A6A4F">C</span><span style="font:500 19px/24px 'IBM Plex Mono',monospace">79</span></div>
+<div style="min-height:60px;border:1.5px solid #E4D6C9;border-radius:4px;background:#fff;display:flex;align-items:center;gap:10px;padding:8px 14px"><span style="width:24px;height:24px;border-radius:4px;background:#F4E7DA;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Mono',monospace;color:#8A6A4F">D</span><span style="font:500 19px/24px 'IBM Plex Mono',monospace">80</span></div>
+</div>
+<div style="padding:22px 20px 26px;display:flex;flex-direction:column;gap:6px">
+<div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#8A6A4F">Keine Erklärungen im Sprint — Auswertung kommt am Ende.</div>
+<div style="display:flex;gap:4px">
+<span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#A61B1B"></span><span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#A61B1B"></span><span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#146B45"></span><span style="height:5px;flex:1;border-radius:999px;background:#E4D6C9"></span>
+</div>
+<div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#8A6A4F">Verlauf · ✓ und ✕ zusätzlich als Form unterscheidbar</div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Begründung Sprint: warme Papierfläche (#FDF6F0), Logik-Orange als Kopffläche, Timer 56 px Mono und ein sich leerender Balken — Hektik entsteht durch Größe und Bewegung, nicht durch rote Warnfarbe.</div>
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Hauptrichtung — Screens 5–8: Auswertung, Briefing, Simulation, Testergebnis</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">05 Auswertung</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="background:#16233A;padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#8FA3C4"><span>20:41</span><span>▮▮▮ 80 %</span></div>
+<div style="background:#16233A;padding:14px 20px 26px;border-radius:0 0 20px 20px;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8FA3C4">Übungsrunde beendet · Mathematik</div>
+<div style="display:flex;align-items:flex-end;gap:14px">
+<div style="font:600 60px/60px 'IBM Plex Sans',sans-serif;color:#fff;font-variant-numeric:tabular-nums">80<span style="font:600 26px/30px 'IBM Plex Sans',sans-serif"> %</span></div>
+<div style="padding-bottom:8px;display:flex;flex-direction:column;gap:2px"><span style="font:500 13px/17px 'IBM Plex Mono',monospace;color:#B9E3CE">✓ 16 richtig</span><span style="font:500 13px/17px 'IBM Plex Mono',monospace;color:#F3B8AE">✕ 4 falsch</span></div>
+</div>
+<div style="display:flex;gap:3px">
+<span style="height:6px;flex:16;border-radius:999px;background:#2FA875"></span><span style="height:6px;flex:4;border-radius:999px;background:#F1705F"></span>
+</div>
+</div>
+<div style="padding:18px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:12px 14px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">0:34</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7C838F">Ø pro Aufgabe</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:12px 14px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">11:20</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7C838F">Gesamtdauer</div></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Nach Thema</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;overflow:hidden">
+<div style="padding:12px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:400 15px/20px 'IBM Plex Sans',sans-serif"><span>Dreisatz</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#A61B1B">3/6 · 50 %</span></div><div style="height:5px;background:#EFEBE4;border-radius:999px;overflow:hidden"><div style="width:50%;height:5px;background:#2F6FED"></div></div></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:400 15px/20px 'IBM Plex Sans',sans-serif"><span>Prozentrechnung</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#4A5260">7/8 · 88 %</span></div><div style="height:5px;background:#EFEBE4;border-radius:999px;overflow:hidden"><div style="width:88%;height:5px;background:#2F6FED"></div></div></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:400 15px/20px 'IBM Plex Sans',sans-serif"><span>Textaufgaben</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#4A5260">6/6 · 100 %</span></div><div style="height:5px;background:#EFEBE4;border-radius:999px;overflow:hidden"><div style="width:100%;height:5px;background:#2F6FED"></div></div></div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Alle 20 Aufgaben</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#2F6FED">nur Fehler</span></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:10px;align-items:center"><span style="width:24px;height:24px;border-radius:4px;background:#146B45;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Sans',sans-serif">✓</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">Aufgabe 4 · Prozent</span></div>
+<div style="font:400 15px/22px 'IBM Plex Sans',sans-serif">18 % von 450 € entsprechen …</div>
+<div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#146B45">deine Antwort 81 € · richtig</div>
+</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:10px;align-items:center"><span style="width:24px;height:24px;border-radius:4px;background:#A61B1B;color:#fff;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">Aufgabe 5 · Dreisatz</span></div>
+<div style="font:400 15px/22px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Drei Sachbearbeiter bearbeiten 156 Anträge in 4 Tagen …</div>
+<div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#A61B1B;text-decoration:line-through;text-decoration-color:#A61B1B">deine Antwort 360</div>
+<div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#146B45">Musterlösung 390</div>
+<div style="border-top:1px solid #EFEBE4;padding-top:8px;font:400 13px/19px 'IBM Plex Sans',sans-serif;color:#4A5260">156 ÷ 3 ÷ 4 = 13 → 13 × 5 × 6 = 390</div>
+</div>
+</div>
+<div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+<div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">4 Fehler jetzt wiederholen</div>
+<div style="height:48px;border-radius:20px;border:1.5px solid #16233A;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Zur Startseite</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">06 Simulations-Briefing</span>
+<div style="width:360px;background:#0E1116;border-radius:24px;border:1px solid #2C333D;overflow:hidden;color:#EDEFF2;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7A828E"><span>20:45</span><span>▮▮▮ 79 %</span></div>
+<div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:999px;background:#F1705F"></span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#F1705F">Ernstfall · Gesamtsimulation</span></div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font:600 13px/16px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#7A828E">TEIL 1 VON 4</div>
+<div style="font:600 30px/36px 'IBM Plex Sans',sans-serif">Rechnerisches Denken</div>
+<div style="font:400 15px/22px 'IBM Plex Sans',sans-serif;color:#A7B0BC;text-wrap:pretty">Der Teil läuft ohne Unterbrechung. Lösungen und Erklärungen erscheinen erst nach dem letzten Teil.</div>
+</div>
+<div style="display:flex;gap:1px;background:#2C333D;border-radius:10px;overflow:hidden">
+<div style="flex:1;background:#171B22;padding:14px 12px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">24</div><div style="font:500 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7A828E">Aufgaben</div></div>
+<div style="flex:1;background:#171B22;padding:14px 12px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">20:00</div><div style="font:500 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7A828E">Bearbeitungszeit</div></div>
+<div style="flex:1;background:#171B22;padding:14px 12px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">0:50</div><div style="font:500 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7A828E">Ø pro Aufgabe</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Abgedeckte Bereiche</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<span style="height:36px;padding:0 14px;border-radius:999px;border:1px solid #2C333D;display:inline-flex;align-items:center;gap:7px;font:400 13px/1 'IBM Plex Sans',sans-serif;color:#EDEFF2"><span style="width:8px;height:8px;border-radius:2px;background:#6C9BFF"></span>Dreisatz</span>
+<span style="height:36px;padding:0 14px;border-radius:999px;border:1px solid #2C333D;display:inline-flex;align-items:center;gap:7px;font:400 13px/1 'IBM Plex Sans',sans-serif;color:#EDEFF2"><span style="width:8px;height:8px;border-radius:2px;background:#6C9BFF"></span>Prozent</span>
+<span style="height:36px;padding:0 14px;border-radius:999px;border:1px solid #2C333D;display:inline-flex;align-items:center;gap:7px;font:400 13px/1 'IBM Plex Sans',sans-serif;color:#EDEFF2"><span style="width:8px;height:8px;border-radius:2px;background:#F08B4C"></span>Zahlenreihen</span>
+<span style="height:36px;padding:0 14px;border-radius:999px;border:1px solid #2C333D;display:inline-flex;align-items:center;gap:7px;font:400 13px/1 'IBM Plex Sans',sans-serif;color:#EDEFF2"><span style="width:8px;height:8px;border-radius:2px;background:#F08B4C"></span>Matrizen</span>
+</div>
+</div>
+<div style="border-top:1px solid #2C333D;padding-top:16px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;justify-content:space-between;font:500 12px/17px 'IBM Plex Mono',monospace;color:#7A828E"><span>Teil 1 · rechnerisch</span><span>20:00</span></div>
+<div style="display:flex;justify-content:space-between;font:500 12px/17px 'IBM Plex Mono',monospace;color:#4E5763"><span>Teil 2 · logisch</span><span>25:00</span></div>
+<div style="display:flex;justify-content:space-between;font:500 12px/17px 'IBM Plex Mono',monospace;color:#4E5763"><span>Teil 3 · sprachlich</span><span>21:00</span></div>
+<div style="display:flex;justify-content:space-between;font:500 12px/17px 'IBM Plex Mono',monospace;color:#4E5763"><span>Teil 4 · Konzentration</span><span>30:00</span></div>
+</div>
+</div>
+<div style="padding:22px 20px 22px;display:flex;flex-direction:column;gap:10px">
+<div style="height:52px;border-radius:20px;background:#EDEFF2;color:#0E1116;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Teil starten</div>
+<div style="height:48px;display:flex;align-items:center;justify-content:center;font:500 14px/20px 'IBM Plex Sans',sans-serif;color:#A7B0BC">Später fortsetzen</div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Begründung Ernstfall: Die Simulation ist in hell wie dunkel immer schwarz. Kein Papier, keine Karten mit Rand — nur Trennlinien und Mono. Der Wechsel ins Dunkel ist der Vorhang vor der Prüfung.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">07 Simulation laufend</span>
+<div style="width:360px;background:#0E1116;border-radius:24px;border:1px solid #2C333D;overflow:hidden;color:#EDEFF2;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7A828E"><span>20:47</span><span>▮▮▮ 79 %</span></div>
+<div style="padding:14px 20px 14px;border-bottom:1px solid #2C333D;display:flex;align-items:center;justify-content:space-between">
+<div><div style="font:600 32px/36px 'IBM Plex Mono',monospace;font-variant-numeric:tabular-nums">17:42</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7A828E">Teil 1 von 4 · Restzeit</div></div>
+<div style="text-align:right"><div style="font:600 16px/20px 'IBM Plex Mono',monospace">6 / 24</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7A828E">Aufgabe</div></div>
+</div>
+<div style="height:3px;background:#1F242C"><div style="width:25%;height:3px;background:#EDEFF2"></div></div>
+<div style="padding:34px 20px 0">
+<div style="font:400 18px/27px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Ein Dienstfahrzeug verbraucht auf 100 km 7,4 Liter. Wie weit reicht eine Tankfüllung von 55 Litern, gerundet auf 10 km?</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:1px;background:#2C333D;border-radius:4px;overflow:hidden;margin:28px 20px 0">
+<div style="background:#0E1116;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#7A828E">A</span><span style="font:400 16px/22px 'IBM Plex Sans',sans-serif">680 km</span></div>
+<div style="background:#0E1116;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#7A828E">B</span><span style="font:400 16px/22px 'IBM Plex Sans',sans-serif">700 km</span></div>
+<div style="background:#1F242C;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px;border-left:3px solid #EDEFF2"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#EDEFF2">C</span><span style="font:500 16px/22px 'IBM Plex Sans',sans-serif">740 km</span><span style="margin-left:auto;font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#A7B0BC">gewählt</span></div>
+<div style="background:#0E1116;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#7A828E">D</span><span style="font:400 16px/22px 'IBM Plex Sans',sans-serif">760 km</span></div>
+</div>
+<div style="padding:22px 20px 24px;display:flex;gap:10px;align-items:center">
+<div style="width:96px;height:48px;border-radius:20px;border:1px solid #2C333D;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif;color:#A7B0BC">Zurück</div>
+<div style="flex:1;height:52px;border-radius:20px;background:#EDEFF2;color:#0E1116;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Weiter</div>
+</div>
+<div style="padding:0 20px 22px;font:500 11px/16px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#4E5763;text-align:center">Auswertung nach Teil 4</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">08 Testergebnis</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="background:#0E1116;padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7A828E"><span>22:29</span><span>▮▮ 61 %</span></div>
+<div style="background:#0E1116;padding:16px 20px 26px;color:#EDEFF2;display:flex;flex-direction:column;gap:12px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#7A828E">Gesamtsimulation abgeschlossen · 18. Aug</div>
+<div style="display:flex;align-items:flex-end;gap:16px">
+<div style="font:600 60px/60px 'IBM Plex Sans',sans-serif;font-variant-numeric:tabular-nums">73<span style="font:600 26px/30px 'IBM Plex Sans',sans-serif"> %</span></div>
+<div style="padding-bottom:8px"><div style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#A7B0BC">70 von 96 Aufgaben</div><div style="font:500 13px/18px 'IBM Plex Mono',monospace;color:#A7B0BC">Dauer 1:42 h</div></div>
+</div>
+<div style="display:flex;align-items:center;gap:8px;background:#1F242C;border-radius:4px;padding:10px 12px"><span style="font:600 12px/1 'IBM Plex Mono',monospace;color:#F3C06B">!</span><span style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#D7DDE5">Der Test wurde in Teil 3 für 4 Minuten pausiert — im Ernstfall gibt es keine Pause.</span></div>
+</div>
+<div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Ergebnis je Testteil</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;overflow:hidden">
+<div style="padding:12px 16px;display:flex;align-items:center;gap:12px"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F;width:44px">Teil 1</span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Rechnerisch</span><span style="font:600 15px/20px 'IBM Plex Mono',monospace">79 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;align-items:center;gap:12px"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F;width:44px">Teil 2</span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Logisch</span><span style="font:600 15px/20px 'IBM Plex Mono',monospace">64 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;align-items:center;gap:12px"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F;width:44px">Teil 3</span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Sprachlich</span><span style="font:600 15px/20px 'IBM Plex Mono',monospace">81 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;align-items:center;gap:12px"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F;width:44px">Teil 4</span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Konzentration</span><span style="font:600 15px/20px 'IBM Plex Mono',monospace">68 %</span></div>
+</div>
+</div>
+<div style="padding:22px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Fehlerquote je Kategorie</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-direction:column;gap:5px"><div style="display:flex;justify-content:space-between;font:400 14px/19px 'IBM Plex Sans',sans-serif"><span>Matrizen</span><span style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#A61B1B">44 % Fehler</span></div><div style="height:5px;background:#EFEBE4;border-radius:999px;overflow:hidden"><div style="width:44%;height:5px;background:#C2410C"></div></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><div style="display:flex;justify-content:space-between;font:400 14px/19px 'IBM Plex Sans',sans-serif"><span>Dreisatz</span><span style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#4A5260">29 % Fehler</span></div><div style="height:5px;background:#EFEBE4;border-radius:999px;overflow:hidden"><div style="width:29%;height:5px;background:#2F6FED"></div></div></div>
+<div style="display:flex;flex-direction:column;gap:5px"><div style="display:flex;justify-content:space-between;font:400 14px/19px 'IBM Plex Sans',sans-serif"><span>Rechtschreibung</span><span style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#4A5260">14 % Fehler</span></div><div style="height:5px;background:#EFEBE4;border-radius:999px;overflow:hidden"><div style="width:14%;height:5px;background:#0E9F6E"></div></div></div>
+</div>
+</div>
+<div style="padding:22px 20px 22px;display:flex;flex-direction:column;gap:10px">
+<div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Alle 26 Fehler durchgehen</div>
+<div style="height:48px;border-radius:20px;border:1.5px solid #16233A;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Ergebnis speichern</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Hauptrichtung — Screens 9–11: Statistik, Einstellungen, Pro</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">09 Statistik</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:52</span><span>▮▮▮ 78 %</span></div>
+<div style="padding:8px 20px 16px;border-bottom:1px solid #DFD9D0"><div style="font:600 26px/32px 'IBM Plex Sans',sans-serif">Statistik</div></div>
+<div style="padding:18px 20px 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+<div style="background:#EFEBE4;border-radius:10px;padding:11px 12px"><div style="font:600 20px/24px 'IBM Plex Mono',monospace">1 847</div><div style="font:500 9.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7C838F">gelöst</div></div>
+<div style="background:#EFEBE4;border-radius:10px;padding:11px 12px"><div style="font:600 20px/24px 'IBM Plex Mono',monospace">71 %</div><div style="font:500 9.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7C838F">Quote</div></div>
+<div style="background:#EFEBE4;border-radius:10px;padding:11px 12px"><div style="font:600 20px/24px 'IBM Plex Mono',monospace">0:38</div><div style="font:500 9.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7C838F">Ø Zeit</div></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Entwicklung</div>
+<div style="background:#16233A;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="font:600 20px/26px 'IBM Plex Sans',sans-serif;color:#fff">Du bist besser geworden</div>
+<div style="display:flex;align-items:flex-end;gap:16px">
+<div><div style="font:600 32px/34px 'IBM Plex Mono',monospace;color:#fff">78 %</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8FA3C4">letzte 7 Tage</div></div>
+<div style="font:500 18px/22px 'IBM Plex Mono',monospace;color:#8FA3C4;padding-bottom:14px">↑ 17</div>
+<div><div style="font:600 24px/28px 'IBM Plex Mono',monospace;color:#9FB6DA">61 %</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8FA3C4">7 Tage davor</div></div>
+</div>
+</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:14px">
+<div><div style="font:600 24px/28px 'IBM Plex Mono',monospace">9</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7C838F">Tage Serie</div></div>
+<div style="display:flex;gap:3px;flex:1;justify-content:flex-end">
+<span style="width:12px;height:24px;border-radius:2px;background:#16233A"></span><span style="width:12px;height:24px;border-radius:2px;background:#16233A"></span><span style="width:12px;height:24px;border-radius:2px;background:#16233A"></span><span style="width:12px;height:24px;border-radius:2px;background:#16233A"></span><span style="width:12px;height:24px;border-radius:2px;background:#16233A"></span><span style="width:12px;height:24px;border-radius:2px;background:#16233A"></span><span style="width:12px;height:24px;border-radius:2px;background:#EFEBE4"></span>
+</div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Trefferquote · 8 Wochen</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7C838F">Ø 71 %</span></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:16px 14px 12px">
+<div style="display:flex;align-items:flex-end;gap:6px;height:104px">
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">58</span><div style="width:100%;height:58%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W1</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">61</span><div style="width:100%;height:61%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W2</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">57</span><div style="width:100%;height:57%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W3</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">66</span><div style="width:100%;height:66%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W4</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">69</span><div style="width:100%;height:69%;background:#C9D3E4;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W5</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">74</span><div style="width:100%;height:74%;background:#16233A;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W6</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">76</span><div style="width:100%;height:76%;background:#16233A;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W7</span></div>
+<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:6px"><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">78</span><div style="width:100%;height:78%;background:#16233A;border-radius:2px"></div><span style="font:500 9.5px/12px 'IBM Plex Mono',monospace;color:#7C838F">W8</span></div>
+</div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Je Modul</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;overflow:hidden">
+<div style="padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:2px;background:#2F6FED"></span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Mathematik</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#4A5260">742 Aufg. · 74 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:2px;background:#C2410C"></span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Logisches Denken</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#4A5260">585 Aufg. · 68 %</span></div>
+<div style="border-top:1px solid #EFEBE4;padding:12px 16px;display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:2px;background:#0E9F6E"></span><span style="font:400 15px/20px 'IBM Plex Sans',sans-serif;flex:1">Sprache</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#4A5260">520 Aufg. · 81 %</span></div>
+</div>
+</div>
+<div style="padding:24px 20px 24px;display:flex;flex-direction:column;gap:8px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Letzte Sitzungen</div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E7E1D8;min-height:48px"><div style="flex:1"><div style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Übung · Mathematik</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">heute 20:41 · 20 Aufgaben · 11:20</div></div><span style="font:600 15px/20px 'IBM Plex Mono',monospace">80 %</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E7E1D8;min-height:48px"><div style="flex:1"><div style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Sprint · Misch</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">heute 20:31 · 12 Aufgaben · 1:00</div></div><span style="font:600 15px/20px 'IBM Plex Mono',monospace">67 %</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #E7E1D8;min-height:48px"><div style="flex:1"><div style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Simulation · 4 Teile</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">gestern 21:04 · 96 Aufgaben · 1:42 h</div></div><span style="font:600 15px/20px 'IBM Plex Mono',monospace">73 %</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 0;min-height:48px"><div style="flex:1"><div style="font:400 15px/20px 'IBM Plex Sans',sans-serif">Übung · Sprache</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">16. Aug · 30 Aufgaben · 14:02</div></div><span style="font:600 15px/20px 'IBM Plex Mono',monospace">84 %</span></div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">10 Einstellungen</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:58</span><span>▮▮▮ 77 %</span></div>
+<div style="padding:8px 20px 16px;border-bottom:1px solid #DFD9D0"><div style="font:600 26px/32px 'IBM Plex Sans',sans-serif">Einstellungen</div></div>
+<div style="padding:18px 20px 0">
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:16px;display:flex;align-items:center;gap:14px">
+<div style="flex:1"><div style="display:flex;align-items:center;gap:8px;margin-bottom:4px"><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.12em;padding:2px 5px;border:1px solid #B08A2E;border-radius:4px;color:#8C6B1F">PRO</span></div><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Pro ansehen</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Schwierigkeit wählen, keine Werbung</div></div>
+<span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Prüfung</div>
+<div style="display:flex;align-items:center;min-height:52px;border-bottom:1px solid #E7E1D8;gap:12px"><div style="flex:1;font:400 16px/22px 'IBM Plex Sans',sans-serif">Testtermin</div><div style="font:500 14px/20px 'IBM Plex Mono',monospace;color:#4A5260">14.09.2026</div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+<div style="display:flex;align-items:center;min-height:52px;border-bottom:1px solid #E7E1D8;gap:12px"><div style="flex:1;font:400 16px/22px 'IBM Plex Sans',sans-serif">Stelle / Behörde</div><div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#4A5260">Polizei NRW</div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Erinnerungen</div>
+<div style="display:flex;align-items:center;min-height:52px;gap:12px"><div style="flex:1"><div style="font:400 16px/22px 'IBM Plex Sans',sans-serif">Täglich erinnern</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Eine Nachricht pro Tag, nicht mehr</div></div><span style="width:52px;height:32px;border-radius:999px;background:#16233A;display:flex;align-items:center;justify-content:flex-end;padding:0 4px"><span style="width:24px;height:24px;border-radius:999px;background:#fff"></span></span></div>
+<div style="display:flex;align-items:center;min-height:52px;gap:12px;border-top:1px solid #E7E1D8"><div style="flex:1;font:400 16px/22px 'IBM Plex Sans',sans-serif">Uhrzeit</div><div style="font:500 15px/20px 'IBM Plex Mono',monospace">19:30</div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+<div style="display:flex;flex-direction:column;gap:8px;border-top:1px solid #E7E1D8;padding-top:14px">
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#4A5260">Zusätzlich vor dem Termin erinnern</div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<span style="height:44px;padding:0 16px;border-radius:999px;background:#16233A;color:#fff;display:inline-flex;align-items:center;gap:6px;font:500 14px/1 'IBM Plex Sans',sans-serif">✓ 7 Tage</span>
+<span style="height:44px;padding:0 16px;border-radius:999px;background:#16233A;color:#fff;display:inline-flex;align-items:center;gap:6px;font:500 14px/1 'IBM Plex Sans',sans-serif">✓ 3 Tage</span>
+<span style="height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #DFD9D0;display:inline-flex;align-items:center;font:500 14px/1 'IBM Plex Sans',sans-serif">1 Tag</span>
+<span style="height:44px;padding:0 16px;border-radius:999px;border:1.5px solid #DFD9D0;display:inline-flex;align-items:center;font:500 14px/1 'IBM Plex Sans',sans-serif">Morgens</span>
+</div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Werbung und Daten</div>
+<div style="display:flex;align-items:center;min-height:52px;border-bottom:1px solid #E7E1D8;gap:12px"><div style="flex:1"><div style="font:400 16px/22px 'IBM Plex Sans',sans-serif">Werbe-Einstellungen</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Personalisierung widerrufen</div></div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+<div style="display:flex;align-items:center;min-height:52px;border-bottom:1px solid #E7E1D8;gap:12px"><div style="flex:1;font:400 16px/22px 'IBM Plex Sans',sans-serif">Datenschutzerklärung</div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+</div>
+<div style="padding:24px 20px 24px;display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Konto</div>
+<div style="display:flex;align-items:center;min-height:52px;border-bottom:1px solid #E7E1D8;gap:12px"><div style="flex:1"><div style="font:400 16px/22px 'IBM Plex Sans',sans-serif">Anmelden</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Fortschritt auf mehreren Geräten</div></div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+<div style="font:500 11px/16px 'IBM Plex Mono',monospace;color:#9A9384;padding-top:12px">Version 1.4.0 · Aufgabenstand Aug 2026</div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Begründung: Verwaltung ohne Karten — Listenzeilen mit 52-dp-Höhe direkt auf Papier. Nur der Pro-Einstieg bekommt eine Karte, weil er eine Handlung ist.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">11 Pro / Kauf · ohne Dark Patterns</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>21:02</span><span>▮▮▮ 76 %</span></div>
+<div style="padding:8px 20px 18px;border-bottom:1px solid #DFD9D0;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:12px"><span style="font:400 20px/1 'IBM Plex Sans',sans-serif;color:#4A5260">←</span><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.12em;padding:2px 6px;border:1px solid #B08A2E;border-radius:4px;color:#8C6B1F">PRO</span></div>
+<div style="font:600 26px/32px 'IBM Plex Sans',sans-serif;padding-left:32px">Was Pro dazugibt</div>
+</div>
+<div style="padding:18px 20px 0;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;gap:12px"><span style="font:600 15px/22px 'IBM Plex Mono',monospace;color:#146B45">+</span><div><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Schwierigkeit selbst wählen</div><div style="font:400 13.5px/19px 'IBM Plex Sans',sans-serif;color:#4A5260">Leicht, mittel oder schwer pro Runde</div></div></div>
+<div style="display:flex;gap:12px"><span style="font:600 15px/22px 'IBM Plex Mono',monospace;color:#146B45">+</span><div><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Keine Werbung</div><div style="font:400 13.5px/19px 'IBM Plex Sans',sans-serif;color:#4A5260">Auch kein Banner in Übungsrunden</div></div></div>
+<div style="display:flex;gap:12px"><span style="font:600 15px/22px 'IBM Plex Mono',monospace;color:#146B45">+</span><div><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Statistik nach Thema und Woche</div><div style="font:400 13.5px/19px 'IBM Plex Sans',sans-serif;color:#4A5260">Verlauf über acht Wochen, Export als PDF</div></div></div>
+</div>
+<div style="padding:20px 20px 0">
+<div style="background:#EFEBE4;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#4A5260">Kostenlos bleibt</div>
+<div style="font:400 14.5px/21px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Alle Aufgaben, alle drei Module, der Fehlerspeicher, alle Übungs- und Sprint-Runden und die komplette Gesamtsimulation mit Auswertung. Pro schaltet keine Aufgaben frei.</div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Drei Wege — gleichwertig dargestellt</div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><div style="flex:1"><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Einmalkauf</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Kein Abo, keine Verlängerung</div></div><div style="font:600 17px/22px 'IBM Plex Mono',monospace">24,99 €</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><div style="flex:1"><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Monatlich</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Monatlich kündbar</div></div><div style="font:600 17px/22px 'IBM Plex Mono',monospace">3,99 €</div></div>
+<div style="background:#fff;border:1px solid #DFD9D0;border-radius:10px;padding:14px 16px;display:flex;align-items:center;gap:12px;min-height:52px"><div style="flex:1"><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Jährlich</div><div style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#4A5260">Jährliche Abbuchung, jährlich kündbar</div></div><div style="font:600 17px/22px 'IBM Plex Mono',monospace">19,99 €</div></div>
+<div style="font:400 13px/19px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Nichts ist vorausgewählt. Tippen Sie den Weg an, der Ihnen passt — der Knopf unten übernimmt Ihre Wahl.</div>
+</div>
+<div style="padding:20px 20px 0">
+<div style="height:52px;border-radius:20px;background:#EFEBE4;color:#7C838F;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Bitte einen Tarif wählen</div>
+</div>
+<div style="padding:16px 20px 24px;display:flex;flex-direction:column;gap:12px">
+<div style="font:400 12.5px/18px 'IBM Plex Sans',sans-serif;color:#4A5260;text-wrap:pretty">Abos verlängern sich automatisch um den gewählten Zeitraum, bis sie gekündigt werden. Die Kündigung erfolgt jederzeit in den Google-Play-Einstellungen, spätestens 24 Stunden vor Ablauf. Der Einmalkauf verlängert sich nicht.</div>
+<div style="display:flex;gap:16px;align-items:center;min-height:48px"><span style="font:500 14px/20px 'IBM Plex Sans',sans-serif;color:#2F6FED">Früheren Kauf wiederherstellen</span></div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Begründung Kauf: „Kostenlos bleibt" steht vor den Preisen, alle drei Tarife tragen dieselbe Fläche, kein Tarif ist markiert oder vorausgewählt — der Hauptknopf bleibt bis zur Wahl inaktiv statt zu drängen.</div>
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Dunkelmodus — Startseite, Übungsrunde, Auswertung, Simulation</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">01 Startseite · dunkel</span>
+<div style="width:360px;background:#0E1116;border-radius:24px;border:1px solid #2C333D;overflow:hidden;color:#EDEFF2;font-family:'IBM Plex Sans',sans-serif">
+<div style="background:#1B2534;padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#8FA3C4"><span>20:14</span><span>▮▮▮ 84 %</span></div>
+<div style="background:#1B2534;padding:14px 20px 30px;border-radius:0 0 20px 20px;display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8FA3C4">Prüfungstermin · 14. Sep 2026</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#9FB6DA">ändern</span></div>
+<div style="font:600 34px/38px 'IBM Plex Sans',sans-serif;color:#fff">Noch 23 Tage</div>
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#C6D0E0">Polizei NRW · Mittlerer Dienst</div>
+</div>
+<div style="padding:0 20px;margin-top:-18px">
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:4px;background:#3A1D1B;color:#F1705F;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#F1705F">Fehlerspeicher</span></div>
+<div style="font:600 20px/26px 'IBM Plex Sans',sans-serif">34 Fehler wiederholen</div>
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#A7B0BC">Schwächstes Thema: <strong style="font-weight:600;color:#EDEFF2">Dreisatz</strong> — 41 % Trefferquote</div>
+<div style="height:52px;border-radius:20px;background:#E7EAEF;color:#0E1116;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Fehler jetzt durchgehen</div>
+</div>
+</div>
+<div style="padding:20px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div style="background:#1F242C;border-radius:10px;padding:12px 14px"><div style="font:600 26px/30px 'IBM Plex Mono',monospace">1 847</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7A828E">Aufgaben gelöst</div></div>
+<div style="background:#1F242C;border-radius:10px;padding:12px 14px"><div style="font:600 26px/30px 'IBM Plex Mono',monospace">71 %</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7A828E">Trefferquote</div></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Schnellstart</div>
+<div style="display:flex;gap:10px">
+<div style="flex:1;height:52px;border-radius:20px;background:#E7EAEF;color:#0E1116;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:600 15px/18px 'IBM Plex Sans',sans-serif">Übung</span><span style="font:500 10px/12px 'IBM Plex Mono',monospace;color:#4A5260">20 Aufgaben</span></div>
+<div style="flex:1;height:52px;border-radius:20px;border:1.5px solid #454E5B;display:flex;flex-direction:column;align-items:center;justify-content:center"><span style="font:600 15px/18px 'IBM Plex Sans',sans-serif">Sprint</span><span style="font:500 10px/12px 'IBM Plex Mono',monospace;color:#7A828E">60 Sekunden</span></div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Module</div>
+<div style="background:#171B22;border:1px solid #2C333D;border-top:3px solid #6C9BFF;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Mathematik</div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7A828E">Dreisatz · Prozent · Textaufgaben · Reihen</div></div><div style="font:600 18px/22px 'IBM Plex Mono',monospace">74 %</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-top:3px solid #F08B4C;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Logisches Denken</div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7A828E">Zahlenreihen · Matrizen · Analogien</div></div><div style="font:600 18px/22px 'IBM Plex Mono',monospace">68 %</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-top:3px solid #37C79A;border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px"><div style="flex:1"><div style="font:600 16px/22px 'IBM Plex Sans',sans-serif">Sprache</div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#7A828E">Rechtschreibung · Grammatik · Wortschatz</div></div><div style="font:600 18px/22px 'IBM Plex Mono',monospace">81 %</div></div>
+</div>
+<div style="padding:24px 20px 0">
+<div style="background:#000;border:1px solid #2C333D;border-radius:10px;padding:18px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:999px;background:#F1705F"></span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#F1705F">Ernstfall</span></div>
+<div style="font:600 20px/26px 'IBM Plex Sans',sans-serif;color:#fff">Gesamtsimulation</div>
+<div style="font:400 14px/20px 'IBM Plex Sans',sans-serif;color:#A7B0BC">4 Teile · 96 Minuten · keine Lösungen während des Tests</div>
+<div style="height:52px;border-radius:20px;background:#fff;color:#000;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Simulation beginnen</div>
+</div>
+</div>
+<div style="padding:20px;display:flex;align-items:center;gap:10px"><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.12em;padding:3px 6px;border:1px solid #8C6B1F;border-radius:4px;color:#D9B45F">PRO</span><span style="font:400 13px/18px 'IBM Plex Sans',sans-serif;color:#A7B0BC;flex:1">Schwierigkeitswahl und Statistik ohne Werbung.</span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;color:#6C9BFF">ansehen</span></div>
+<div style="display:flex;border-top:1px solid #2C333D;background:#171B22;padding:6px 0 12px">
+<div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><span style="width:16px;height:16px;border-radius:3px;background:#EDEFF2"></span><span style="font:500 11px/13px 'IBM Plex Sans',sans-serif;color:#EDEFF2">Start</span></div>
+<div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><span style="display:flex;align-items:flex-end;gap:2px;height:16px"><span style="width:4px;height:8px;background:#7A828E"></span><span style="width:4px;height:12px;background:#7A828E"></span><span style="width:4px;height:16px;background:#7A828E"></span></span><span style="font:500 11px/13px 'IBM Plex Sans',sans-serif;color:#7A828E">Statistik</span></div>
+<div style="flex:1;height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px"><span style="width:16px;height:16px;border-radius:999px;border:2px solid #7A828E"></span><span style="font:500 11px/13px 'IBM Plex Sans',sans-serif;color:#7A828E">Mehr</span></div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Kein Umdrehen: Die Kopffläche wird im Dunkeln heller als der Grund (#1B2534 auf #0E1116), damit sie weiter als oberste Ebene liest. Der Ernstfall-Block geht auf reines Schwarz — im Dunkeln der einzige Weg, noch tiefer zu werden.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">03 Übungsrunde · dunkel</span>
+<div style="width:360px;background:#0E1116;border-radius:24px;border:1px solid #2C333D;overflow:hidden;color:#EDEFF2;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7A828E"><span>20:22</span><span>▮▮▮ 83 %</span></div>
+<div style="padding:10px 20px 14px;display:flex;flex-direction:column;gap:8px;background:#171B22;border-bottom:1px solid #2C333D">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Aufgabe 5/20 · Mathematik</span><span style="font:500 12px/16px 'IBM Plex Sans',sans-serif;color:#A7B0BC">beenden</span></div>
+<div style="height:6px;border-radius:999px;background:#2C333D;overflow:hidden"><div style="width:25%;height:6px;background:#6C9BFF"></div></div>
+</div>
+<div style="padding:20px 20px 0">
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;padding:18px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#6C9BFF;margin-bottom:8px">Dreisatz</div>
+<div style="font:400 17px/25px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Drei Sachbearbeiter bearbeiten 156 Anträge in 4 Tagen. Wie viele Anträge bearbeiten fünf Sachbearbeiter in 6 Tagen?</div>
+</div>
+</div>
+<div style="padding:14px 20px 0;display:flex;flex-direction:column;gap:8px">
+<div style="min-height:52px;border:1.5px solid #2C333D;border-radius:4px;background:#171B22;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#1F242C;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Mono',monospace;color:#A7B0BC">A</span><span style="font:400 15px/21px 'IBM Plex Sans',sans-serif;flex:1">312 Anträge</span></div>
+<div style="min-height:52px;border:1.5px solid #F1705F;border-radius:4px;background:#2A1614;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#F1705F;color:#2A1614;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1;text-decoration:line-through;text-decoration-color:#F1705F">360 Anträge</span><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#F1705F">deine Antwort</span></div>
+<div style="min-height:52px;border:1.5px solid #2FA875;border-radius:4px;background:#0F2620;display:flex;align-items:center;gap:12px;padding:8px 14px"><span style="width:26px;height:26px;border-radius:4px;background:#2FA875;color:#0F2620;display:flex;align-items:center;justify-content:center;font:600 14px/1 'IBM Plex Sans',sans-serif">✓</span><span style="font:500 15px/21px 'IBM Plex Sans',sans-serif;flex:1">390 Anträge</span><span style="font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#2FA875">richtig</span></div>
+<div style="min-height:52px;border:1.5px solid #2C333D;border-radius:4px;background:#171B22;display:flex;align-items:center;gap:12px;padding:8px 14px;opacity:.5"><span style="width:26px;height:26px;border-radius:4px;background:#1F242C;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Mono',monospace;color:#A7B0BC">D</span><span style="font:400 15px/21px 'IBM Plex Sans',sans-serif;flex:1">468 Anträge</span></div>
+</div>
+<div style="padding:16px 20px 0">
+<div style="background:#171B22;border:1px solid #2C333D;border-left:4px solid #F1705F;border-radius:4px;padding:16px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:24px;height:24px;border-radius:999px;background:#F1705F;color:#2A1614;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:600 17px/22px 'IBM Plex Sans',sans-serif;color:#F1705F">Leider falsch</span></div>
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Rechenweg</div>
+<div style="font:400 15px/23px 'IBM Plex Sans',sans-serif;text-wrap:pretty">1 Sachbearbeiter · 1 Tag: 156 ÷ 3 ÷ 4 = <strong style="font-family:'IBM Plex Mono',monospace;font-weight:600">13</strong><br>5 Sachbearbeiter · 6 Tage: 13 × 5 × 6 = <strong style="font-family:'IBM Plex Mono',monospace;font-weight:600">390</strong></div>
+<div style="font:400 13px/19px 'IBM Plex Sans',sans-serif;color:#A7B0BC;border-top:1px solid #2C333D;padding-top:10px">Typischer Fehler: 360 entsteht, wenn nur die Tage verdoppelt statt beide Größen einzeln umgerechnet werden.</div>
+</div>
+</div>
+<div style="padding:16px 20px 12px"><div style="height:52px;border-radius:20px;background:#E7EAEF;color:#0E1116;display:flex;align-items:center;justify-content:center;gap:10px;font:600 15px/20px 'IBM Plex Sans',sans-serif">Weiter <span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#4A5260">6/20</span></div></div>
+<div style="margin:0 20px 16px;height:50px;background:#1F242C;border:1px dashed #3A424E;border-radius:4px;display:flex;align-items:center;justify-content:center;font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;color:#7A828E">WERBEBANNER 320 × 50 · nur ohne Pro</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">05 Auswertung · dunkel</span>
+<div style="width:360px;background:#0E1116;border-radius:24px;border:1px solid #2C333D;overflow:hidden;color:#EDEFF2;font-family:'IBM Plex Sans',sans-serif">
+<div style="background:#1B2534;padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#8FA3C4"><span>20:41</span><span>▮▮▮ 80 %</span></div>
+<div style="background:#1B2534;padding:14px 20px 26px;border-radius:0 0 20px 20px;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#8FA3C4">Übungsrunde beendet · Mathematik</div>
+<div style="display:flex;align-items:flex-end;gap:14px">
+<div style="font:600 60px/60px 'IBM Plex Sans',sans-serif;color:#fff">80<span style="font:600 26px/30px 'IBM Plex Sans',sans-serif"> %</span></div>
+<div style="padding-bottom:8px;display:flex;flex-direction:column;gap:2px"><span style="font:500 13px/17px 'IBM Plex Mono',monospace;color:#8FE0BB">✓ 16 richtig</span><span style="font:500 13px/17px 'IBM Plex Mono',monospace;color:#F3B8AE">✕ 4 falsch</span></div>
+</div>
+<div style="display:flex;gap:3px"><span style="height:6px;flex:16;border-radius:999px;background:#2FA875"></span><span style="height:6px;flex:4;border-radius:999px;background:#F1705F"></span></div>
+</div>
+<div style="padding:18px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;padding:12px 14px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">0:34</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7A828E">Ø pro Aufgabe</div></div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;padding:12px 14px"><div style="font:600 22px/26px 'IBM Plex Mono',monospace">11:20</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7A828E">Gesamtdauer</div></div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Nach Thema</div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;overflow:hidden">
+<div style="padding:12px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:400 15px/20px 'IBM Plex Sans',sans-serif"><span>Dreisatz</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#F1705F">3/6 · 50 %</span></div><div style="height:5px;background:#2C333D;border-radius:999px;overflow:hidden"><div style="width:50%;height:5px;background:#6C9BFF"></div></div></div>
+<div style="border-top:1px solid #2C333D;padding:12px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:400 15px/20px 'IBM Plex Sans',sans-serif"><span>Prozentrechnung</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#A7B0BC">7/8 · 88 %</span></div><div style="height:5px;background:#2C333D;border-radius:999px;overflow:hidden"><div style="width:88%;height:5px;background:#6C9BFF"></div></div></div>
+<div style="border-top:1px solid #2C333D;padding:12px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font:400 15px/20px 'IBM Plex Sans',sans-serif"><span>Textaufgaben</span><span style="font:500 13px/20px 'IBM Plex Mono',monospace;color:#A7B0BC">6/6 · 100 %</span></div><div style="height:5px;background:#2C333D;border-radius:999px;overflow:hidden"><div style="width:100%;height:5px;background:#6C9BFF"></div></div></div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7A828E">Alle 20 Aufgaben</div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:10px;align-items:center"><span style="width:24px;height:24px;border-radius:4px;background:#2FA875;color:#0F2620;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Sans',sans-serif">✓</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7A828E">Aufgabe 4 · Prozent</span></div>
+<div style="font:400 15px/22px 'IBM Plex Sans',sans-serif">18 % von 450 € entsprechen …</div>
+<div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#2FA875">deine Antwort 81 € · richtig</div>
+</div>
+<div style="background:#171B22;border:1px solid #2C333D;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;gap:10px;align-items:center"><span style="width:24px;height:24px;border-radius:4px;background:#F1705F;color:#2A1614;display:flex;align-items:center;justify-content:center;font:600 13px/1 'IBM Plex Sans',sans-serif">✕</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7A828E">Aufgabe 5 · Dreisatz</span></div>
+<div style="font:400 15px/22px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Drei Sachbearbeiter bearbeiten 156 Anträge in 4 Tagen …</div>
+<div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#F1705F;text-decoration:line-through;text-decoration-color:#F1705F">deine Antwort 360</div>
+<div style="font:500 13px/19px 'IBM Plex Mono',monospace;color:#2FA875">Musterlösung 390</div>
+<div style="border-top:1px solid #2C333D;padding-top:8px;font:400 13px/19px 'IBM Plex Sans',sans-serif;color:#A7B0BC">156 ÷ 3 ÷ 4 = 13 → 13 × 5 × 6 = 390</div>
+</div>
+</div>
+<div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+<div style="height:52px;border-radius:20px;background:#E7EAEF;color:#0E1116;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">4 Fehler jetzt wiederholen</div>
+<div style="height:48px;border-radius:20px;border:1.5px solid #454E5B;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Zur Startseite</div>
+</div>
+</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">07 Simulation · dunkel (Sollzustand in beiden Modi)</span>
+<div style="width:360px;background:#000;border-radius:24px;border:1px solid #2C333D;overflow:hidden;color:#EDEFF2;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#6B737F"><span>20:47</span><span>▮▮▮ 79 %</span></div>
+<div style="padding:14px 20px 14px;border-bottom:1px solid #232A33;display:flex;align-items:center;justify-content:space-between">
+<div><div style="font:600 32px/36px 'IBM Plex Mono',monospace">17:42</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#6B737F">Teil 1 von 4 · Restzeit</div></div>
+<div style="text-align:right"><div style="font:600 16px/20px 'IBM Plex Mono',monospace">6 / 24</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#6B737F">Aufgabe</div></div>
+</div>
+<div style="height:3px;background:#171B22"><div style="width:25%;height:3px;background:#EDEFF2"></div></div>
+<div style="padding:34px 20px 0"><div style="font:400 18px/27px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Ein Dienstfahrzeug verbraucht auf 100 km 7,4 Liter. Wie weit reicht eine Tankfüllung von 55 Litern, gerundet auf 10 km?</div></div>
+<div style="display:flex;flex-direction:column;gap:1px;background:#232A33;border-radius:4px;overflow:hidden;margin:28px 20px 0">
+<div style="background:#000;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#6B737F">A</span><span style="font:400 16px/22px 'IBM Plex Sans',sans-serif">680 km</span></div>
+<div style="background:#000;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#6B737F">B</span><span style="font:400 16px/22px 'IBM Plex Sans',sans-serif">700 km</span></div>
+<div style="background:#151A21;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px;border-left:3px solid #EDEFF2"><span style="font:600 13px/1 'IBM Plex Mono',monospace">C</span><span style="font:500 16px/22px 'IBM Plex Sans',sans-serif">740 km</span><span style="margin-left:auto;font:600 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#A7B0BC">gewählt</span></div>
+<div style="background:#000;min-height:56px;display:flex;align-items:center;gap:14px;padding:10px 16px"><span style="font:600 13px/1 'IBM Plex Mono',monospace;color:#6B737F">D</span><span style="font:400 16px/22px 'IBM Plex Sans',sans-serif">760 km</span></div>
+</div>
+<div style="padding:22px 20px 24px;display:flex;gap:10px;align-items:center">
+<div style="width:96px;height:48px;border-radius:20px;border:1px solid #2C333D;display:flex;align-items:center;justify-content:center;font:500 14px/1 'IBM Plex Sans',sans-serif;color:#A7B0BC">Zurück</div>
+<div style="flex:1;height:52px;border-radius:20px;background:#EDEFF2;color:#000;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Weiter</div>
+</div>
+<div style="padding:0 20px 22px;font:500 11px/16px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:#4E5763;text-align:center">Auswertung nach Teil 4</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Im Dunkelmodus geht die Simulation von #0E1116 auf reines Schwarz — dieselbe Struktur, nur eine Stufe tiefer. Modulfarben fehlen hier absichtlich: während des Tests soll nichts verraten, welches Thema gerade läuft.</div>
+</div>
+
+</div>
+</div>
+
+<div class="dv-opt" id="1f"><div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Varianten B — Startseite als Tagesplan, Rückmeldung als Sheet, Auswertung als Prüfungsbogen</div>
+<div style="display:flex;gap:24px;align-items:flex-start">
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">01 B · Eine Entscheidung statt Liste</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:14</span><span>▮▮▮ 84 %</span></div>
+<div style="padding:14px 20px 18px;display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid #14181F">
+<div><div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Bis zur Prüfung</div><div style="font:600 44px/46px 'IBM Plex Mono',monospace;letter-spacing:-.02em">23</div><div style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#4A5260">Tage · 14.09.2026</div></div>
+<div style="text-align:right;padding-bottom:4px"><div style="font:600 20px/24px 'IBM Plex Mono',monospace">71 %</div><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#7C838F">Quote · 1 847 Aufg.</div></div>
+</div>
+<div style="padding:24px 20px 22px;background:#16233A;color:#fff;display:flex;flex-direction:column;gap:14px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#8FA3C4">Heute dran</div>
+<div style="font:600 28px/34px 'IBM Plex Sans',sans-serif;text-wrap:pretty">20 Aufgaben Dreisatz — dein schwächstes Thema</div>
+<div style="display:flex;gap:20px">
+<div><div style="font:600 20px/24px 'IBM Plex Mono',monospace">41 %</div><div style="font:500 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8FA3C4">aktuell</div></div>
+<div><div style="font:600 20px/24px 'IBM Plex Mono',monospace">34</div><div style="font:500 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8FA3C4">offene Fehler</div></div>
+<div><div style="font:600 20px/24px 'IBM Plex Mono',monospace">~9</div><div style="font:500 10px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#8FA3C4">Minuten</div></div>
+</div>
+<div style="height:52px;border-radius:20px;background:#fff;color:#16233A;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">Los</div>
+<div style="display:flex;gap:18px;padding-top:2px"><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;color:#9FB6DA">anderes Thema</span><span style="font:500 13px/18px 'IBM Plex Sans',sans-serif;color:#9FB6DA">Sprint 60 s</span></div>
+</div>
+<div style="padding:20px 20px 0;display:flex;flex-direction:column;gap:12px">
+<div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#7C838F">Stand je Modul</div>
+<div style="display:flex;gap:10px">
+<div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="font:600 19px/22px 'IBM Plex Mono',monospace">74 %</div><div style="height:4px;background:#EFEBE4"><div style="width:74%;height:4px;background:#2F6FED"></div></div><div style="font:400 12px/16px 'IBM Plex Sans',sans-serif;color:#4A5260">Mathe</div></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="font:600 19px/22px 'IBM Plex Mono',monospace">68 %</div><div style="height:4px;background:#EFEBE4"><div style="width:68%;height:4px;background:#C2410C"></div></div><div style="font:400 12px/16px 'IBM Plex Sans',sans-serif;color:#4A5260">Logik</div></div>
+<div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="font:600 19px/22px 'IBM Plex Mono',monospace">81 %</div><div style="height:4px;background:#EFEBE4"><div style="width:81%;height:4px;background:#0E9F6E"></div></div><div style="font:400 12px/16px 'IBM Plex Sans',sans-serif;color:#4A5260">Sprache</div></div>
+</div>
+</div>
+<div style="padding:24px 20px 0;display:flex;flex-direction:column;gap:0">
+<div style="display:flex;align-items:center;min-height:56px;border-top:1px solid #DFD9D0;gap:12px"><span style="width:8px;height:8px;background:#A61B1B"></span><div style="flex:1"><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Gesamtsimulation</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">4 Teile · 96 Min · zuletzt 73 %</div></div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+<div style="display:flex;align-items:center;min-height:56px;border-top:1px solid #DFD9D0;gap:12px"><span style="width:8px;height:8px;background:#14181F"></span><div style="flex:1"><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Statistik</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">+17 Punkte in 7 Tagen</div></div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+<div style="display:flex;align-items:center;min-height:56px;border-top:1px solid #DFD9D0;border-bottom:1px solid #DFD9D0;gap:12px"><span style="width:8px;height:8px;background:#8C6B1F"></span><div style="flex:1"><div style="font:500 16px/22px 'IBM Plex Sans',sans-serif">Pro</div><div style="font:500 11px/15px 'IBM Plex Mono',monospace;color:#7C838F">Schwierigkeit wählen, ohne Werbung</div></div><span style="font:400 18px/1 'IBM Plex Sans',sans-serif;color:#7C838F">›</span></div>
+</div>
+<div style="padding:20px;font:400 13px/19px 'IBM Plex Sans',sans-serif;color:#7C838F">Einstellungen und Konto findest du oben rechts.</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Variante B beantwortet die Frage „was soll ich heute tun?" mit genau einem Vorschlag. Module und Verwaltung schrumpfen auf Datenzeilen — die Startseite ist damit keine Blockliste mehr, sondern eine Entscheidung.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">03 B · Zahleneingabe, Rückmeldung als Sheet</span>
+<div style="width:360px;background:#F7F5F1;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif;position:relative">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:24</span><span>▮▮▮ 83 %</span></div>
+<div style="padding:12px 20px 12px;display:flex;align-items:center;gap:12px">
+<div style="flex:1;display:flex;gap:3px">
+<span style="height:4px;flex:1;background:#16233A"></span><span style="height:4px;flex:1;background:#16233A"></span><span style="height:4px;flex:1;background:#16233A"></span><span style="height:4px;flex:1;background:#16233A"></span><span style="height:4px;flex:1;background:#16233A"></span><span style="height:4px;flex:1;background:#16233A"></span><span style="height:4px;flex:1;background:#DFD9D0"></span><span style="height:4px;flex:1;background:#DFD9D0"></span><span style="height:4px;flex:1;background:#DFD9D0"></span><span style="height:4px;flex:1;background:#DFD9D0"></span>
+</div>
+<span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#4A5260">6/10</span>
+</div>
+<div style="padding:14px 20px 0"><div style="font:500 11px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#2F6FED">Prozentrechnung · Zahleneingabe</div></div>
+<div style="padding:12px 20px 0"><div style="font:400 21px/30px 'IBM Plex Sans',sans-serif;text-wrap:pretty">Ein Ausbildungsentgelt von 1 240 € steigt um 6,5 %. Wie hoch ist es danach in Euro?</div></div>
+<div style="padding:22px 20px 0">
+<div style="border:2px solid #16233A;border-radius:4px;background:#fff;height:64px;display:flex;align-items:center;padding:0 16px;gap:10px"><span style="font:600 26px/30px 'IBM Plex Mono',monospace;flex:1">1 320,60</span><span style="font:500 15px/20px 'IBM Plex Mono',monospace;color:#7C838F">€</span></div>
+<div style="font:400 12.5px/18px 'IBM Plex Sans',sans-serif;color:#7C838F;padding-top:8px">Komma erlaubt, auf zwei Stellen gerundet.</div>
+</div>
+<div style="padding:20px 20px 0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+<div style="height:52px;border-radius:4px;background:#fff;border:1px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 20px/1 'IBM Plex Mono',monospace">7</div>
+<div style="height:52px;border-radius:4px;background:#fff;border:1px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 20px/1 'IBM Plex Mono',monospace">8</div>
+<div style="height:52px;border-radius:4px;background:#fff;border:1px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 20px/1 'IBM Plex Mono',monospace">9</div>
+<div style="height:52px;border-radius:4px;background:#fff;border:1px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 20px/1 'IBM Plex Mono',monospace">4</div>
+<div style="height:52px;border-radius:4px;background:#fff;border:1px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 20px/1 'IBM Plex Mono',monospace">5</div>
+<div style="height:52px;border-radius:4px;background:#fff;border:1px solid #DFD9D0;display:flex;align-items:center;justify-content:center;font:500 20px/1 'IBM Plex Mono',monospace">6</div>
+</div>
+<div style="height:270px"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#146B45;border-radius:16px 16px 24px 24px;padding:18px 20px 22px;box-shadow:0 -8px 24px rgba(20,24,31,.22);display:flex;flex-direction:column;gap:12px;color:#fff">
+<div style="width:36px;height:4px;border-radius:999px;background:rgba(255,255,255,.4);align-self:center"></div>
+<div style="display:flex;align-items:center;gap:12px"><span style="width:34px;height:34px;border-radius:999px;background:#fff;color:#146B45;display:flex;align-items:center;justify-content:center;font:600 18px/1 'IBM Plex Sans',sans-serif">✓</span><div><div style="font:600 22px/26px 'IBM Plex Sans',sans-serif">Richtig</div><div style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#BFE3D0">1 320,60 € · 0:22</div></div></div>
+<div style="background:#0F5537;border-radius:4px;padding:12px 14px;display:flex;flex-direction:column;gap:6px">
+<div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#BFE3D0">Rechenweg</div>
+<div style="font:400 14.5px/22px 'IBM Plex Sans',sans-serif">1 240 € × 1,065 = 1 320,60 €<br><span style="color:#BFE3D0">Kurzweg: 1 % = 12,40 € → 6,5 % = 80,60 €</span></div>
+</div>
+<div style="height:52px;border-radius:20px;background:#fff;color:#0F5537;display:flex;align-items:center;justify-content:center;gap:10px;font:600 15px/20px 'IBM Plex Sans',sans-serif">Weiter <span style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#146B45">7/10</span></div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Variante B macht die Rückmeldung zum Ereignis: ein farbiges Sheet fährt über die Tastatur, Urteil und Rechenweg auf einer Fläche, „Weiter" liegt direkt unter dem Daumen. Farbe trägt hier viel Gewicht — deshalb zusätzlich Glyphe, Wort und Zeit.</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:7px">
+<span style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">05 B · Auswertung als Prüfungsbogen</span>
+<div style="width:360px;background:#FFFDF9;border-radius:24px;border:1px solid #DFD9D0;overflow:hidden;color:#14181F;font-family:'IBM Plex Sans',sans-serif">
+<div style="padding:10px 20px 0;display:flex;justify-content:space-between;font:500 11px/16px 'IBM Plex Mono',monospace;color:#7C838F"><span>20:41</span><span>▮▮▮ 80 %</span></div>
+<div style="margin:14px 20px 0;border:2px solid #14181F">
+<div style="border-bottom:1px solid #14181F;padding:10px 14px;display:flex;justify-content:space-between;font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase"><span>Übungsprotokoll</span><span>18.08.2026</span></div>
+<div style="display:flex;align-items:stretch">
+<div style="flex:1;padding:16px 14px;border-right:1px solid #14181F"><div style="font:500 10.5px/14px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#4A5260">Trefferquote</div><div style="font:600 46px/48px 'IBM Plex Sans',sans-serif">80 %</div><div style="font:500 12px/16px 'IBM Plex Mono',monospace;color:#4A5260">16 ✓ · 4 ✕ von 20</div></div>
+<div style="width:118px;display:flex;flex-direction:column">
+<div style="flex:1;padding:10px 12px;border-bottom:1px solid #DFD9D0"><div style="font:600 17px/22px 'IBM Plex Mono',monospace">0:34</div><div style="font:500 9.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#4A5260">Ø / Aufgabe</div></div>
+<div style="flex:1;padding:10px 12px;border-bottom:1px solid #DFD9D0"><div style="font:600 17px/22px 'IBM Plex Mono',monospace">11:20</div><div style="font:500 9.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#4A5260">Dauer</div></div>
+<div style="flex:1;padding:10px 12px"><div style="font:600 17px/22px 'IBM Plex Mono',monospace">20 %</div><div style="font:500 9.5px/13px 'IBM Plex Mono',monospace;letter-spacing:.06em;text-transform:uppercase;color:#4A5260">Fehlerquote</div></div>
+</div>
+</div>
+</div>
+<div style="padding:20px 20px 0">
+<div style="display:flex;font:500 10px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F;border-bottom:1px solid #14181F;padding-bottom:6px"><span style="flex:1">Thema</span><span style="width:52px;text-align:right">richtig</span><span style="width:52px;text-align:right">Quote</span></div>
+<div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #E7E1D8;font:400 14.5px/20px 'IBM Plex Sans',sans-serif"><span style="flex:1">Dreisatz</span><span style="width:52px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13.5px">3/6</span><span style="width:52px;text-align:right;font:600 13.5px/20px 'IBM Plex Mono',monospace;color:#A61B1B">50 %</span></div>
+<div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #E7E1D8;font:400 14.5px/20px 'IBM Plex Sans',sans-serif"><span style="flex:1">Prozentrechnung</span><span style="width:52px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13.5px">7/8</span><span style="width:52px;text-align:right;font:600 13.5px/20px 'IBM Plex Mono',monospace">88 %</span></div>
+<div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #E7E1D8;font:400 14.5px/20px 'IBM Plex Sans',sans-serif"><span style="flex:1">Textaufgaben</span><span style="width:52px;text-align:right;font-family:'IBM Plex Mono',monospace;font-size:13.5px">6/6</span><span style="width:52px;text-align:right;font:600 13.5px/20px 'IBM Plex Mono',monospace">100 %</span></div>
+</div>
+<div style="padding:22px 20px 0">
+<div style="display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #14181F;padding-bottom:6px"><span style="font:500 10px/14px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#7C838F">Aufgabenspiegel</span><span style="font:500 11px/14px 'IBM Plex Mono',monospace;color:#2F6FED">nur Fehler</span></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #E7E1D8"><span style="font:600 12px/20px 'IBM Plex Mono',monospace;color:#7C838F;width:20px">04</span><span style="width:22px;height:22px;border-radius:3px;background:#146B45;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Sans',sans-serif">✓</span><div style="flex:1"><div style="font:400 14.5px/20px 'IBM Plex Sans',sans-serif">18 % von 450 €</div><div style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#4A5260">81 € · richtig</div></div></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #E7E1D8;background:#FDF4F2"><span style="font:600 12px/20px 'IBM Plex Mono',monospace;color:#7C838F;width:20px">05</span><span style="width:22px;height:22px;border-radius:3px;background:#A61B1B;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Sans',sans-serif">✕</span><div style="flex:1"><div style="font:400 14.5px/20px 'IBM Plex Sans',sans-serif">156 Anträge, 3 Bearbeiter, 4 Tage → 5 Bearbeiter, 6 Tage</div><div style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#A61B1B;text-decoration:line-through">deine Antwort 360</div><div style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#146B45">Musterlösung 390</div><div style="font:400 12.5px/18px 'IBM Plex Sans',sans-serif;color:#4A5260;padding-top:4px">156 ÷ 3 ÷ 4 = 13 → × 5 × 6 = 390</div></div></div>
+<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #E7E1D8"><span style="font:600 12px/20px 'IBM Plex Mono',monospace;color:#7C838F;width:20px">06</span><span style="width:22px;height:22px;border-radius:3px;background:#146B45;color:#fff;display:flex;align-items:center;justify-content:center;font:600 12px/1 'IBM Plex Sans',sans-serif">✓</span><div style="flex:1"><div style="font:400 14.5px/20px 'IBM Plex Sans',sans-serif">Zahlenreihe 4 · 9 · 19 · 39</div><div style="font:500 12px/17px 'IBM Plex Mono',monospace;color:#4A5260">79 · richtig</div></div></div>
+</div>
+<div style="padding:20px;display:flex;flex-direction:column;gap:10px">
+<div style="height:52px;border-radius:20px;background:#16233A;color:#fff;display:flex;align-items:center;justify-content:center;font:600 15px/20px 'IBM Plex Sans',sans-serif">4 Fehler wiederholen</div>
+<div style="height:48px;display:flex;align-items:center;justify-content:center;font:500 14px/20px 'IBM Plex Sans',sans-serif;color:#2F6FED">Protokoll als PDF sichern</div>
+</div>
+</div>
+<div style="width:360px;font:400 12px/17px 'IBM Plex Sans',sans-serif;color:#4A5260;margin-top:2px;text-wrap:pretty">Variante B liest wie ein amtliches Protokoll: doppelte Rahmenlinie, Tabellenzeilen statt Karten, Fehlerzeilen leicht getönt. Ernster Ton, dichter — und die vertraute Form eines echten Prüfungsbogens.</div>
+</div>
+
+</div>
+</div>
+
+</div>
+<p class="dv-next">Als nächstes möglich: „Startseite <a class="dv-oid" href="#1f">1f</a> weiterbauen" · „Rückmeldungs-Sheet auch für Multiple Choice" · „Auswertung <a class="dv-oid" href="#1f">1f</a> gegen <a class="dv-oid" href="#1c">1c</a> stellen" · „App-Icon in drei Richtungen"</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { sprint: 41, sel: null, answered: false };
+  componentDidMount() {
+    this.iv = setInterval(() => this.setState(s => ({ sprint: s.sprint > 0 ? s.sprint - 1 : 60 })), 1000);
+  }
+  componentWillUnmount() { clearInterval(this.iv); }
+  renderVals() {
+    const s = this.state.sprint;
+    return {
+      sprintTime: "0:" + String(s).padStart(2, "0"),
+      sprintPct: Math.round((s / 60) * 100) + "%"
+    };
+  }
+}
+</script>
+</body>
+</html>
