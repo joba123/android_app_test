@@ -6,6 +6,7 @@ import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,6 +44,22 @@ class SimulationScreen extends ConsumerWidget {
       }
     }
 
+    // Der Ernstfall ist in hell wie dunkel schwarz. Der Wechsel ins Dunkel
+    // ist der Vorhang vor der Prüfung: kein Papier, keine Karten mit Rand,
+    // nur Trennlinien und Mono. Die Auswertung danach gehoert wieder zum
+    // Ueben und bleibt deshalb im normalen Modus.
+    return Theme(
+      data: buildAppTheme(Brightness.dark),
+      child: _buildRun(context, ref, session, controller),
+    );
+  }
+
+  Widget _buildRun(
+    BuildContext context,
+    WidgetRef ref,
+    SimulationSession session,
+    SimulationController controller,
+  ) {
     // Solange die Simulation läuft, ist ein stilles Verlassen nicht möglich –
     // sonst wäre der Durchlauf mit einem Wisch weg.
     return PopScope(

@@ -1,5 +1,63 @@
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
+
+/// Datenkarte: Haarlinie, Radius 10, kein Schatten.
+///
+/// Karten bekommt nur, was Daten trägt oder eine Handlung auslöst –
+/// Verwaltungskram bleibt eine flache Listenzeile.
+class DataCard extends StatelessWidget {
+  const DataCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.accent,
+    this.padding = const EdgeInsets.all(Gap.card),
+  });
+
+  final Widget child;
+  final VoidCallback? onTap;
+
+  /// Modulfarbe als 3-dp-Oberkante. Nie als Flächenfüllung und nie als
+  /// linker Akzentstreifen – so bleibt die Farbe eine Datenmarke und wird
+  /// nicht zur Dekoration.
+  final Color? accent;
+
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+
+    final content = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (accent != null)
+          Container(height: 3, color: accent),
+        Padding(padding: padding, child: child),
+      ],
+    );
+
+    return ClipRRect(
+      borderRadius: Radii.cardRadius,
+      child: Material(
+        color: tokens.raised,
+        child: InkWell(
+          onTap: onTap,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              border: Border.all(color: theme.colorScheme.outlineVariant),
+              borderRadius: Radii.cardRadius,
+            ),
+            child: content,
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 /// Einstiegskachel fuer ein Trainingsmodul auf der Startseite.
 class ModuleCard extends StatelessWidget {
@@ -25,82 +83,52 @@ class ModuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final color = module.resolveColor(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
+      padding: const EdgeInsets.only(bottom: Gap.md),
+      child: DataCard(
+        onTap: onTap,
+        accent: color,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(module.label, style: theme.textTheme.titleSmall),
+                  const SizedBox(height: Gap.xs),
+                  Text(
+                    module.description,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: Gap.sm),
+                  Text(
+                    sizeLabel,
+                    style: theme.textTheme.labelSmall,
+                  ),
+                ],
+              ),
             ),
-            child: Row(
+            const SizedBox(width: Gap.md),
+            // Die Quote steht in Mono: sie ist ein Messwert.
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: module.color.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(module.icon, color: module.color, size: 26),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        module.label,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        module.description,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            sizeLabel,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.onSurfaceVariant,
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Text(
-                            accuracy > 0
-                                ? '${(accuracy * 100).round()} % richtig'
-                                : 'noch kein Ergebnis',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: module.color,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                Text(
+                  accuracy > 0 ? '${(accuracy * 100).round()} %' : '–',
+                  style: MonoText.metric.copyWith(
+                    color: accuracy > 0 ? color : theme.colorScheme.outline,
                   ),
                 ),
-                Icon(
-                  Icons.chevron_right,
-                  color: theme.colorScheme.onSurfaceVariant,
+                Text(
+                  accuracy > 0 ? 'Quote' : 'kein Ergebnis',
+                  style: theme.textTheme.labelSmall,
                 ),
               ],
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -131,64 +159,35 @@ class ModeCard extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: theme.colorScheme.outlineVariant),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Icon(icon, color: color, size: 22),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+      padding: const EdgeInsets.only(bottom: Gap.md),
+      child: DataCard(
+        onTap: onTap,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: theme.colorScheme.onSurfaceVariant, size: 22),
+            const SizedBox(width: Gap.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(title, style: theme.textTheme.titleSmall),
                       ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: color.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(99),
-                      ),
-                      child: Text(
-                        meta,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: color,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                    height: 1.4,
+                      const SizedBox(width: Gap.sm),
+                      Text(meta, style: MonoText.inline.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      )),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: Gap.xs),
+                  Text(subtitle, style: theme.textTheme.bodySmall),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

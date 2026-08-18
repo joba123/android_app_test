@@ -169,6 +169,9 @@ lib/
 ├── main.dart                  App-Start, SharedPreferences + Firebase (optional)
 ├── firebase_options.dart      Platzhalter, wird von flutterfire erzeugt
 ├── app.dart                   MaterialApp + Material-3-Theme
+├── theme/                     Gestaltung
+│   ├── design_tokens.dart     Farbrollen, Radien, Abstandsraster
+│   └── app_theme.dart         Theme, Typo-Skala, Mono-Schnitte
 ├── models/                    Datenmodelle (unveränderlich)
 │   ├── training_module.dart   Kategorien inkl. Farbe/Icon/Beschreibung
 │   ├── sub_category.dart      Unterkategorien, je fest einem Modul zugeordnet
@@ -231,6 +234,8 @@ lib/
 ├── widgets/                   Wiederverwendbare Bausteine
 │   ├── module_card.dart       Modul- und Modus-Kacheln
 │   ├── review_card.dart       Einstieg in die Fehler-Wiederholung
+│   ├── exam_header.dart       Dunkle Kopffläche mit Countdown
+│   ├── section_title.dart     Abschnittsüberschrift in Mono-Versalien
 │   ├── progress_section.dart  Vergleich, Serie und Verlauf
 │   ├── trend_chart.dart       Wochenbalken der Trefferquote
 │   ├── scope_selector.dart    Auswahlliste, geteilt von Übung und Sprint
@@ -285,6 +290,99 @@ ist er gesetzt, zeigt die `QuestionCard` das Bild über dem Aufgabentext. Für d
 Figurenanalogien muss dann nur das Asset hinterlegt, das Feld gesetzt und der
 beschreibende Teil des Aufgabentextes gekürzt werden. Der Asset-Ordner braucht
 zusätzlich einen Eintrag in `pubspec.yaml`.
+
+## Gestaltung: „Prüfungsbogen, nicht Spielbrett"
+
+Die Oberfläche folgt einem Entwurf aus Claude Design. Leitgedanke: amtliche
+Sachlichkeit als Handschrift — Papierflächen statt Kartenteppich, Mono-Ziffern
+für alles Gemessene, Modulfarbe nur als Datenmarke. **Rangfolge entsteht über
+Fläche und Dunkelheit, nicht über Rahmen.**
+
+Drei Annahmen tragen den Entwurf:
+
+1. **Der Termin ist der Anker.** Wer einen Prüfungstermin hinterlegt hat,
+   öffnet die App wegen des Countdowns. Er sitzt darum in der dunklen
+   Kopffläche der Startseite, nicht in einer Karte unter anderen.
+2. **Zwei Register: Üben und Prüfen.** Üben ist hell, erklärend, unterbrechbar.
+   Die Testsimulation ist **immer dunkel — auch im Hellmodus**, ohne Karten,
+   ohne Rückmeldung. Der Moduswechsel ist der Vorhang vor der Prüfung.
+3. **Verwaltungskram wird flach.** Karten bekommt nur, was Daten trägt oder
+   eine Handlung auslöst.
+
+### Tokens
+
+`lib/theme/design_tokens.dart` trägt die Rollen, die Material 3 nicht kennt —
+Papier, erhabene Datenkarte, eingelassene Rille — als `ThemeExtension`.
+Material bietet dafür keine Begriffe, und eine erzwungene Zuordnung auf
+`surfaceContainer*` hätte den Unterschied verwischt.
+
+| Rolle | hell | dunkel |
+| --- | --- | --- |
+| Papier | `#F7F5F1` | `#0E1116` |
+| Datenkarte | `#FFFFFF` | `#171B22` |
+| Rille, Balkengrund | `#EFEBE4` | `#1F242C` |
+| Tinte / Hauptaktion | `#16233A` | `#E7EAEF` |
+| Link, Fokus | `#2F6FED` | `#6C9BFF` |
+| richtig | `#146B45` | `#2FA875` |
+| falsch | `#A61B1B` | `#F1705F` |
+
+Die Modulfarben bleiben (Mathematik `#2F6FED`, Logik `#C2410C`, Sprache
+`#0E9F6E`) und bekommen helle Gegenstücke für den Dunkelmodus.
+
+**Die Seed-Farbe wandert von `#2F6FED` auf die Tinte `#16233A`.** Blau soll
+eindeutig „Mathematik" heißen und nicht gleichzeitig Markenfarbe sein — sonst
+konkurriert die Datenmarke mit der Hauptaktion.
+
+### Schrift
+
+**IBM Plex Sans für Prosa, IBM Plex Mono für alles Gemessene** — Zeit, Zähler,
+Quoten, Aufgabennummern. Immer mit Tabellenziffern, damit Zahlen beim
+Hochzählen nicht zappeln. Diese Trennung ist die eigentliche Handschrift und
+ersetzt Roboto vollständig.
+
+Die Schriften sind **gebündelt statt zur Laufzeit geladen** (`assets/fonts/`,
+Latin-Subset, OFL 1.1, zusammen 355 KB). Die App wird unterwegs und offline
+benutzt; eine Schrift, die beim ersten Start erst nachgeladen werden muss,
+wäre dort nicht da.
+
+**Ein Fund beim Einbinden:** Umlaute, ß und € sind im Latin-Subset enthalten,
+aber **✓, ✕ und → fehlen** — genau die Zeichen, die der Entwurf für die
+Rückmeldung vorsieht. Als Textzeichen wären sie auf eine Systemschrift
+zurückgefallen. Sie sind deshalb Material-Icons (`Icons.check`,
+`Icons.close`), was die Absicht ohnehin besser trifft: gemeint ist eine
+Glyphe, kein bestimmter Unicode-Codepunkt.
+
+### Radien und Abstände
+
+Vier Radien statt eines: **4** (Eingabe, Antwortoption), **10** (Datenkarte),
+**20** (Kopffläche, Hauptknopf), **999** (Chip). Ein kleiner Radius heißt
+„hier wird eingegeben", ein großer „hier wird gestartet" — das ersetzt die
+gleichförmigen Material-Karten als Rangordnung.
+
+Abstände im 4er-Raster (4/8/12/16/20/24/32). Unter 360 dp fällt der Seitenrand
+auf 16 und die zweispaltigen Kennzahlen brechen auf eine Spalte um.
+
+Karten werfen **keinen Schatten**, nur eine Haarlinie — nur schwebende Dinge
+werfen Schatten. Im Dunkelmodus ersetzt Flächenhelligkeit den Schatten.
+
+### Rückmeldung ist vierfach unterschieden
+
+Jeder Zustand einer Antwortoption trägt **Farbe, Glyphe, Wort und
+Textauszeichnung**. Farbe allein bedeutet hier nie etwas — damit bleibt die
+Rückmeldung bei Farbfehlsichtigkeit und im Sonnenlicht lesbar. Tests halten
+das fest: `richtig` ohne Häkchen oder ohne Wort lässt die Suite fehlschlagen.
+
+### Was aus dem Entwurf **nicht** übernommen wurde
+
+Der Entwurf zeigt die App teils reicher, als sie ist. Nicht umgesetzt, weil es
+Funktionen wären und nicht Gestaltung:
+
+- Aufgabentypen **Matrizen** und **Konzentration** (gibt es noch nicht)
+- „Typischer Fehler"-Hinweis im Rechenweg (dafür fehlen die Daten)
+- **Zurück/Weiter** innerhalb eines Testteils und „Später fortsetzen"
+- Filter „nur Fehler" in der Auswertung
+- Die Zahlen der Simulation im Entwurf (4 Teile, 96 Minuten) sind
+  Platzhalter; die App zeigt ihre tatsächlichen 74 Aufgaben in 45 Minuten.
 
 ## Fortschritt über Zeit
 
@@ -747,7 +845,7 @@ flutter build apk --release
 ```
 
 Verifiziert mit Flutter 3.35.4 / Dart 3.9.2: `flutter analyze` meldet keine
-Befunde, alle 390 Tests laufen durch, Debug- und Release-APK werden erzeugt.
+Befunde, alle 407 Tests laufen durch, Debug- und Release-APK werden erzeugt.
 Der Android-Build gelingt auch **ohne** `google-services.json`: Das
 google-services-Gradle-Plugin wird nicht angewandt, die Konfiguration kommt aus
 Dart.

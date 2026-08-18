@@ -1,3 +1,4 @@
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Zustand einer Antwortoption in der Darstellung.
@@ -18,7 +19,15 @@ enum AnswerOptionState {
   dimmed,
 }
 
-/// Eine anklickbare Antwortmoeglichkeit mit Buchstaben-Marker (A, B, C, D).
+/// Eine anklickbare Antwortmöglichkeit.
+///
+/// Jeder Zustand ist **vierfach** unterschieden: über die Farbe, über die
+/// Glyphe im Marker, über ein Wort am Ende und über die Textauszeichnung. So
+/// bleibt die Rückmeldung auch bei Farbfehlsichtigkeit und im Sonnenlicht
+/// lesbar – Farbe allein trägt hier nie eine Bedeutung.
+///
+/// Die Glyphen sind Material-Icons und keine Textzeichen: ✓ und ✕ fehlen im
+/// gebündelten Schriftschnitt und würden auf eine Systemschrift zurückfallen.
 class AnswerOptionTile extends StatelessWidget {
   const AnswerOptionTile({
     super.key,
@@ -33,94 +42,160 @@ class AnswerOptionTile extends StatelessWidget {
   final AnswerOptionState state;
   final VoidCallback? onTap;
 
+  /// Das Wort, das den Zustand benennt. `null` heißt: nichts zu sagen.
+  static String? wordFor(AnswerOptionState state) => switch (state) {
+        AnswerOptionState.correct => 'richtig',
+        AnswerOptionState.wrong => 'deine Antwort',
+        AnswerOptionState.selected => 'gewählt',
+        _ => null,
+      };
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final tokens = context.tokens;
 
-    final (Color background, Color border, Color foreground) = switch (state) {
+    final (Color background, Color accent, Color foreground) = switch (state) {
       AnswerOptionState.idle => (
-          scheme.surface,
+          tokens.raised,
           scheme.outlineVariant,
           scheme.onSurface,
         ),
       AnswerOptionState.selected => (
-          scheme.primaryContainer,
-          scheme.primary,
-          scheme.onPrimaryContainer,
+          tokens.sunk,
+          tokens.ink,
+          scheme.onSurface,
         ),
       AnswerOptionState.correct => (
-          const Color(0xFFE3F6EC),
-          const Color(0xFF0E9F6E),
-          const Color(0xFF07543A),
+          tokens.raised,
+          tokens.correct,
+          tokens.correct,
         ),
       AnswerOptionState.wrong => (
-          const Color(0xFFFDE8E8),
-          scheme.error,
-          const Color(0xFF7A1B1B),
+          tokens.raised,
+          tokens.wrong,
+          tokens.wrong,
         ),
       AnswerOptionState.dimmed => (
-          scheme.surface,
+          tokens.raised,
           scheme.outlineVariant,
           scheme.onSurfaceVariant,
         ),
     };
 
-    final trailingIcon = switch (state) {
-      AnswerOptionState.correct => Icons.check_circle,
-      AnswerOptionState.wrong => Icons.cancel,
+    // Der Marker traegt entweder den Buchstaben oder die Zustandsglyphe.
+    final markerIcon = switch (state) {
+      AnswerOptionState.correct => Icons.check,
+      AnswerOptionState.wrong => Icons.close,
       _ => null,
     };
 
+    final word = wordFor(state);
+    final emphasised =
+        state == AnswerOptionState.correct || state == AnswerOptionState.wrong;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: Gap.sm),
       child: Material(
         color: background,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.inputRadius,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: Radii.inputRadius,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+            padding: const EdgeInsets.symmetric(
+              horizontal: Gap.md,
+              vertical: 14,
+            ),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: border, width: 1.4),
+              borderRadius: Radii.inputRadius,
+              border: Border.all(
+                color: accent,
+                width: state == AnswerOptionState.idle ? 1 : 1.5,
+              ),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: border.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  child: Text(
-                    label,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: foreground,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
+                _Marker(
+                  label: label,
+                  icon: markerIcon,
+                  accent: accent,
+                  filled: emphasised || state == AnswerOptionState.selected,
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: Gap.md),
                 Expanded(
                   child: Text(
                     text,
-                    style: theme.textTheme.bodyLarge?.copyWith(color: foreground),
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      color: foreground,
+                      fontWeight:
+                          emphasised ? FontWeight.w600 : FontWeight.w400,
+                    ),
                   ),
                 ),
-                if (trailingIcon != null) ...[
-                  const SizedBox(width: 8),
-                  Icon(trailingIcon, color: border, size: 22),
+                if (word != null) ...[
+                  const SizedBox(width: Gap.sm),
+                  Text(
+                    word,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: emphasised ? accent : scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ],
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Buchstaben-Marker, im aufgedeckten Zustand mit Glyphe statt Buchstabe.
+class _Marker extends StatelessWidget {
+  const _Marker({
+    required this.label,
+    required this.icon,
+    required this.accent,
+    required this.filled,
+  });
+
+  final String label;
+  final IconData? icon;
+  final Color accent;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      width: 28,
+      height: 28,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: filled ? accent : Colors.transparent,
+        borderRadius: Radii.inputRadius,
+        border: Border.all(color: accent),
+      ),
+      child: icon != null
+          ? Icon(
+              icon,
+              size: 18,
+              color: filled
+                  ? theme.colorScheme.surface
+                  : accent,
+            )
+          : Text(
+              label,
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: filled ? theme.colorScheme.surface : accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
     );
   }
 }

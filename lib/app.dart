@@ -1,11 +1,20 @@
 import 'dart:async';
 
 import 'package:einstellungstest_trainer/screens/home_screen.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Das Theme lebt in `lib/theme/app_theme.dart`; hier nur weitergereicht,
+/// damit bestehende Importe von `app.dart` weiter funktionieren.
+export 'package:einstellungstest_trainer/theme/app_theme.dart'
+    show buildAppTheme, AppFonts, MonoText;
+export 'package:einstellungstest_trainer/theme/design_tokens.dart'
+    show ExamTokens, ExamTokensAccess, Radii, Gap;
+
 
 class EinstellungstestTrainerApp extends ConsumerStatefulWidget {
   const EinstellungstestTrainerApp({super.key});
@@ -51,51 +60,4 @@ class _EinstellungstestTrainerAppState
       home: const HomeScreen(),
     );
   }
-}
-
-/// Material-3-Theme der App.
-///
-/// Bewusst zurueckhaltend: Bei einer Lern-App soll die Aufgabe im Fokus
-/// stehen, nicht die Oberflaeche.
-ThemeData buildAppTheme(Brightness brightness) {
-  final scheme = ColorScheme.fromSeed(
-    seedColor: const Color(0xFF2F6FED),
-    brightness: brightness,
-  );
-
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: scheme,
-    scaffoldBackgroundColor: scheme.surface,
-    appBarTheme: AppBarTheme(
-      backgroundColor: scheme.surface,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      centerTitle: false,
-      titleTextStyle: TextStyle(
-        color: scheme.onSurface,
-        fontSize: 19,
-        fontWeight: FontWeight.w700,
-      ),
-      iconTheme: IconThemeData(color: scheme.onSurface),
-    ),
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size.fromHeight(52),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-      ),
-    ),
-  );
 }

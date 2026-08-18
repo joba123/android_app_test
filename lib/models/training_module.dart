@@ -1,3 +1,4 @@
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Die fachlichen Trainingsbereiche der App.
@@ -56,5 +57,19 @@ enum TrainingModule {
       (module) => module.id == id,
       orElse: () => TrainingModule.math,
     );
+  }
+
+  /// Die Modulfarbe im aktuellen Hell-/Dunkelmodus.
+  ///
+  /// [color] bleibt der Hellmodus-Wert und wird dort weiter verwendet, wo
+  /// kein BuildContext zur Hand ist. Im Dunkeln braucht dieselbe Farbe einen
+  /// helleren Schritt, sonst verschwindet sie auf der dunklen Flaeche.
+  Color resolveColor(BuildContext context) {
+    final tokens = context.tokens;
+    return switch (this) {
+      TrainingModule.math => tokens.math,
+      TrainingModule.logic => tokens.logic,
+      TrainingModule.language => tokens.language,
+    };
   }
 }

@@ -490,11 +490,16 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
 
+      // In den Einstellungen steht der Termin als Satz ...
       expect(find.text('Noch 30 Tage'), findsOneWidget);
 
       await goBack(tester);
 
-      expect(find.text('Noch 30 Tage'), findsOneWidget);
+      // ... in der Kopfflaeche der Startseite dagegen getrennt: die Zahl in
+      // Mono, das Wort daneben in Prosa.
+      expect(find.text('30'), findsOneWidget);
+      expect(find.text('Tage'), findsOneWidget);
+      expect(find.textContaining('Prüfungstermin'), findsOneWidget);
     });
   });
 
