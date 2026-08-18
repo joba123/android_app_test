@@ -23,7 +23,7 @@ class SimulationController
 
   @override
   SimulationSession build(String blueprintId) {
-    final blueprint = SimulationBlueprints.all.firstWhere(
+    final blueprint = SimulationBlueprints.startable.firstWhere(
       (candidate) => candidate.id == blueprintId,
       orElse: () => SimulationBlueprints.full,
     );

@@ -95,6 +95,17 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: Gap.section),
                 const SectionTitle('Ernstfall'),
+                // Erst der kurze Weg hinein, dann der lange. Wer 45 Minuten
+                // am Stueck nicht aufbringt, soll das Format trotzdem einmal
+                // erlebt haben.
+                _TryoutRow(
+                  onTap: () => open(
+                    const SimulationScreen(
+                      blueprint: SimulationBlueprints.tryout,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: Gap.md),
                 _SimulationRow(
                   onTap: () => open(
                     const SimulationScreen(
@@ -158,6 +169,63 @@ class _SprintRow extends StatelessWidget {
                   ),
                 ),
               const SizedBox(width: Gap.sm),
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: theme.colorScheme.outline,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Der Probelauf: dieselbe Mechanik wie die Simulation, aber auf Papier
+/// statt in Tinte – er soll einladen, nicht einschüchtern.
+class _TryoutRow extends StatelessWidget {
+  const _TryoutRow({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+    const blueprint = SimulationBlueprints.tryout;
+
+    return Material(
+      color: tokens.raised,
+      borderRadius: Radii.cardRadius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: Radii.cardRadius,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: Gap.card,
+            vertical: Gap.md,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: Radii.cardRadius,
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(blueprint.title, style: theme.textTheme.titleSmall),
+                    Text(
+                      'Ein Teil · '
+                      '${blueprint.totalDuration.inMinutes} Min · '
+                      'zum Kennenlernen',
+                      style: theme.textTheme.labelSmall,
+                    ),
+                  ],
+                ),
+              ),
               Icon(
                 Icons.chevron_right,
                 size: 20,

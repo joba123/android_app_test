@@ -92,7 +92,7 @@ void main() {
   });
 
   group('Testsimulationen', () {
-    test('dauern jeweils mindestens 30 Minuten', () {
+    test('dauern als vollwertiger Durchlauf mindestens 30 Minuten', () {
       for (final blueprint in SimulationBlueprints.all) {
         expect(
           blueprint.totalDuration.inMinutes,
@@ -113,7 +113,7 @@ void main() {
     });
 
     test('jeder Teil hat mindestens ein Thema', () {
-      for (final blueprint in SimulationBlueprints.all) {
+      for (final blueprint in SimulationBlueprints.startable) {
         for (final part in blueprint.parts) {
           expect(
             part.subCategories,
@@ -125,7 +125,7 @@ void main() {
     });
 
     test('modulgebundene Simulationen bleiben bei ihrem Modul', () {
-      for (final blueprint in SimulationBlueprints.all) {
+      for (final blueprint in SimulationBlueprints.startable) {
         final module = blueprint.module;
         if (module == null) continue;
 
@@ -140,7 +140,7 @@ void main() {
     });
 
     test('fordern nie mehr Aufgaben an, als der statische Pool hergibt', () {
-      for (final blueprint in SimulationBlueprints.all) {
+      for (final blueprint in SimulationBlueprints.startable) {
         for (final part in blueprint.parts) {
           var available = 0;
           var unlimited = false;
@@ -171,8 +171,18 @@ void main() {
       }
     });
 
+    test('der Probelauf bleibt kurz und einteilig', () {
+      const tryout = SimulationBlueprints.tryout;
+
+      // Sein Sinn ist der niedrige Einstieg: ein Teil, keine halbe Stunde.
+      expect(tryout.parts, hasLength(1));
+      expect(tryout.totalDuration, const Duration(minutes: 10));
+      // Und trotzdem aus allen drei Bereichen, damit man das Format kennt.
+      expect(tryout.parts.first.modules, hasLength(3));
+    });
+
     test('die Taktung bleibt in einem realistischen Rahmen', () {
-      for (final blueprint in SimulationBlueprints.all) {
+      for (final blueprint in SimulationBlueprints.startable) {
         for (final part in blueprint.parts) {
           final seconds = part.timePerQuestion.inSeconds;
           expect(

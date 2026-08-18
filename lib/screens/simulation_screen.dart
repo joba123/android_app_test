@@ -221,6 +221,9 @@ class _BriefingView extends StatelessWidget {
     final partNumber = session.partIndex + 1;
     final totalParts = session.loadedParts.length;
     final isFirst = session.partIndex == 0;
+    // Der Probelauf besteht aus einem einzigen Teil – dann waere „Teil 1 von
+    // 1" nur Buchhaltung.
+    final isSinglePart = totalParts == 1;
 
     return Scaffold(
       appBar: AppBar(
@@ -247,7 +250,7 @@ class _BriefingView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    '$totalParts Testteile, '
+                    '${isSinglePart ? 'Ein Testteil' : '$totalParts Testteile'}, '
                     '${session.blueprint.totalDuration.inMinutes} Minuten, '
                     '${session.blueprint.totalQuestions} Aufgaben. '
                     'Keine Lösungen, keine Zwischenergebnisse – '
@@ -272,15 +275,17 @@ class _BriefingView extends StatelessWidget {
                     ),
                   ),
                 ),
-              Text(
-                'Teil $partNumber von $totalParts',
-                style: theme.textTheme.labelLarge?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              if (!isSinglePart) ...[
+                Text(
+                  'Teil $partNumber von $totalParts',
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 6),
+                const SizedBox(height: 6),
+              ],
               Text(
-                part.title,
+                isSinglePart ? session.blueprint.title : part.title,
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -340,7 +345,9 @@ class _BriefingView extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton(
                 onPressed: onStart,
-                child: Text(isFirst ? 'Teil starten' : 'Nächsten Teil starten'),
+                child: Text(
+                  isFirst ? 'Teil starten' : 'Nächsten Teil starten',
+                ),
               ),
             ],
           ),
@@ -439,7 +446,11 @@ class _RunningView extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text('Teil ${session.partIndex + 1}: ${part.moduleLabel}'),
+        title: Text(
+          session.loadedParts.length == 1
+              ? session.blueprint.title
+              : 'Teil ${session.partIndex + 1}: ${part.moduleLabel}',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.pause_circle_outline),
@@ -475,12 +486,14 @@ class _RunningView extends StatelessWidget {
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  Text(
-                    'Teil ${session.partIndex + 1}/${session.loadedParts.length}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
+                  if (session.loadedParts.length > 1)
+                    Text(
+                      'Teil ${session.partIndex + 1}/'
+                      '${session.loadedParts.length}',
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
                 ],
               ),
             ),

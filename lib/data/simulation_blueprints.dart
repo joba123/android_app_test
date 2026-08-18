@@ -13,8 +13,9 @@ import 'package:einstellungstest_trainer/models/training_module.dart';
 /// * Zahlenreihen und Figuren: 40–60 Sekunden
 /// * Textverständnis und Schlussfolgerungen: 60–90 Sekunden
 ///
-/// Jede Simulation dauert mindestens 30 Minuten. Zwischen den Teilen gibt es
-/// ein kurzes Briefing – danach läuft die Zeit unerbittlich.
+/// Jede vollwertige Simulation dauert mindestens 30 Minuten. Zwischen den
+/// Teilen gibt es ein kurzes Briefing – danach läuft die Zeit unerbittlich.
+/// Einzige Ausnahme ist der [tryout]: ein Testteil zum Hineinschnuppern.
 abstract final class SimulationBlueprints {
   /// Modulübergreifende Gesamtsimulation – das Kernstück der App und einem
   /// echten Einstellungstest am nächsten.
@@ -64,6 +65,33 @@ abstract final class SimulationBlueprints {
         duration: Duration(minutes: 6),
         instructions: 'Zum Abschluss die längeren Aufgaben. Prüfen Sie streng, '
             'was aus dem Text zwingend folgt – nicht, was plausibel klingt.',
+      ),
+    ],
+  );
+
+  /// Ein einzelner Testteil zum Kennenlernen des Formats.
+  ///
+  /// Die Gesamtsimulation kostet 45 Minuten am Stück – als erster Kontakt ist
+  /// das zu viel verlangt. Der Probelauf zeigt dieselbe Mechanik (Briefing,
+  /// Countdown, keine Lösungen, Auswertung erst am Ende) in zehn Minuten und
+  /// mit Aufgaben aus allen drei Bereichen.
+  static const tryout = SimulationBlueprint(
+    id: 'sim_tryout',
+    title: 'Probelauf',
+    description: 'Ein Testteil, zehn Minuten – zum Kennenlernen des Formats.',
+    parts: [
+      SimulationPart(
+        title: 'Probelauf',
+        subCategories: [
+          SubCategory.arithmetic,
+          SubCategory.spelling,
+          SubCategory.numberSequences,
+        ],
+        questionCount: 14,
+        duration: Duration(minutes: 10),
+        instructions: 'Gut 40 Sekunden pro Aufgabe. Es gibt keine Lösungen '
+            'zwischendurch und kein Zurück – wer hängt, geht weiter. '
+            'Die Auswertung kommt am Ende.',
       ),
     ],
   );
@@ -167,7 +195,12 @@ abstract final class SimulationBlueprints {
     ],
   );
 
+  /// Die vollwertigen Simulationen: mehrere Teile, mindestens 30 Minuten.
   static const all = [full, math, logic, language];
+
+  /// Alles, was sich starten lässt – der Probelauf gehört dazu, auch wenn er
+  /// die Maße einer echten Simulation bewusst nicht erfüllt.
+  static const startable = [tryout, full, math, logic, language];
 
   static SimulationBlueprint forModule(TrainingModule module) {
     return switch (module) {

@@ -5,6 +5,7 @@ import 'package:einstellungstest_trainer/screens/result_screen.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/ad_banner_slot.dart';
 import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
+import 'package:einstellungstest_trainer/widgets/feedback_sheet.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
@@ -97,33 +98,27 @@ class QuizScreen extends ConsumerWidget {
                   QuestionCard(question: question),
                   const SizedBox(height: 18),
                   ..._buildAnswerArea(session, controller),
-                  if (session.revealed) ...[
-                    const SizedBox(height: 12),
-                    ExplanationBox(
-                      explanation: question.explanation,
-                      isCorrect: session.answers.isNotEmpty &&
-                          session.answers.last.isCorrect,
-                    ),
-                  ],
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: session.revealed
-                  ? FilledButton(
-                      onPressed: controller.next,
-                      child: Text(
-                        session.isLastQuestion ? 'Auswertung' : 'Weiter',
-                      ),
-                    )
-                  : OutlinedButton(
-                      onPressed: controller.skip,
-                      child: Text(
-                        isSprint ? 'Überspringen' : 'Weiß ich nicht',
-                      ),
-                    ),
-            ),
+            // Die Rückmeldung nimmt den Platz des Knopfes ein und fährt von
+            // unten hoch. Die Aufgabe bleibt darüber stehen.
+            if (session.revealed)
+              FeedbackSheet(
+                isCorrect:
+                    session.answers.isNotEmpty && session.answers.last.isCorrect,
+                explanation: question.explanation,
+                isLast: session.isLastQuestion,
+                onNext: controller.next,
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                child: OutlinedButton(
+                  onPressed: controller.skip,
+                  child: Text(isSprint ? 'Überspringen' : 'Weiß ich nicht'),
+                ),
+              ),
             if (isSprint)
               Padding(
                 padding: const EdgeInsets.only(bottom: 10),

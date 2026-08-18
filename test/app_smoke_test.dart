@@ -5,6 +5,7 @@ import 'package:einstellungstest_trainer/services/notifications/reminder_service
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/purchase/purchase_service.dart';
+import 'package:einstellungstest_trainer/widgets/feedback_sheet.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:flutter/material.dart';
@@ -225,15 +226,47 @@ void main() {
       await tester.tap(find.text('A'));
       await tester.pumpAndSettle();
 
-      // Rückmeldung samt Erklärung, erst danach geht es weiter.
+      // Die Rueckmeldung faehrt von unten hoch: Urteil, Rechenweg, Knopf.
+      expect(find.byType(FeedbackSheet), findsOneWidget);
       expect(find.text('Weiter'), findsOneWidget);
-      expect(find.byType(ExplanationBox), findsOneWidget);
+      // Die Aufgabe bleibt darueber sichtbar.
+      expect(find.byType(QuestionCard), findsOneWidget);
 
       await tester.tap(find.text('Weiter'));
       await tester.pumpAndSettle();
 
       expect(find.text('Aufgabe 2/20'), findsOneWidget);
-      expect(find.byType(ExplanationBox), findsNothing);
+      expect(find.byType(FeedbackSheet), findsNothing);
+    });
+
+    testWidgets('die Rückmeldung nennt Urteil, Rechenweg und den nächsten '
+        'Schritt', (tester) async {
+      await pumpApp(tester);
+      await openPracticeSetup(tester);
+
+      await tester.tap(find.text('Zahlenreihen'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Übung starten'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('A'));
+      await tester.pumpAndSettle();
+
+      final sheet = find.byType(FeedbackSheet);
+      // Ob „A" richtig war, entscheidet der Zufall – das Urteil steht so
+      // oder so gross oben in der Flaeche.
+      expect(
+        find.descendant(
+          of: sheet,
+          matching: find.textContaining(RegExp('Richtig|Falsch')),
+        ),
+        findsOneWidget,
+      );
+      // Der Knopf sitzt in der Flaeche, nicht mehr darueber im Bogen.
+      expect(
+        find.descendant(of: sheet, matching: find.text('Weiter')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Rechenaufgaben zeigen ein Eingabefeld statt Optionen',
@@ -337,7 +370,7 @@ void main() {
       await tester.pump();
 
       // Kein Feedback, kein "Weiter" – die nächste Aufgabe steht sofort da.
-      expect(find.byType(ExplanationBox), findsNothing);
+      expect(find.byType(FeedbackSheet), findsNothing);
       expect(find.text('Weiter'), findsNothing);
       expect(find.textContaining('1 bearbeitet'), findsOneWidget);
     });
@@ -373,6 +406,24 @@ void main() {
       await tester.tap(find.text('Gesamtsimulation'));
       await tester.pumpAndSettle();
     }
+
+    testWidgets('der Probelauf ist ein einzelner, kurzer Teil',
+        (tester) async {
+      await pumpApp(tester);
+
+      await tester.tap(find.text('Probelauf'));
+      await tester.pumpAndSettle();
+
+      // Ein Teil – also keine Teil-Zaehlung, die nichts zu zaehlen hat.
+      expect(find.textContaining('Ein Testteil, 10 Minuten'), findsOneWidget);
+      expect(find.text('Teil 1 von 1'), findsNothing);
+
+      await tester.tap(find.text('Teil starten'));
+      await tester.pump();
+
+      expect(find.text('Aufgabe 1 von 14'), findsOneWidget);
+      expect(find.textContaining('Teil 1/'), findsNothing);
+    });
 
     testWidgets('startet mit einem Briefing statt sofort', (tester) async {
       await pumpApp(tester);
@@ -413,7 +464,7 @@ void main() {
       await tester.tap(find.text('Prüfen'));
       await tester.pump();
 
-      expect(find.byType(ExplanationBox), findsNothing);
+      expect(find.byType(FeedbackSheet), findsNothing);
       expect(find.textContaining('Richtig wäre'), findsNothing);
       // Die nächste Aufgabe steht sofort da.
       expect(find.text('Aufgabe 2 von 20'), findsOneWidget);

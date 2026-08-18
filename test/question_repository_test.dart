@@ -246,7 +246,7 @@ void main() {
   });
 
   test('Simulationsteil liefert genau die geforderte Anzahl', () {
-    for (final blueprint in SimulationBlueprints.all) {
+    for (final blueprint in SimulationBlueprints.startable) {
       for (final part in blueprint.parts) {
         final drawn = repository.drawForPart(part);
 
