@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/widgets/figure_view.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +33,10 @@ class QuestionCard extends StatelessWidget {
             question.subCategory.label.toUpperCase(),
             style: NumText.kicker.copyWith(color: theme.colorScheme.outline),
           ),
+          if (question.figures != null) ...[
+            const SizedBox(height: Gap.card),
+            FigureRow(cells: question.figures!),
+          ],
           if (question.imageAsset != null) ...[
             const SizedBox(height: Gap.card),
             ClipRRect(

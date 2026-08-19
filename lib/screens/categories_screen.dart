@@ -7,6 +7,7 @@ import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
+import 'package:einstellungstest_trainer/screens/strike_out_screen.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
@@ -82,10 +83,15 @@ class CategoriesScreen extends ConsumerWidget {
                   ),
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute<void>(
-                      builder: (_) => QuizScreen(
-                        mode: SessionMode.practice,
-                        scope: PracticeScope.subCategory(topic),
-                      ),
+                      // Der Durchstreichtest ist keine Folge von Fragen,
+                      // sondern eine Flaeche unter Zeitdruck – er bringt
+                      // deshalb seinen eigenen Bildschirm mit.
+                      builder: (_) => topic.hasOwnScreen
+                          ? const StrikeOutScreen()
+                          : QuizScreen(
+                              mode: SessionMode.practice,
+                              scope: PracticeScope.subCategory(topic),
+                            ),
                     ),
                   ),
                 ),

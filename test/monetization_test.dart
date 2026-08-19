@@ -189,6 +189,9 @@ void main() {
         ...SubCategory.of(TrainingModule.logic),
         ...SubCategory.of(TrainingModule.language),
       ]) {
+        // Generierte Themen haben keinen festen Bestand, der wachsen koennte.
+        if (QuestionPool.isGeneratedTopic(subCategory)) continue;
+
         expect(
           QuestionPool.countForSubCategory(subCategory, proUnlocked: true),
           greaterThan(QuestionPool.countForSubCategory(subCategory)),

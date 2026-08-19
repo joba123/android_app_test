@@ -53,25 +53,51 @@ class QuestionRepository {
     List<SubCategory> subCategories = const [],
     Difficulty? difficulty,
   }) {
-    if (QuestionPool.isGenerated(module)) {
+    if (count <= 0) return const [];
+
+    // Ein Modul kann beides fuehren: Logik hat feste Aufgaben und die
+    // generierten Formen. Deshalb wird die Anfrage aufgeteilt und
+    // anschliessend zusammengelegt.
+    final topics = subCategories.isEmpty
+        ? SubCategory.of(module)
+        : subCategories;
+    final generated = topics.where(QuestionPool.isGeneratedTopic).toList();
+    final fixed =
+        topics.where((topic) => !QuestionPool.isGeneratedTopic(topic)).toList();
+
+    if (fixed.isEmpty) {
       return _math.generate(
         count: count,
-        subCategories: subCategories,
+        subCategories: generated,
         difficulty: difficulty,
       );
     }
 
+    // Der generierte Anteil richtet sich nach der Zahl der Themen: Bei einem
+    // generierten von vier Themen kommt rund ein Viertel aus der Fabrik.
+    final generatedCount = generated.isEmpty
+        ? 0
+        : (count * generated.length / topics.length).round();
+
     final pool = _filterByDifficulty(
-      QuestionPool.forSubCategories(
-        module,
-        subCategories,
-        proUnlocked: proUnlocked,
-      ),
+      QuestionPool.forSubCategories(module, fixed, proUnlocked: proUnlocked),
       difficulty,
     )..shuffle(_random);
 
-    final take = count < pool.length ? count : pool.length;
-    return [for (final question in pool.take(take)) _shuffleOptions(question)];
+    final fromPool = count - generatedCount;
+    final take = fromPool < pool.length ? fromPool : pool.length;
+    final drawn = [
+      for (final question in pool.take(take)) _shuffleOptions(question),
+      if (generated.isNotEmpty)
+        // Was der feste Bestand nicht hergibt, fuellt die Fabrik auf.
+        ..._math.generate(
+          count: count - take,
+          subCategories: generated,
+          difficulty: difficulty,
+        ),
+    ];
+
+    return drawn..shuffle(_random);
   }
 
   /// Schränkt einen statischen Bestand auf eine Schwierigkeit ein.
@@ -230,7 +256,14 @@ class QuestionRepository {
     if (QuestionPool.isGenerated(module)) {
       return _math.generate(
         count: sprintQueueLength,
-        subCategories: scope.subCategories,
+        // Ohne Themenangabe die generierten Themen **dieses** Moduls: Die
+        // Fabrik bedient inzwischen mehrere Module, eine leere Liste hiesse
+        // dort „alles" und wuerde einen Mathe-Sprint mit Formen fuellen.
+        subCategories: scope.subCategories.isEmpty
+            ? SubCategory.of(module)
+                .where(QuestionPool.isGeneratedTopic)
+                .toList()
+            : scope.subCategories,
       );
     }
 

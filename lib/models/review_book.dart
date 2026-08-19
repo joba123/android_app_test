@@ -296,8 +296,14 @@ class ReviewBook {
     return ReviewBook(memories: nextMemories, topics: nextTopics);
   }
 
-  /// Kennungen der Mathematik-Fabrik, Muster `math_<thema>_g<n>`.
-  static bool _isGeneratedId(String id) => id.startsWith('math_');
+  /// Kennungen der Aufgabenfabrik, Muster `gen_<thema>_g<n>`.
+  ///
+  /// Generierte Aufgaben gibt es kein zweites Mal – sie zu merken waere
+  /// sinnlos, die Wiederholung fände die Aufgabe nie wieder. Das alte
+  /// Praefix `math_` bleibt erkannt, damit gespeicherte Buecher aus
+  /// frueheren Versionen weiter stimmen.
+  static bool _isGeneratedId(String id) =>
+      id.startsWith('gen_') || id.startsWith('math_');
 
   Map<String, dynamic> toJson() => {
         'memories': [for (final entry in memories.values) entry.toJson()],

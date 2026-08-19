@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:einstellungstest_trainer/models/exam_date.dart';
+import 'package:einstellungstest_trainer/models/exam_plan.dart';
 import 'package:einstellungstest_trainer/models/ad_frequency.dart';
 import 'package:einstellungstest_trainer/models/module_stats.dart';
 import 'package:einstellungstest_trainer/models/pro_entitlement.dart';
@@ -33,6 +34,8 @@ class StorageService {
   static const String _onboardingKey = 'onboarding_done_v1';
   static const String _profileKey = 'user_profile_v1';
   static const String _themeModeKey = 'theme_mode_v1';
+  static const String _examPlansKey = 'exam_plans_v1';
+  static const String _activePlanKey = 'active_exam_plan_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -262,6 +265,38 @@ class StorageService {
     await _prefs.setString(_profileKey, jsonEncode(profile.toJson()));
   }
 
+  // --- Pruefungen ---
+
+  List<ExamPlan> loadExamPlans() {
+    final raw = _prefs.getString(_examPlansKey);
+    if (raw == null) return const [];
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! List) return const [];
+
+      return [
+        for (final entry in decoded)
+          if (entry is Map<String, dynamic>) ExamPlan.fromJson(entry),
+      ];
+    } on FormatException {
+      return const [];
+    }
+  }
+
+  Future<void> saveExamPlans(List<ExamPlan> plans) async {
+    await _prefs.setString(
+      _examPlansKey,
+      jsonEncode([for (final plan in plans) plan.toJson()]),
+    );
+  }
+
+  String? get activeExamPlanId => _prefs.getString(_activePlanKey);
+
+  Future<void> saveActiveExamPlanId(String id) async {
+    await _prefs.setString(_activePlanKey, id);
+  }
+
   // --- Darstellung ---
 
   String get themeModeId => _prefs.getString(_themeModeKey) ?? 'system';
@@ -294,6 +329,8 @@ class StorageService {
     await _prefs.remove(_reminderSettingsKey);
     await _prefs.remove(_adFrequencyKey);
     await _prefs.remove(_profileKey);
+    await _prefs.remove(_examPlansKey);
+    await _prefs.remove(_activePlanKey);
     // Die Pro-Berechtigung bleibt bewusst stehen: Sie haengt am Store-Konto,
     // nicht an den Lerndaten. Wer sein Konto loescht, verliert nicht, wofuer
     // er bezahlt hat.

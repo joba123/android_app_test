@@ -1,13 +1,15 @@
+import 'package:einstellungstest_trainer/models/field_of_study.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
-import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
+import 'package:einstellungstest_trainer/services/exam_plan_controller.dart';
 import 'package:einstellungstest_trainer/services/profile_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
+import 'package:einstellungstest_trainer/widgets/field_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -98,12 +100,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _name = TextEditingController();
   int _step = 0;
   DateTime? _pickedDate;
+  FieldOfStudy _field = FieldOfStudy.general;
 
   /// Wie viele Aufgaben die erste Runde hat. Kurz genug, um sie zu Ende zu
   /// bringen, lang genug, um alle drei Bereiche zu zeigen.
   static const int firstRoundLength = 10;
 
-  int get _lastStep => _steps.length;
+  /// Nach den erklärenden Schritten kommen zwei eigene: die Fachrichtung
+  /// und danach Name und Termin.
+  int get _fieldStep => _steps.length;
+  int get _lastStep => _steps.length + 1;
 
   @override
   void dispose() {
@@ -125,9 +131,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   Future<void> _finish() async {
-    final date = _pickedDate;
-    if (date != null) {
-      await ref.read(examDateProvider.notifier).set(date);
+    final plans = ref.read(examPlansProvider);
+    final active = plans.active;
+
+    // Die erste Prüfung entsteht beim ersten Start automatisch; hier bekommt
+    // sie ihre Fachrichtung und – wenn vorhanden – ihren Termin.
+    if (active != null) {
+      await ref.read(examPlansProvider.notifier).update(
+            active.id,
+            title: _field == FieldOfStudy.general ? active.title : _field.label,
+            field: _field,
+            date: _pickedDate,
+            clearDate: _pickedDate == null,
+          );
     }
     await ref.read(profileProvider.notifier).setName(_name.text);
     await ref.read(onboardingDoneProvider.notifier).complete();
@@ -207,14 +223,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
               ),
               Expanded(
-                child: onLast
-                    ? _AboutYou(
-                        name: _name,
-                        pickedDate: _pickedDate,
-                        onPickDate: _pickDate,
-                        onClearDate: () => setState(() => _pickedDate = null),
-                      )
-                    : _Explainer(step: _steps[_step]),
+                child: switch (_step) {
+                  final step when step == _lastStep => _AboutYou(
+                      name: _name,
+                      pickedDate: _pickedDate,
+                      onPickDate: _pickDate,
+                      onClearDate: () => setState(() => _pickedDate = null),
+                    ),
+                  final step when step == _fieldStep => _FieldStep(
+                      selected: _field,
+                      onSelect: (field) => setState(() => _field = field),
+                    ),
+                  _ => _Explainer(step: _steps[_step]),
+                },
               ),
               FilledButton(
                 onPressed: _next,
@@ -371,6 +392,35 @@ class _AboutYou extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Die Wahl der Fachrichtung – der Schritt, aus dem der Leitfaden entsteht.
+class _FieldStep extends StatelessWidget {
+  const _FieldStep({required this.selected, required this.onSelect});
+
+  final FieldOfStudy selected;
+  final ValueChanged<FieldOfStudy> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        const SizedBox(height: Gap.card),
+        Text('Worauf übst du hin?', style: theme.textTheme.displayLarge),
+        const SizedBox(height: Gap.card),
+        Text(
+          'Daraus baut die App deinen Leitfaden: welche Themen du brauchst '
+          'und wie viel davon. Üben kannst du trotzdem alles.',
+          style: theme.textTheme.bodyLarge,
+        ),
+        const SizedBox(height: Gap.section),
+        FieldPicker(selected: selected, onSelect: onSelect),
+      ],
     );
   }
 }

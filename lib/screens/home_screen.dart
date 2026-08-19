@@ -7,10 +7,15 @@ import 'package:einstellungstest_trainer/models/session_mode.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/categories_screen.dart';
+import 'package:einstellungstest_trainer/screens/exam_plans_screen.dart';
+import 'package:einstellungstest_trainer/screens/guide_screen.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
 import 'package:einstellungstest_trainer/screens/settings_screen.dart';
+import 'package:einstellungstest_trainer/models/exam_date.dart';
+import 'package:einstellungstest_trainer/models/readiness.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
-import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
+import 'package:einstellungstest_trainer/screens/strike_out_screen.dart';
+import 'package:einstellungstest_trainer/services/exam_plan_controller.dart';
 import 'package:einstellungstest_trainer/services/profile_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
@@ -55,7 +60,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final stats = ref.watch(statsControllerProvider);
-    final examDate = ref.watch(examDateProvider);
+    final plans = ref.watch(examPlansProvider);
+    final activePlan = plans.active;
+    final readiness = ref.watch(readinessProvider);
     final profile = ref.watch(profileProvider);
     final answeredToday = ref.watch(answeredTodayProvider);
     final isPro = ref.watch(isProProvider);
@@ -75,21 +82,57 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    profile.greeting(DateTime.now()),
+                    profile.name == null
+                        ? profile.greeting(DateTime.now())
+                        : '${profile.greeting(DateTime.now())}, '
+                            '${profile.name}',
                     style: theme.textTheme.labelMedium?.copyWith(
                       color: theme.colorScheme.outline,
                     ),
                   ),
                   const SizedBox(height: Gap.xs),
-                  Text(profile.headline, style: theme.textTheme.headlineLarge),
+                  // Oben steht, worauf gerade hingearbeitet wird. Wer mehrere
+                  // Verfahren vorbereitet, wechselt hier.
+                  _ExamSwitch(
+                    plans: plans,
+                    onSelect: (id) =>
+                        ref.read(examPlansProvider.notifier).select(id),
+                    onManage: () => _openScreen(const ExamPlansScreen()),
+                  ),
                 ],
               ),
             ),
             TodayBand(
-              examDate: examDate,
+              examDate: activePlan?.date == null
+                  ? null
+                  : ExamDate(
+                      date: activePlan!.date!,
+                      updatedAt: activePlan.createdAt,
+                      label: activePlan.title,
+                    ),
               answeredToday: answeredToday,
               goal: profile.dailyGoal,
               onTap: () => _openScreen(const SettingsScreen()),
+            ),
+            const SizedBox(height: Gap.sm),
+            _GuideCard(
+              readiness: readiness,
+              onOpen: () => _openScreen(const GuideScreen()),
+              onStart: () {
+                final next = readiness.nextStep;
+                if (next == null) {
+                  _openScreen(const GuideScreen());
+                  return;
+                }
+                _openScreen(
+                  next.subCategory.hasOwnScreen
+                      ? const StrikeOutScreen()
+                      : QuizScreen(
+                          mode: SessionMode.practice,
+                          scope: PracticeScope.subCategory(next.subCategory),
+                        ),
+                );
+              },
             ),
             // Die Wiederholung steht nur da, wenn es etwas zu wiederholen
             // gibt – eine Zeile „0 Fehler" waere Fuellmaterial.
@@ -207,6 +250,239 @@ class _ReviewRow extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Der Wechsel zwischen den Prüfungen – oben, weil alles darunter davon
+/// abhängt.
+class _ExamSwitch extends StatelessWidget {
+  const _ExamSwitch({
+    required this.plans,
+    required this.onSelect,
+    required this.onManage,
+  });
+
+  final ExamPlans plans;
+  final ValueChanged<String> onSelect;
+  final VoidCallback onManage;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final active = plans.active;
+
+    return InkWell(
+      onTap: () => _open(context),
+      borderRadius: Radii.tileRadius,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          children: [
+            Flexible(
+              child: Text(
+                active?.title ?? 'Meine Vorbereitung',
+                style: theme.textTheme.headlineLarge,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: Gap.sm),
+            Icon(
+              Icons.keyboard_arrow_down_rounded,
+              size: 26,
+              color: theme.colorScheme.outline,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _open(BuildContext context) async {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Gap.cardWide,
+            Gap.cardWide,
+            Gap.cardWide,
+            Gap.card,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text('Prüfung', style: theme.textTheme.headlineSmall),
+              const SizedBox(height: Gap.xs),
+              Text(
+                'Jede Prüfung hat ihre eigene Fachrichtung und ihren eigenen '
+                'Leitfaden.',
+                style: theme.textTheme.bodySmall,
+              ),
+              const SizedBox(height: Gap.card),
+              for (final plan in plans.plans)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: Gap.sm),
+                  child: Material(
+                    color:
+                        plan.id == plans.activeId ? tokens.ink : tokens.sunk,
+                    borderRadius: Radii.buttonRadius,
+                    child: InkWell(
+                      borderRadius: Radii.buttonRadius,
+                      onTap: () => Navigator.of(sheetContext).pop(plan.id),
+                      child: Container(
+                        constraints:
+                            const BoxConstraints(minHeight: Gap.control),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 22,
+                          vertical: Gap.md,
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    plan.title,
+                                    style:
+                                        theme.textTheme.titleMedium?.copyWith(
+                                      color: plan.id == plans.activeId
+                                          ? tokens.onInk
+                                          : theme.colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  Text(
+                                    plan.field.label,
+                                    style:
+                                        theme.textTheme.labelSmall?.copyWith(
+                                      color: plan.id == plans.activeId
+                                          ? tokens.onInk.withValues(alpha: 0.7)
+                                          : theme.colorScheme.outline,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            if (plan.id == plans.activeId)
+                              Icon(
+                                Icons.check_rounded,
+                                size: 20,
+                                color: tokens.onInk,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: Gap.sm),
+              OutlinedButton(
+                onPressed: () => Navigator.of(sheetContext).pop('__manage__'),
+                child: const Text('Prüfungen verwalten'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    if (choice == null) return;
+    if (choice == '__manage__') {
+      onManage();
+    } else {
+      onSelect(choice);
+    }
+  }
+}
+
+/// Der Leitfaden auf der Startseite: ein Balken, ein Satz, ein Knopf.
+class _GuideCard extends StatelessWidget {
+  const _GuideCard({
+    required this.readiness,
+    required this.onOpen,
+    required this.onStart,
+  });
+
+  final Readiness readiness;
+  final VoidCallback onOpen;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+    final next = readiness.nextStep;
+
+    return Container(
+      padding: const EdgeInsets.all(Gap.card),
+      decoration: BoxDecoration(
+        color: tokens.raised,
+        borderRadius: Radii.cardRadius,
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text('Leitfaden', style: theme.textTheme.titleLarge),
+              ),
+              Text(
+                '${(readiness.progress * 100).round()} %',
+                style: NumText.inline.copyWith(
+                  fontSize: 15,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Gap.md),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(Radii.pill),
+            child: LinearProgressIndicator(
+              value: readiness.progress,
+              minHeight: 6,
+              backgroundColor: tokens.sunk,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                readiness.isReady
+                    ? tokens.correct
+                    : theme.colorScheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(height: Gap.md),
+          Text(
+            next == null
+                ? readiness.summary
+                : 'Als Nächstes: ${next.subCategory.label} – ${next.advice}',
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: Gap.card),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onOpen,
+                  child: const Text('Alle Schritte'),
+                ),
+              ),
+              const SizedBox(width: Gap.md),
+              Expanded(
+                child: FilledButton(
+                  onPressed: onStart,
+                  child: Text(next == null ? 'Weiter üben' : 'Los'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

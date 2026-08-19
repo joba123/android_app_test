@@ -142,6 +142,7 @@ class QuizScreen extends ConsumerWidget {
             AnswerOptionTile(
               label: String.fromCharCode(65 + index),
               text: format.options[index],
+              figure: format.optionFigures?[index],
               accent: palette,
               state: _optionState(session, format, index),
               onTap:

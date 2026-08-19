@@ -53,6 +53,9 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
     required this.math,
     required this.logic,
     required this.language,
+    required this.english,
+    required this.concentration,
+    required this.personality,
   });
 
   /// Papiergrund – die Grundfläche der App.
@@ -85,6 +88,9 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
   final ModulePalette math;
   final ModulePalette logic;
   final ModulePalette language;
+  final ModulePalette english;
+  final ModulePalette concentration;
+  final ModulePalette personality;
 
   /// Die Farben des Entwurfs, umgerechnet aus OKLCH.
   ///
@@ -115,8 +121,23 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
     ),
     language: ModulePalette(
       accent: Color(0xFFCD632D),
-      soft: Color(0xFFFFE3D3),
-      deep: Color(0xFF8A3400),
+      soft: Color(0xFFFFE4D6),
+      deep: Color(0xFF8D3700),
+    ),
+    english: ModulePalette(
+      accent: Color(0xFF00A0A2),
+      soft: Color(0xFFCDF4F3),
+      deep: Color(0xFF00696B),
+    ),
+    concentration: ModulePalette(
+      accent: Color(0xFFA98000),
+      soft: Color(0xFFF5EBCE),
+      deep: Color(0xFF714F00),
+    ),
+    personality: ModulePalette(
+      accent: Color(0xFF956ED2),
+      soft: Color(0xFFEFE6FF),
+      deep: Color(0xFF614092),
     ),
   );
 
@@ -144,9 +165,24 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
       deep: Color(0xFFAEECC9),
     ),
     language: ModulePalette(
-      accent: Color(0xFFE28A5A),
-      soft: Color(0xFF3A2A22),
-      deep: Color(0xFFF6C7AC),
+      accent: Color(0xFFF19266),
+      soft: Color(0xFF3A1E11),
+      deep: Color(0xFFFFC2A3),
+    ),
+    english: ModulePalette(
+      accent: Color(0xFF00C7C7),
+      soft: Color(0xFF002E2E),
+      deep: Color(0xFF89E7E6),
+    ),
+    concentration: ModulePalette(
+      accent: Color(0xFFCEAA3E),
+      soft: Color(0xFF302504),
+      deep: Color(0xFFEBD28F),
+    ),
+    personality: ModulePalette(
+      accent: Color(0xFFBB9AF4),
+      soft: Color(0xFF2A203B),
+      deep: Color(0xFFDDC7FF),
     ),
   );
 
@@ -163,6 +199,9 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
   ModulePalette paletteOf(String moduleId) => switch (moduleId) {
         'logic' => logic,
         'language' => language,
+        'english' => english,
+        'concentration' => concentration,
+        'personality' => personality,
         _ => math,
       };
 
@@ -180,6 +219,9 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
     ModulePalette? math,
     ModulePalette? logic,
     ModulePalette? language,
+    ModulePalette? english,
+    ModulePalette? concentration,
+    ModulePalette? personality,
   }) {
     return ExamTokens(
       paper: paper ?? this.paper,
@@ -194,6 +236,9 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
       math: math ?? this.math,
       logic: logic ?? this.logic,
       language: language ?? this.language,
+      english: english ?? this.english,
+      concentration: concentration ?? this.concentration,
+      personality: personality ?? this.personality,
     );
   }
 
@@ -214,6 +259,10 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
       math: ModulePalette.lerp(math, other.math, t),
       logic: ModulePalette.lerp(logic, other.logic, t),
       language: ModulePalette.lerp(language, other.language, t),
+      english: ModulePalette.lerp(english, other.english, t),
+      concentration:
+          ModulePalette.lerp(concentration, other.concentration, t),
+      personality: ModulePalette.lerp(personality, other.personality, t),
     );
   }
 }

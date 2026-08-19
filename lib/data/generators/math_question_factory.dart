@@ -1,15 +1,21 @@
 import 'dart:math';
 
 import 'package:einstellungstest_trainer/data/generators/arithmetic_generator.dart';
+import 'package:einstellungstest_trainer/data/generators/concentration_generators.dart';
 import 'package:einstellungstest_trainer/data/generators/percentage_generator.dart';
 import 'package:einstellungstest_trainer/data/generators/question_generator.dart';
 import 'package:einstellungstest_trainer/data/generators/rule_of_three_generator.dart';
+import 'package:einstellungstest_trainer/data/generators/shape_generator.dart';
 import 'package:einstellungstest_trainer/data/generators/word_problem_generator.dart';
 import 'package:einstellungstest_trainer/data/question_validation.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 
-/// Erzeugt Mathematik-Aufgaben auf Abruf – der Pool ist damit unbegrenzt.
+/// Erzeugt Aufgaben auf Abruf – für diese Themen ist der Pool unbegrenzt.
+///
+/// Das betrifft nicht nur Mathematik: Auch Formenreihen und die
+/// Konzentrationsaufgaben entstehen zur Laufzeit. Der Name bleibt aus
+/// Kompatibilitätsgründen, die Fabrik ist längst allgemein.
 ///
 /// Die Fabrik hält den Zufallsgenerator und einen laufenden Zähler für die
 /// IDs. Eine Instanz pro Sitzung genügt; innerhalb einer Sitzung sind die IDs
@@ -30,6 +36,9 @@ class MathQuestionFactory {
     SubCategory.ruleOfThree: RuleOfThreeGenerator(),
     SubCategory.percentage: PercentageGenerator(),
     SubCategory.wordProblems: WordProblemGenerator(),
+    SubCategory.shapes: ShapeGenerator(),
+    SubCategory.counting: CountingGenerator(),
+    SubCategory.comparison: ComparisonGenerator(),
   };
 
   /// Die Unterkategorien, die generiert werden können.
@@ -54,7 +63,7 @@ class MathQuestionFactory {
     }
 
     final level = difficulty ?? _randomDifficulty();
-    final id = 'math_${subCategory.id}_g${_serial++}';
+    final id = 'gen_${subCategory.id}_g${_serial++}';
     final question = generator.generate(_random, level, id);
 
     assert(() {

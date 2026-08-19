@@ -9,6 +9,25 @@ Dimension ergänzt werden, ohne die bestehende Struktur zu verändern.
 Zielplattform ist Android, iOS ist perspektivisch vorgesehen. Es wird nichts
 verwendet, was einer späteren iOS-Unterstützung im Weg steht.
 
+## Fachrichtung, Prüfungen und Leitfaden
+
+Beim ersten Start wird eine **Fachrichtung** gewählt (Polizei, Informatik,
+BWL, Feuerwehr, Personal, Ingenieurwesen, Verwaltung, Bank, Bahn, Pflege,
+Handwerk, Luftfahrt – oder Allgemein). Sie legt fest, welche Themen der
+**Leitfaden** verlangt und wie streng: Kernthemen brauchen 30 beantwortete
+Aufgaben, Nebenthemen 15, beide eine Trefferquote von 80 Prozent. Dazu kommt
+eine bestandene Gesamtsimulation (70 Prozent). Erst dann gilt die
+Vorbereitung als abgeschlossen.
+
+Es können **mehrere Prüfungen** nebeneinander laufen – wer sich bei Polizei
+und Bahn bewirbt, bereitet zwei Verfahren mit verschiedenen Anforderungen
+vor. Oben im Hauptmenü wird gewechselt; jede Prüfung hat ihre eigene
+Fachrichtung, ihren eigenen Leitfaden und einen **optionalen** Termin. Ohne
+Termin zählt die App das Tagesziel mit, statt einen Countdown zu zeigen.
+
+Der Fortschritt in den Themen gehört dabei zum Nutzer, nicht zur Prüfung:
+Wer eine Prüfung löscht, verliert nichts von dem, was er geübt hat.
+
 ## Module
 
 Jedes Modul bietet dieselben drei Trainingsmodi.
@@ -16,8 +35,25 @@ Jedes Modul bietet dieselben drei Trainingsmodi.
 | Modul (Kategorie) | Unterkategorien | Antwortformat | Quelle |
 | --- | --- | --- | --- |
 | **Mathematik** | Grundrechenarten · Dreisatz · Prozentrechnung · Textaufgaben | Zahleneingabe | generiert (unbegrenzt) |
-| **Logisches Denken** | Zahlenreihen (23 +6) · Figurenanalogien (15 +4) · Schlussfolgerungen (8 +4) | Multiple Choice | statisch |
+| **Logisches Denken** | Zahlenreihen (23 +6) · Figurenanalogien (15 +4) · Schlussfolgerungen (8 +4) · Formen & Muster | Multiple Choice | statisch, Formen generiert |
 | **Sprache** | Rechtschreibung (21 +6) · Wortanalogien (15 +5) · Grammatik (6 +3) · Wortschatz & Textverständnis (8 +4) | Multiple Choice | statisch |
+| **Englisch** | Vokabeln (20) · Grammatik (15) · Textverständnis (8) | Multiple Choice | statisch |
+| **Konzentration** | Durchstreichtest · Zählen & Erfassen · Reihen vergleichen | eigener Bildschirm bzw. gemischt | generiert (unbegrenzt) |
+| **Persönlichkeitstest** | Wie Tests gewertet werden (12) · Antworten einschätzen (8) | Multiple Choice | statisch |
+
+**Formen & Muster** werden gezeichnet, nicht als Bild geliefert: `FigureCell`
+beschreibt Form, Anzahl, Füllung und Drehung, ein `CustomPainter` malt sie.
+Dadurch bleiben sie in jeder Auflösung scharf und folgen dem Hell-/Dunkelmodus.
+
+**Der Durchstreichtest** ist der einzige Aufgabentyp mit eigenem Bildschirm:
+Er stellt keine Frage, sondern eine Fläche voller Zeichen unter Zeitdruck.
+Gewertet wird wie im d2 – bearbeitete Zeichen, Verwechslungen und
+Auslassungen getrennt, daraus die Konzentrationsleistung.
+
+**Der Persönlichkeitstest misst nichts.** Er erklärt, wie solche Fragebogen
+aufgebaut sind und woran Auswerter hängenbleiben (Kontrollskalen,
+Konsistenz, Zustimmungstendenz) – als Wissensfragen mit einer richtigen
+Antwort. Eine App, die Persönlichkeit bewertet, wäre eine andere App.
 
 Die Zahlen in Klammern mit Plus sind der Zusatzbestand für Pro – siehe
 [Monetarisierung](#monetarisierung).
@@ -118,8 +154,9 @@ und scharf gestellt sind:
 | Teil 1 Mathematik | Grundrechnen, Dreisatz, Prozent | 20 | 15 Min | 45 s |
 | Teil 2 Sprache | Rechtschreibung, Wortanalogien | 26 | 9 Min | 20 s |
 | Teil 3 Logisches Denken | Zahlenreihen, Figurenanalogien | 20 | 15 Min | 45 s |
-| Teil 4 Textverständnis | Schlussfolgerungen, Wortschatz | 8 | 6 Min | 45 s |
-| **Gesamt** | | **74** | **45 Min** | |
+| Teil 4 Konzentration | Zählen, Reihen vergleichen | 12 | 6 Min | 30 s |
+| Teil 5 Textverständnis | Schlussfolgerungen, Wortschatz | 8 | 6 Min | 45 s |
+| **Gesamt** | | **86** | **51 Min** | |
 
 Dazu drei kürzere Simulationen für einzelne Module (je 30 Minuten): Mathematik
 46 Aufgaben, Logik 36, Sprache 39.

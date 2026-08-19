@@ -47,7 +47,10 @@ void main() {
 
     test('jede statische Unterkategorie hat Aufgaben', () {
       for (final subCategory in SubCategory.values) {
-        if (QuestionPool.isGenerated(subCategory.module)) continue;
+        if (QuestionPool.isGeneratedTopic(subCategory)) continue;
+        // Der Durchstreichtest ist keine Frage mit Antwortoptionen, sondern
+        // ein eigener Bildschirm – er hat deshalb keinen Aufgabenbestand.
+        if (subCategory.hasOwnScreen) continue;
 
         expect(
           QuestionPool.countForSubCategory(subCategory),
@@ -60,6 +63,7 @@ void main() {
     test('jede generierbare Unterkategorie hat einen Generator', () {
       for (final subCategory in SubCategory.values) {
         if (!QuestionPool.isGenerated(subCategory.module)) continue;
+        if (subCategory.hasOwnScreen) continue;
 
         expect(
           MathQuestionFactory.supports(subCategory),

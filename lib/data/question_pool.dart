@@ -1,5 +1,7 @@
 import 'package:einstellungstest_trainer/data/generators/math_question_factory.dart';
+import 'package:einstellungstest_trainer/data/english_questions.dart';
 import 'package:einstellungstest_trainer/data/language_questions.dart';
+import 'package:einstellungstest_trainer/data/personality_questions.dart';
 import 'package:einstellungstest_trainer/data/logic_questions.dart';
 import 'package:einstellungstest_trainer/data/pro_questions.dart';
 import 'package:einstellungstest_trainer/models/question.dart';
@@ -21,6 +23,8 @@ abstract final class QuestionPool {
   static const List<Question> all = [
     ...logicQuestions,
     ...languageQuestions,
+    ...englishQuestions,
+    ...personalityQuestions,
   ];
 
   /// Der Bestand inklusive der Pro-Aufgaben.
@@ -31,6 +35,8 @@ abstract final class QuestionPool {
   static const List<Question> allWithPro = [
     ...logicQuestions,
     ...languageQuestions,
+    ...englishQuestions,
+    ...personalityQuestions,
     ...proQuestions,
   ];
 
@@ -40,9 +46,17 @@ abstract final class QuestionPool {
   /// Wie viele Aufgaben Pro zusaetzlich mitbringt.
   static int get proExtraCount => proQuestions.length;
 
-  /// Ob die Aufgaben dieses Moduls algorithmisch erzeugt werden.
+  /// Ob die Aufgaben dieses Moduls vollstaendig algorithmisch erzeugt werden.
+  ///
+  /// Bei Logik gilt das nur fuer einzelne Themen (Formen), deshalb steht das
+  /// Modul hier nicht: Wer genauer fragen will, nimmt [isGeneratedTopic].
   static bool isGenerated(TrainingModule module) =>
-      module == TrainingModule.math;
+      module == TrainingModule.math ||
+      module == TrainingModule.concentration;
+
+  /// Ob dieses Thema algorithmisch erzeugt wird.
+  static bool isGeneratedTopic(SubCategory subCategory) =>
+      MathQuestionFactory.supports(subCategory);
 
   static List<Question> forModule(
     TrainingModule module, {
@@ -91,16 +105,25 @@ abstract final class QuestionPool {
   /// Beschreibung des Umfangs für die Oberfläche. Bei generierten Modulen
   /// wäre eine Zahl irreführend.
   static String describeSize(TrainingModule module, {bool proUnlocked = false}) {
-    return isGenerated(module)
-        ? 'beliebig viele Aufgaben'
-        : '${countFor(module, proUnlocked: proUnlocked)} Aufgaben';
+    if (isGenerated(module)) return 'beliebig viele Aufgaben';
+
+    final fixed = countFor(module, proUnlocked: proUnlocked);
+    // Gemischte Module – etwa Logik mit den generierten Formen – nennen den
+    // festen Bestand und weisen auf den Rest hin, statt eine Zahl zu
+    // behaupten, die es so nicht gibt.
+    final hasGenerated =
+        SubCategory.of(module).any(isGeneratedTopic);
+
+    return hasGenerated
+        ? '$fixed Aufgaben und mehr'
+        : '$fixed Aufgaben';
   }
 
   static String describeSubCategorySize(
     SubCategory subCategory, {
     bool proUnlocked = false,
   }) {
-    return isGenerated(subCategory.module)
+    return isGeneratedTopic(subCategory)
         ? 'beliebig viele Aufgaben'
         : '${countForSubCategory(subCategory, proUnlocked: proUnlocked)} '
             'Aufgaben';

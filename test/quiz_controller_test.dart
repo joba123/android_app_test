@@ -46,6 +46,26 @@ class _FixedRepository extends QuestionRepository {
   List<Question> drawForPart(SimulationPart part) => questions;
 }
 
+
+/// Wartet, bis eine Bedingung zutrifft.
+///
+/// Das Verbuchen einer Runde laeuft asynchron ueber mehrere Stufen
+/// (Statistik, Verlauf, Fehlerbuch). Ein einzelnes `Future.delayed(zero)`
+/// trifft mal die eine, mal die andere – unter Last wird der Test dadurch
+/// unzuverlaessig. Deshalb hier warten, bis das Ergebnis tatsaechlich da ist.
+Future<void> waitUntil(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 2),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw StateError('Bedingung trat nicht innerhalb von $timeout ein');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+}
+
 void main() {
   late ProviderContainer container;
 
@@ -446,7 +466,9 @@ void main() {
         );
       }
       controller.finishEarly();
-      await Future<void>.delayed(Duration.zero);
+      await waitUntil(
+        () => container.read(statsControllerProvider).bestSprint(topic) == 3,
+      );
 
       final stats = container.read(statsControllerProvider);
       expect(stats.bestSprint(topic), 3);
@@ -472,7 +494,9 @@ void main() {
         );
       }
       controller.finishEarly();
-      await Future<void>.delayed(Duration.zero);
+      await waitUntil(
+        () => container.read(statsControllerProvider).bestSprint(topic) == 2,
+      );
 
       // Zweite Runde kennt den alten Bestwert.
       container.invalidate(quizControllerProvider(first));
@@ -484,7 +508,9 @@ void main() {
 
       controller = container.read(quizControllerProvider(second).notifier);
       controller.finishEarly();
-      await Future<void>.delayed(Duration.zero);
+      await waitUntil(
+        () => container.read(sessionHistoryProvider).length == 2,
+      );
 
       // Null richtig darf den Bestwert nicht drücken.
       expect(container.read(statsControllerProvider).bestSprint(topic), 2);
@@ -532,7 +558,14 @@ void main() {
 
       controller.finishEarly();
       // Das Persistieren läuft asynchron an.
-      await Future<void>.delayed(Duration.zero);
+      await waitUntil(
+        () =>
+            container
+                .read(statsControllerProvider)
+                .forModule(TrainingModule.math)
+                .answered ==
+            2,
+      );
 
       final stats = container.read(statsControllerProvider);
       expect(
@@ -550,7 +583,9 @@ void main() {
       final current = container.read(quizControllerProvider(config));
       controller.answer(correctResponse(current.currentQuestion));
       controller.finishEarly();
-      await Future<void>.delayed(Duration.zero);
+      await waitUntil(
+        () => container.read(sessionHistoryProvider).isNotEmpty,
+      );
 
       final history = container.read(sessionHistoryProvider);
       expect(history, hasLength(1));

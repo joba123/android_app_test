@@ -39,6 +39,37 @@ enum TrainingModule {
     icon: Icons.menu_book_outlined,
     glyph: 'Aa',
     color: Color(0xFFCD632D),
+  ),
+  english(
+    id: 'english',
+    label: 'Englisch',
+    menuLabel: 'Englisch',
+    shortLabel: 'Englisch',
+    description: 'Vokabeln, Grammatik und Textverstaendnis auf Englisch',
+    icon: Icons.language_outlined,
+    glyph: 'EN',
+    color: Color(0xFF00A0A2),
+  ),
+  concentration(
+    id: 'concentration',
+    label: 'Konzentration',
+    menuLabel: 'Konzentration',
+    shortLabel: 'Konzentr.',
+    description: 'Durchstreichtest, Zaehlen und Vergleichen unter Zeitdruck',
+    icon: Icons.center_focus_strong_outlined,
+    // Der Punkt steht fuer das Zeichen, das im Durchstreichtest gesucht wird.
+    glyph: '',
+    color: Color(0xFFA98000),
+  ),
+  personality(
+    id: 'personality',
+    label: 'Persönlichkeitstest',
+    menuLabel: 'Persönlichkeit',
+    shortLabel: 'Persoenl.',
+    description: 'Wie Persoenlichkeitsfragebogen gewertet werden',
+    icon: Icons.psychology_outlined,
+    glyph: '?',
+    color: Color(0xFF956ED2),
   );
 
   const TrainingModule({
@@ -84,6 +115,9 @@ enum TrainingModule {
       TrainingModule.math => tokens.math,
       TrainingModule.logic => tokens.logic,
       TrainingModule.language => tokens.language,
+      TrainingModule.english => tokens.english,
+      TrainingModule.concentration => tokens.concentration,
+      TrainingModule.personality => tokens.personality,
     };
   }
 

@@ -22,7 +22,7 @@ abstract final class SimulationBlueprints {
   static const full = SimulationBlueprint(
     id: 'sim_full',
     title: 'Gesamtsimulation',
-    description: 'Vier Testteile, 45 Minuten am Stück – wie im echten '
+    description: 'Fünf Testteile, gut 50 Minuten am Stück – wie im echten '
         'Auswahlverfahren.',
     parts: [
       SimulationPart(
@@ -59,7 +59,16 @@ abstract final class SimulationBlueprints {
             'Gliedern, Änderung von Form, Anzahl oder Lage.',
       ),
       SimulationPart(
-        title: 'Teil 4: Textverständnis',
+        title: 'Teil 4: Konzentration',
+        subCategories: [SubCategory.counting, SubCategory.comparison],
+        questionCount: 12,
+        duration: Duration(minutes: 6),
+        instructions: 'Sorgfalt unter Zeitdruck: 30 Sekunden pro Aufgabe. '
+            'Zeilenweise vorgehen und nicht springen – wer springt, zählt '
+            'doppelt.',
+      ),
+      SimulationPart(
+        title: 'Teil 5: Textverständnis',
         subCategories: [SubCategory.conclusions, SubCategory.vocabulary],
         questionCount: 8,
         duration: Duration(minutes: 6),
@@ -202,11 +211,17 @@ abstract final class SimulationBlueprints {
   /// die Maße einer echten Simulation bewusst nicht erfüllt.
   static const startable = [tryout, full, math, logic, language];
 
-  static SimulationBlueprint forModule(TrainingModule module) {
+  /// Die modulgebundene Simulation, sofern es eine gibt.
+  ///
+  /// Fuer Englisch, Konzentration und Persoenlichkeit gibt es keine eigene
+  /// Simulation: Diese Bereiche kommen in echten Verfahren nicht als
+  /// eigenstaendiger, halbstuendiger Testteil vor.
+  static SimulationBlueprint? forModule(TrainingModule module) {
     return switch (module) {
       TrainingModule.math => math,
       TrainingModule.logic => logic,
       TrainingModule.language => language,
+      _ => null,
     };
   }
 }

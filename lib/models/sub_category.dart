@@ -46,6 +46,13 @@ enum SubCategory {
     module: TrainingModule.logic,
     label: 'Schlussfolgerungen',
   ),
+  // Formenreihen und Ausreisser – gezeichnet statt beschrieben, siehe
+  // FigureSpec.
+  shapes(
+    id: 'shapes',
+    module: TrainingModule.logic,
+    label: 'Formen & Muster',
+  ),
 
   // --- Sprache ---
   spelling(
@@ -70,6 +77,54 @@ enum SubCategory {
     id: 'vocabulary',
     module: TrainingModule.language,
     label: 'Wortschatz & Textverständnis',
+  ),
+
+  // --- Englisch ---
+  englishVocabulary(
+    id: 'english_vocabulary',
+    module: TrainingModule.english,
+    label: 'Vokabeln',
+  ),
+  englishGrammar(
+    id: 'english_grammar',
+    module: TrainingModule.english,
+    label: 'Grammatik',
+  ),
+  englishReading(
+    id: 'english_reading',
+    module: TrainingModule.english,
+    label: 'Textverständnis',
+  ),
+
+  // --- Konzentration ---
+  // Der Durchstreichtest laeuft auf einem eigenen Bildschirm: Die Aufgabe
+  // ist nicht eine Frage, sondern eine Flaeche voller Zeichen unter Zeitdruck.
+  strikeOut(
+    id: 'strike_out',
+    module: TrainingModule.concentration,
+    label: 'Durchstreichtest',
+  ),
+  counting(
+    id: 'counting',
+    module: TrainingModule.concentration,
+    label: 'Zählen & Erfassen',
+  ),
+  comparison(
+    id: 'comparison',
+    module: TrainingModule.concentration,
+    label: 'Reihen vergleichen',
+  ),
+
+  // --- Persönlichkeit ---
+  personalityBasics(
+    id: 'personality_basics',
+    module: TrainingModule.personality,
+    label: 'Wie Tests gewertet werden',
+  ),
+  personalityAnswers(
+    id: 'personality_answers',
+    module: TrainingModule.personality,
+    label: 'Antworten einschätzen',
   );
 
   const SubCategory({
@@ -84,6 +139,11 @@ enum SubCategory {
 
   final TrainingModule module;
   final String label;
+
+  /// Alle Unterkategorien eines Moduls in Deklarationsreihenfolge.
+  /// Ob dieses Thema einen eigenen Bildschirm mitbringt statt einer Frage
+  /// mit Antwortoptionen.
+  bool get hasOwnScreen => this == SubCategory.strikeOut;
 
   /// Alle Unterkategorien eines Moduls in Deklarationsreihenfolge.
   static List<SubCategory> of(TrainingModule module) {

@@ -1,5 +1,7 @@
+import 'package:einstellungstest_trainer/models/figure.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
+import 'package:einstellungstest_trainer/widgets/figure_view.dart';
 import 'package:flutter/material.dart';
 
 /// Zustand einer Antwortoption in der Darstellung.
@@ -36,6 +38,7 @@ class AnswerOptionTile extends StatelessWidget {
     required this.text,
     required this.state,
     this.accent,
+    this.figure,
     this.onTap,
   });
 
@@ -46,6 +49,10 @@ class AnswerOptionTile extends StatelessWidget {
   /// Die Farbe des Bereichs, zu dem die Aufgabe gehört. Ohne Angabe die
   /// Schriftfarbe – dann trägt nur die Form.
   final ModulePalette? accent;
+
+  /// Gezeichnete Antwort. Ist sie gesetzt, tritt die Figur an die Stelle des
+  /// Textes – der bleibt als Beschreibung für Vorlesehilfen erhalten.
+  final FigureCell? figure;
 
   final VoidCallback? onTap;
 
@@ -154,12 +161,17 @@ class AnswerOptionTile extends StatelessWidget {
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: Text(
-                          text,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            height: 1.35,
-                          ),
-                        ),
+                        child: figure == null
+                            ? Text(
+                                text,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  height: 1.35,
+                                ),
+                              )
+                            : Align(
+                                alignment: Alignment.centerLeft,
+                                child: FigureView(cell: figure!, size: 44),
+                              ),
                       ),
                       if (mark != null) ...[
                         const SizedBox(width: Gap.sm),

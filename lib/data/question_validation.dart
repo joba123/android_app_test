@@ -41,6 +41,11 @@ List<String> _validateMultipleChoice(MultipleChoice format) {
   if (format.correctIndex < 0 || format.correctIndex >= format.options.length) {
     problems.add('correctIndex ${format.correctIndex} liegt außerhalb der Optionen');
   }
+  final figures = format.optionFigures;
+  if (figures != null && figures.length != format.options.length) {
+    problems.add('Zu jeder Antwortoption gehört genau eine Figur');
+  }
+
   if (format.options.any((option) => option.trim().isEmpty)) {
     problems.add('mindestens eine Antwortoption ist leer');
   }

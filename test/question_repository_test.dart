@@ -55,13 +55,46 @@ void main() {
 
     test('Anforderung über Poolgröße hinaus wird begrenzt statt zu scheitern',
         () {
-      final available = QuestionPool.countFor(TrainingModule.logic);
+      // Sprache hat ausschliesslich feste Aufgaben; mehr als vorhanden kann
+      // nicht gezogen werden. (Bei Logik fuellt inzwischen die Formen-Fabrik
+      // auf – dort waere der Test keine Aussage mehr.)
+      final available = QuestionPool.countFor(TrainingModule.language);
       final drawn = repository.draw(
-        module: TrainingModule.logic,
+        module: TrainingModule.language,
         count: available + 50,
       );
 
       expect(drawn.length, available);
+    });
+
+    test('ein Sprint bleibt in seinem Modul', () {
+      // Die Fabrik erzeugt inzwischen fuer mehrere Module. Ohne Themenangabe
+      // wuerde sie alles mischen – ein Mathe-Sprint mit Formenaufgaben waere
+      // die Folge.
+      final queue = repository.drawSprintQueue(
+        const PracticeScope.module(TrainingModule.math),
+      );
+
+      expect(queue, isNotEmpty);
+      for (final question in queue) {
+        expect(question.module, TrainingModule.math, reason: question.id);
+      }
+    });
+
+    test('bei gemischten Modulen fuellt die Fabrik auf', () {
+      // Logik fuehrt feste Aufgaben und die generierten Formen. Wer mehr
+      // anfordert, als fest vorliegt, bekommt trotzdem die volle Runde.
+      final available = QuestionPool.countFor(TrainingModule.logic);
+      final drawn = repository.draw(
+        module: TrainingModule.logic,
+        count: available + 20,
+      );
+
+      expect(drawn.length, available + 20);
+      expect(
+        drawn.where((question) => question.subCategory == SubCategory.shapes),
+        isNotEmpty,
+      );
     });
 
     test('Filter auf Unterkategorien greift', () {
@@ -194,15 +227,16 @@ void main() {
     });
 
     test('Misch-Modus verteilt gleichmäßig über die Module', () {
+      final modules = TrainingModule.values.length;
       final drawn = repository.drawForScope(
         const PracticeScope.mixed(),
-        count: 30,
+        count: modules * 5,
       );
 
       for (final module in TrainingModule.values) {
         expect(
           drawn.where((question) => question.module == module).length,
-          10,
+          5,
           reason: 'Modul ${module.label} ist ungleich vertreten',
         );
       }

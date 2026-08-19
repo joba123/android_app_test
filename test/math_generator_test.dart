@@ -54,6 +54,11 @@ num evaluateArithmetic(String prompt) {
   return result;
 }
 
+/// Die generierten Themen des Moduls Mathematik.
+final List<SubCategory> mathTopics = MathQuestionFactory.supportedSubCategories
+    .where((topic) => topic.module == TrainingModule.math)
+    .toList();
+
 void main() {
   group('Qualitätssicherung über alle Unterkategorien', () {
     test('jede generierte Aufgabe besteht die Validierung', () {
@@ -76,11 +81,15 @@ void main() {
       }
     });
 
-    test('alle generierten Aufgaben sind Zahleneingaben im Modul Mathematik',
-        () {
+    test('Mathematik wird durchgaengig als Zahleneingabe gestellt', () {
       final factory = MathQuestionFactory(random: Random(2));
 
-      for (final question in factory.generate(count: 400)) {
+      // Die Fabrik erzeugt inzwischen auch Formen und Konzentration; die
+      // Zahleneingabe ist eine Eigenschaft der Mathematik, nicht der Fabrik.
+      for (final question in factory.generate(
+        count: 400,
+        subCategories: mathTopics,
+      )) {
         expect(question.isNumericInput, isTrue, reason: question.id);
         expect(question.module, TrainingModule.math);
       }
@@ -89,7 +98,10 @@ void main() {
     test('Geldaufgaben rechnen centgenau, Stückzahlen ganzzahlig', () {
       final factory = MathQuestionFactory(random: Random(3));
 
-      for (final question in factory.generate(count: 600)) {
+      for (final question in factory.generate(
+        count: 600,
+        subCategories: mathTopics,
+      )) {
         final format = question.answer as NumericInput;
 
         if (format.unit == '€') {
@@ -109,7 +121,10 @@ void main() {
     test('Ergebnisse sind nie unplausibel groß oder unendlich', () {
       final factory = MathQuestionFactory(random: Random(4));
 
-      for (final question in factory.generate(count: 600)) {
+      for (final question in factory.generate(
+        count: 600,
+        subCategories: mathTopics,
+      )) {
         final value = (question.answer as NumericInput).correctValue;
 
         expect(value.isFinite, isTrue, reason: question.id);

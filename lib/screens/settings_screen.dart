@@ -1,16 +1,17 @@
-import 'package:einstellungstest_trainer/models/exam_date.dart';
 import 'package:einstellungstest_trainer/models/reminder_settings.dart';
 import 'package:einstellungstest_trainer/screens/account_screen.dart';
 import 'package:einstellungstest_trainer/screens/pro_screen.dart';
 import 'package:einstellungstest_trainer/services/ads/ad_config.dart';
 import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
 import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
+import 'package:einstellungstest_trainer/services/exam_plan_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_service.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
 import 'package:einstellungstest_trainer/models/user_profile.dart';
 import 'package:einstellungstest_trainer/services/auth/auth_service.dart';
+import 'package:einstellungstest_trainer/screens/exam_plans_screen.dart';
 import 'package:einstellungstest_trainer/screens/onboarding_screen.dart';
 import 'package:einstellungstest_trainer/services/appearance_controller.dart';
 import 'package:einstellungstest_trainer/services/profile_controller.dart';
@@ -43,6 +44,7 @@ class SettingsScreen extends ConsumerWidget {
     final user = ref.watch(authUserProvider).value;
     final profile = ref.watch(profileProvider);
     final examDate = ref.watch(examDateProvider);
+    final examCount = ref.watch(examPlansProvider).plans.length;
     final reminders = ref.watch(reminderControllerProvider);
     final isPro = ref.watch(isProProvider);
     final mode = ref.watch(themeModeProvider);
@@ -72,17 +74,14 @@ class SettingsScreen extends ConsumerWidget {
             _ProRow(isPro: isPro, onTap: () => open(const ProScreen())),
             const SizedBox(height: Gap.section),
             const SectionTitle('Vorbereitung'),
+            // Der Termin haengt an der Pruefung, nicht am Nutzer – deshalb
+            // fuehrt auch der Weg dorthin ueber die Pruefungen.
             _Row(
-              label: 'Testtermin',
+              label: 'Prüfungen und Termine',
               value: examDate == null
-                  ? 'nicht gesetzt'
+                  ? (examCount == 1 ? 'ohne Termin' : '$examCount Prüfungen')
                   : examDate.describe(DateTime.now()),
-              onTap: () => open(
-                const _DetailScreen(
-                  title: 'Testtermin',
-                  child: ExamDateCard(),
-                ),
-              ),
+              onTap: () => open(const ExamPlansScreen()),
             ),
             _Row(
               label: 'Tagesziel',
@@ -513,98 +512,12 @@ class _ChoiceSheet<T> extends StatelessWidget {
   }
 }
 
-/// Testtermin setzen, ändern, entfernen.
-class ExamDateCard extends ConsumerWidget {
-  const ExamDateCard({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final examDate = ref.watch(examDateProvider);
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: Radii.bandRadius,
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (examDate == null)
-            Text(
-              'Noch kein Termin hinterlegt.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            )
-          else ...[
-            Text(
-              formatDate(examDate.date),
-              style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              [
-                examDate.describe(DateTime.now()),
-                if (examDate.label != null) examDate.label!,
-              ].join(' · '),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => _pick(context, ref, examDate),
-                  child: Text(examDate == null ? 'Termin setzen' : 'Ändern'),
-                ),
-              ),
-              if (examDate != null) ...[
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: () => ref.read(examDateProvider.notifier).clear(),
-                  child: const Text('Entfernen'),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _pick(
-    BuildContext context,
-    WidgetRef ref,
-    ExamDate? current,
-  ) async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: current?.date ?? now.add(const Duration(days: 30)),
-      firstDate: now.subtract(const Duration(days: 1)),
-      lastDate: now.add(const Duration(days: 730)),
-      helpText: 'Wann ist dein Einstellungstest?',
-    );
-
-    if (picked == null) return;
-    await ref.read(examDateProvider.notifier).set(picked, label: current?.label);
-  }
-}
-
+/// Datum in deutscher Schreibweise.
 String formatDate(DateTime value) {
   return '${value.day.toString().padLeft(2, '0')}.'
       '${value.month.toString().padLeft(2, '0')}.${value.year}';
 }
 
-/// Schalter, Vorlaufzeiten, Uhrzeit – und was daraus tatsächlich geplant ist.
 class _ReminderCard extends ConsumerWidget {
   const _ReminderCard();
 

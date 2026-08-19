@@ -1,3 +1,4 @@
+import 'package:einstellungstest_trainer/models/figure.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
 
@@ -23,10 +24,24 @@ sealed class AnswerFormat {
 
 /// Multiple Choice – der Regelfall für Logik und Sprache.
 final class MultipleChoice extends AnswerFormat {
-  const MultipleChoice({required this.options, required this.correctIndex});
+  const MultipleChoice({
+    required this.options,
+    required this.correctIndex,
+    this.optionFigures,
+  });
 
   final List<String> options;
   final int correctIndex;
+
+  /// Gezeichnete Antwortmöglichkeiten – eine je Option, in derselben
+  /// Reihenfolge. Ist das gesetzt, zeigt die Oberfläche die Figur statt des
+  /// Textes; der Text bleibt als Beschreibung für Vorlesehilfen.
+  ///
+  /// Die Liste muss genauso lang sein wie [options]. Das lässt sich hier
+  /// nicht per `assert` festhalten – in einem konstanten Konstruktor ist
+  /// `length` nicht auswertbar –, wird aber von der Aufgabenprüfung
+  /// mitgetragen.
+  final List<FigureCell>? optionFigures;
 
   String get correctOption => options[correctIndex];
 
@@ -38,9 +53,12 @@ final class MultipleChoice extends AnswerFormat {
       order.length == options.length,
       'Reihenfolge passt nicht zur Anzahl der Optionen',
     );
+    final figures = optionFigures;
     return MultipleChoice(
       options: [for (final index in order) options[index]],
       correctIndex: order.indexOf(correctIndex),
+      optionFigures:
+          figures == null ? null : [for (final index in order) figures[index]],
     );
   }
 }
@@ -153,6 +171,7 @@ class Question {
     required this.explanation,
     this.difficulty = Difficulty.medium,
     this.imageAsset,
+    this.figures,
   });
 
   final String id;
@@ -177,7 +196,11 @@ class Question {
   /// der Asset-Ordner zusätzlich in `pubspec.yaml` eingetragen werden.
   final String? imageAsset;
 
-  /// Die Kategorie der Aufgabe: math, logic oder language.
+  /// Gezeichnete Figuren zur Aufgabe, von links nach rechts. Wird statt eines
+  /// Bildes verwendet, wo sich eine Figur eindeutig beschreiben lässt.
+  final List<FigureCell>? figures;
+
+  /// Die Kategorie der Aufgabe.
   TrainingModule get module => subCategory.module;
 
   bool get isMultipleChoice => answer is MultipleChoice;

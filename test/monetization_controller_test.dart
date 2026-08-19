@@ -14,6 +14,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+
+/// Wartet, bis eine Bedingung zutrifft.
+///
+/// Das Verbuchen einer Runde laeuft asynchron ueber mehrere Stufen
+/// (Statistik, Verlauf, Fehlerbuch). Ein einzelnes `Future.delayed(zero)`
+/// trifft mal die eine, mal die andere – unter Last wird der Test dadurch
+/// unzuverlaessig. Deshalb hier warten, bis das Ergebnis tatsaechlich da ist.
+Future<void> waitUntil(
+  bool Function() condition, {
+  Duration timeout = const Duration(seconds: 2),
+}) async {
+  final deadline = DateTime.now().add(timeout);
+  while (!condition()) {
+    if (DateTime.now().isAfter(deadline)) {
+      throw StateError('Bedingung trat nicht innerhalb von $timeout ein');
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+  }
+}
+
 void main() {
   late InMemoryPurchaseService store;
   late InMemoryAdService ads;
