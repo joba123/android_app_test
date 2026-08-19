@@ -3,6 +3,7 @@ import 'package:einstellungstest_trainer/models/question.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
 import 'package:einstellungstest_trainer/screens/result_screen.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:einstellungstest_trainer/widgets/ad_banner_slot.dart';
 import 'package:einstellungstest_trainer/widgets/answer_option_tile.dart';
 import 'package:einstellungstest_trainer/widgets/feedback_sheet.dart';
@@ -61,43 +62,41 @@ class QuizScreen extends ConsumerWidget {
       return _EmptyPool(scopeLabel: scope.label);
     }
 
-    final theme = Theme.of(context);
+    final tokens = context.tokens;
     final question = session.currentQuestion;
     final isSprint = mode == SessionMode.sprint;
-
+    final palette = tokens.paletteOf(question.module.id);
+    final side = Gap.screenPadding(MediaQuery.sizeOf(context).width);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          isSprint ? scope.sprintTitle : '${scope.shortLabel} · ${mode.label}',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => _confirmExit(context, controller),
-            child: const Text('Beenden'),
-          ),
-        ],
-      ),
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-              child: isSprint
-                  ? TimerBar(
-                      remainingSeconds: session.remainingSeconds ?? 0,
-                      totalSeconds: QuizController.sprintSeconds,
-                      label: 'Sprint läuft',
-                    )
-                  : _PracticeProgress(session: session),
+              padding: EdgeInsets.fromLTRB(side, 0, side, Gap.sm),
+              child: _Header(
+                accent: palette.accent,
+                modeLabel: isSprint ? 'Sprint' : 'Üben',
+                progressLabel: isSprint
+                    ? '${session.answers.length} bearbeitet'
+                    : 'Aufgabe ${session.currentNumber}/'
+                        '${session.totalQuestions}',
+                progress: isSprint
+                    ? 1 -
+                        ((session.remainingSeconds ?? 0) /
+                            QuizController.sprintSeconds)
+                    : session.progress,
+                remainingSeconds: isSprint ? session.remainingSeconds : null,
+                onQuit: () => _confirmExit(context, controller),
+              ),
             ),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                padding: EdgeInsets.fromLTRB(side, Gap.sm, side, Gap.card),
                 children: [
                   QuestionCard(question: question),
-                  const SizedBox(height: 18),
-                  ..._buildAnswerArea(session, controller),
+                  const SizedBox(height: Gap.cardWide),
+                  ..._buildAnswerArea(session, controller, palette),
                 ],
               ),
             ),
@@ -113,21 +112,10 @@ class QuizScreen extends ConsumerWidget {
               )
             else
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+                padding: EdgeInsets.fromLTRB(side, Gap.xs, side, Gap.md),
                 child: OutlinedButton(
                   onPressed: controller.skip,
                   child: Text(isSprint ? 'Überspringen' : 'Weiß ich nicht'),
-                ),
-              ),
-            if (isSprint)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(
-                  '${session.correctCount} richtig · '
-                  '${session.answers.length} bearbeitet',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
                 ),
               ),
             // Nur im Uebungsmodus. Im Sprint laeuft eine Uhr - dort waere ein
@@ -140,7 +128,11 @@ class QuizScreen extends ConsumerWidget {
   }
 
   /// Je nach Antwortformat der Aufgabe: Optionsliste oder Zahleneingabe.
-  List<Widget> _buildAnswerArea(QuizSession session, QuizController controller) {
+  List<Widget> _buildAnswerArea(
+    QuizSession session,
+    QuizController controller,
+    ModulePalette palette,
+  ) {
     final question = session.currentQuestion;
 
     switch (question.answer) {
@@ -150,6 +142,7 @@ class QuizScreen extends ConsumerWidget {
             AnswerOptionTile(
               label: String.fromCharCode(65 + index),
               text: format.options[index],
+              accent: palette,
               state: _optionState(session, format, index),
               onTap:
                   session.revealed ? null : () => controller.selectOption(index),
@@ -222,47 +215,84 @@ class QuizScreen extends ConsumerWidget {
   }
 }
 
-/// Fortschrittsanzeige des Übungsmodus: "Aufgabe 5/20" plus Balken.
-class _PracticeProgress extends StatelessWidget {
-  const _PracticeProgress({required this.session});
+/// Die Kopfzeile einer laufenden Runde: Abbruch, Modus, Fortschritt, Uhr.
+class _Header extends StatelessWidget {
+  const _Header({
+    required this.accent,
+    required this.modeLabel,
+    required this.progressLabel,
+    required this.progress,
+    required this.remainingSeconds,
+    required this.onQuit,
+  });
 
-  final QuizSession session;
+  final Color accent;
+  final String modeLabel;
+  final String progressLabel;
+  final double progress;
+  final int? remainingSeconds;
+  final VoidCallback onQuit;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.tokens;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Aufgabe ${session.currentNumber}/${session.totalQuestions}',
-              style: theme.textTheme.labelLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              '${session.correctCount} richtig',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: const Color(0xFF0E9F6E),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(99),
-          child: LinearProgressIndicator(
-            value: session.progress,
-            minHeight: 6,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+    return SizedBox(
+      height: 60,
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: onQuit,
+            icon: const Icon(Icons.close_rounded),
+            tooltip: 'Runde beenden',
           ),
-        ),
-      ],
+          const SizedBox(width: Gap.sm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      modeLabel,
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: accent,
+                      ),
+                    ),
+                    const SizedBox(width: Gap.sm),
+                    Expanded(
+                      child: Text(
+                        progressLabel,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: theme.colorScheme.outline,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: Gap.sm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(Radii.pill),
+                  child: LinearProgressIndicator(
+                    value: progress.clamp(0, 1),
+                    minHeight: 4,
+                    backgroundColor: tokens.sunk,
+                    valueColor: AlwaysStoppedAnimation<Color>(accent),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (remainingSeconds != null) ...[
+            const SizedBox(width: Gap.md),
+            TimerPill(remainingSeconds: remainingSeconds!),
+          ],
+        ],
+      ),
     );
   }
 }
@@ -278,7 +308,7 @@ class _EmptyPool extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Übungsmodus')),
+      appBar: AppBar(title: const Text('Üben')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(28),
@@ -290,13 +320,13 @@ class _EmptyPool extends StatelessWidget {
                 size: 44,
                 color: theme.colorScheme.onSurfaceVariant,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: Gap.card),
               Text(
                 'Für "$scopeLabel" liegen derzeit keine Aufgaben vor.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge,
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: Gap.cardWide),
               OutlinedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: const Text('Andere Auswahl treffen'),

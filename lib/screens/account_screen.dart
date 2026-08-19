@@ -1,6 +1,7 @@
 import 'package:einstellungstest_trainer/services/auth/account_controller.dart';
 import 'package:einstellungstest_trainer/services/auth/auth_service.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,7 +67,7 @@ class _SignedOutCard extends ConsumerWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -102,7 +103,7 @@ class _SignedOutCard extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: Radii.tileRadius,
               ),
               child: Text(
                 'Für diese App-Version ist noch kein Firebase-Projekt '
@@ -157,7 +158,7 @@ class _SignedInCard extends ConsumerWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: Radii.bandRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -302,7 +303,7 @@ class _PrivacyCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -316,7 +317,7 @@ class _PrivacyCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           for (final entry in stored)
-            _Bullet(icon: Icons.check, color: const Color(0xFF0E9F6E), text: entry),
+            _Bullet(icon: Icons.check, color: context.tokens.correct, text: entry),
           const SizedBox(height: 14),
           Text(
             'Nicht gespeichert',

@@ -20,35 +20,64 @@ void main() {
           lessThan(dark.ink.computeLuminance()));
     });
 
-    test('die drei Flaechenstufen sind unterscheidbar', () {
+    test('die Flaechenstufen sind unterscheidbar', () {
       for (final tokens in [ExamTokens.light, ExamTokens.dark]) {
         expect(tokens.paper, isNot(tokens.raised));
         expect(tokens.paper, isNot(tokens.sunk));
         expect(tokens.raised, isNot(tokens.sunk));
+        // Das Band ist eine Stufe kraeftiger als die eingelassene Flaeche.
+        expect(tokens.band, isNot(tokens.sunk));
       }
     });
 
+    test('jeder Bereich bringt drei Abstufungen mit', () {
+      for (final tokens in [ExamTokens.light, ExamTokens.dark]) {
+        for (final palette in [tokens.math, tokens.logic, tokens.language]) {
+          expect(palette.accent, isNot(palette.soft));
+          expect(palette.accent, isNot(palette.deep));
+          // Der zarte Untergrund und die Schrift darauf muessen weit
+          // auseinanderliegen – in welche Richtung, entscheidet der Modus.
+          expect(
+            (palette.soft.computeLuminance() -
+                    palette.deep.computeLuminance())
+                .abs(),
+            greaterThan(0.3),
+          );
+        }
+      }
+    });
+
+    test('die drei Bereichsfarben sind im Hellmodus klar getrennt', () {
+      const tokens = ExamTokens.light;
+
+      // Grün und Orange liegen unter Deuteranopie dicht beieinander; die App
+      // nennt deshalb ueberall den Bereichsnamen neben der Farbe. Dass die
+      // drei Werte ueberhaupt verschieden sind, gehoert trotzdem geprueft.
+      expect(tokens.math.accent, isNot(tokens.logic.accent));
+      expect(tokens.logic.accent, isNot(tokens.language.accent));
+      expect(tokens.math.accent, isNot(tokens.language.accent));
+    });
   });
 
   group('Theme', () {
-    test('nutzt IBM Plex und nicht die Systemschrift', () {
+    test('nutzt die gebuendelten Schriften und nicht die Systemschrift', () {
       final theme = themeOf(Brightness.light);
 
+      // Prosa in Manrope, alles Grosse und Gezaehlte in Space Grotesk.
       expect(theme.textTheme.bodyMedium?.fontFamily, AppFonts.sans);
-      // Alles Gemessene steht in Mono.
-      expect(theme.textTheme.displayLarge?.fontFamily, AppFonts.mono);
-      expect(MonoText.timer.fontFamily, AppFonts.mono);
+      expect(theme.textTheme.displayLarge?.fontFamily, AppFonts.display);
+      expect(theme.textTheme.headlineMedium?.fontFamily, AppFonts.display);
+      expect(NumText.timer.fontFamily, AppFonts.display);
     });
 
     test('Zahlen nutzen Tabellenziffern', () {
       // Sonst zappeln sie beim Hochzaehlen.
       for (final style in [
-        MonoText.timer,
-        MonoText.sprintTimer,
-        MonoText.display,
-        MonoText.metric,
-        MonoText.inline,
-        MonoText.kicker,
+        NumText.timer,
+        NumText.display,
+        NumText.metric,
+        NumText.band,
+        NumText.inline,
       ]) {
         expect(
           style.fontFeatures,
@@ -63,7 +92,7 @@ void main() {
       final theme = themeOf(Brightness.light);
 
       expect(theme.colorScheme.primary, ExamTokens.light.ink);
-      expect(theme.colorScheme.primary, isNot(ExamTokens.light.math));
+      expect(theme.colorScheme.primary, isNot(ExamTokens.light.math.accent));
     });
 
     test('Karten werfen keinen Schatten', () {
@@ -73,11 +102,11 @@ void main() {
       }
     });
 
-    test('die Hauptaktion ist mindestens 52 dp hoch', () {
+    test('die Hauptaktion ist 56 dp hoch', () {
       final style = themeOf(Brightness.light).filledButtonTheme.style;
       final size = style?.minimumSize?.resolve({});
 
-      expect(size?.height, greaterThanOrEqualTo(52));
+      expect(size?.height, Gap.control);
     });
 
     test('beide Modi bringen ihre Tokens mit', () {
@@ -110,8 +139,8 @@ void main() {
         return captured;
       }
 
-      expect(await colorIn(Brightness.light), ExamTokens.light.math);
-      expect(await colorIn(Brightness.dark), ExamTokens.dark.math);
+      expect(await colorIn(Brightness.light), ExamTokens.light.math.accent);
+      expect(await colorIn(Brightness.dark), ExamTokens.dark.math.accent);
     });
   });
 
@@ -135,29 +164,23 @@ void main() {
       );
     }
 
-    testWidgets('richtig traegt Glyphe und Wort, nicht nur Farbe',
-        (tester) async {
+    testWidgets('richtig traegt eine Glyphe, nicht nur Farbe', (tester) async {
       await pumpOption(tester, AnswerOptionState.correct);
 
-      expect(find.byIcon(Icons.check), findsOneWidget);
-      expect(find.text('richtig'), findsOneWidget);
+      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
     });
 
-    testWidgets('falsch traegt Glyphe und Wort, nicht nur Farbe',
-        (tester) async {
+    testWidgets('falsch traegt eine Glyphe, nicht nur Farbe', (tester) async {
       await pumpOption(tester, AnswerOptionState.wrong);
 
-      expect(find.byIcon(Icons.close), findsOneWidget);
-      expect(find.text('deine Antwort'), findsOneWidget);
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
     });
 
-    testWidgets('gewaehlt wird benannt', (tester) async {
+    testWidgets('gewaehlt zeigt noch keine Bewertung', (tester) async {
       await pumpOption(tester, AnswerOptionState.selected);
 
-      expect(find.text('gewählt'), findsOneWidget);
-      // Ohne Aufdeckung keine Bewertungsglyphe.
-      expect(find.byIcon(Icons.check), findsNothing);
-      expect(find.byIcon(Icons.close), findsNothing);
+      expect(find.byIcon(Icons.check_rounded), findsNothing);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
     });
 
     testWidgets('unbeantwortet zeigt den Buchstaben und sagt nichts',
@@ -165,8 +188,16 @@ void main() {
       await pumpOption(tester, AnswerOptionState.idle);
 
       expect(find.text('A'), findsOneWidget);
-      expect(find.text('richtig'), findsNothing);
-      expect(find.text('gewählt'), findsNothing);
+    });
+
+    testWidgets('der Zustand steht auch fuer Vorlesehilfen bereit',
+        (tester) async {
+      // Sichtbar traegt ihn die Flaeche, hoerbar dieser Zusatz.
+      final handle = tester.ensureSemantics();
+      await pumpOption(tester, AnswerOptionState.correct);
+
+      expect(find.bySemanticsLabel('A. 390 Anträge, richtig'), findsOneWidget);
+      handle.dispose();
     });
 
     testWidgets('jeder Zustand ist auch im Dunkelmodus lesbar',
@@ -189,15 +220,16 @@ void main() {
 
   group('Abstandsraster', () {
     test('der Seitenrand faellt auf schmalen Geraeten', () {
-      expect(Gap.screenPadding(320), 16);
-      expect(Gap.screenPadding(390), Gap.screen);
+      expect(Gap.screenPadding(320), 12);
+      expect(Gap.screenPadding(390), Gap.card);
     });
 
     test('die Radien bilden eine Rangfolge', () {
-      // Klein heisst "hier wird eingegeben", gross "hier wird gestartet".
-      expect(Radii.input, lessThan(Radii.card));
-      expect(Radii.card, lessThan(Radii.surface));
-      expect(Radii.surface, lessThan(Radii.pill));
+      // Klein heisst "hier wird eingegeben", gross "hier liegt eine Karte".
+      expect(Radii.input, lessThan(Radii.tile));
+      expect(Radii.tile, lessThan(Radii.band));
+      expect(Radii.band, lessThan(Radii.card));
+      expect(Radii.card, lessThan(Radii.pill));
     });
   });
 }

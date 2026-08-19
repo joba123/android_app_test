@@ -1,89 +1,94 @@
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Schriftfamilien. Prosa in Plex Sans, alles Gemessene in Plex Mono.
+/// Schriftfamilien.
+///
+/// Zwei Familien mit klarer Aufgabenteilung: Space Grotesk für alles, was
+/// zählt oder überschreibt — Zahlen, Titel, Bereichsnamen. Manrope für alles,
+/// was gelesen wird. Die Grotesk ist eng und kantig; sie trägt Zahlen gut und
+/// wäre als Fließtext anstrengend.
 abstract final class AppFonts {
-  static const String sans = 'IBMPlexSans';
-  static const String mono = 'IBMPlexMono';
+  static const String sans = 'Manrope';
+  static const String display = 'SpaceGrotesk';
 
-  /// Fallback für den Fall, dass die gebündelte Schrift fehlt.
   static const List<String> sansFallback = ['Roboto', 'sans-serif'];
-  static const List<String> monoFallback = ['monospace'];
+  static const List<String> displayFallback = ['Roboto', 'sans-serif'];
 }
 
 /// Schriftschnitte für Zahlen.
 ///
-/// Zeit, Zähler, Quoten und Aufgabennummern stehen in Mono mit
-/// Tabellenziffern, damit sie beim Hochzählen nicht zappeln. Diese Trennung
-/// von Prosa ist die eigentliche Handschrift des Entwurfs.
-abstract final class MonoText {
-  static const List<FontFeature> _tabular = [
-    FontFeature.tabularFigures(),
-  ];
+/// Countdown, Quote, Timer und Aufgabennummer stehen in der Grotesk mit
+/// Tabellenziffern, damit sie beim Hochzählen nicht zappeln.
+abstract final class NumText {
+  static const List<FontFeature> _tabular = [FontFeature.tabularFigures()];
 
-  /// Überschrift über einem Abschnitt, gesperrt und in Versalien.
+  static TextStyle _grotesk(
+    double size,
+    double lineHeight, {
+    FontWeight weight = FontWeight.w700,
+    double letterSpacing = 0,
+  }) {
+    return TextStyle(
+      fontFamily: AppFonts.display,
+      fontFamilyFallback: AppFonts.displayFallback,
+      fontSize: size,
+      height: lineHeight / size,
+      fontWeight: weight,
+      letterSpacing: letterSpacing,
+      fontFeatures: _tabular,
+    );
+  }
+
+  /// Beschriftung über einem Abschnitt, gesperrt und in Versalien.
   static const TextStyle kicker = TextStyle(
-    fontFamily: AppFonts.mono,
-    fontFamilyFallback: AppFonts.monoFallback,
+    fontFamily: AppFonts.display,
+    fontFamilyFallback: AppFonts.displayFallback,
     fontSize: 11,
     height: 14 / 11,
-    fontWeight: FontWeight.w500,
-    letterSpacing: 1.32,
-    fontFeatures: _tabular,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 1.54,
   );
 
-  /// Countdown eines Testteils.
-  static const TextStyle timer = TextStyle(
-    fontFamily: AppFonts.mono,
-    fontFamilyFallback: AppFonts.monoFallback,
-    fontSize: 40,
-    height: 44 / 40,
-    fontWeight: FontWeight.w500,
-    fontFeatures: _tabular,
-  );
-
-  /// Der Sprint-Countdown ist größer – Hektik über Größe, nicht über Farbe.
-  static const TextStyle sprintTimer = TextStyle(
-    fontFamily: AppFonts.mono,
-    fontFamilyFallback: AppFonts.monoFallback,
-    fontSize: 56,
-    height: 60 / 56,
+  /// Die kleine Beschriftung unter einer Zahl („TAGE").
+  static const TextStyle unit = TextStyle(
+    fontFamily: AppFonts.sans,
+    fontFamilyFallback: AppFonts.sansFallback,
+    fontSize: 9,
+    height: 11 / 9,
     fontWeight: FontWeight.w600,
-    fontFeatures: _tabular,
+    letterSpacing: 0.72,
   );
 
-  /// Große Kennzahl, etwa eine Trefferquote in der Auswertung.
-  static const TextStyle display = TextStyle(
-    fontFamily: AppFonts.mono,
-    fontFamilyFallback: AppFonts.monoFallback,
-    fontSize: 44,
-    height: 48 / 44,
-    fontWeight: FontWeight.w600,
-    fontFeatures: _tabular,
-  );
+  /// Sprint- und Simulations-Countdown.
+  static TextStyle get timer => _grotesk(40, 44);
 
-  /// Zahl in einer Kennzahl-Kachel.
-  static const TextStyle metric = TextStyle(
-    fontFamily: AppFonts.mono,
-    fontFamilyFallback: AppFonts.monoFallback,
-    fontSize: 26,
-    height: 32 / 26,
-    fontWeight: FontWeight.w600,
-    fontFeatures: _tabular,
-  );
+  /// Die große Zahl einer Auswertung.
+  static TextStyle get display => _grotesk(56, 58, letterSpacing: -1.6);
 
-  /// Kleine Zahl im Fließtext, etwa „5/20".
-  static const TextStyle inline = TextStyle(
-    fontFamily: AppFonts.mono,
-    fontFamilyFallback: AppFonts.monoFallback,
-    fontSize: 13,
-    height: 16 / 13,
-    fontWeight: FontWeight.w500,
-    fontFeatures: _tabular,
-  );
+  /// Kennzahl in einer Kachel.
+  static TextStyle get metric => _grotesk(24, 28, letterSpacing: -0.48);
+
+  /// Zahl im Band, etwa die Tage bis zur Prüfung.
+  static TextStyle get band => _grotesk(21, 21);
+
+  /// Kleine Zahl in einer Zeile, etwa „64 %".
+  static TextStyle get inline =>
+      _grotesk(14, 18, weight: FontWeight.w700);
 }
 
 TextTheme _buildTextTheme(Color onSurface, Color onSurfaceVariant) {
+  TextStyle grotesk(double size, double lineHeight, double tracking) {
+    return TextStyle(
+      fontFamily: AppFonts.display,
+      fontFamilyFallback: AppFonts.displayFallback,
+      fontSize: size,
+      height: lineHeight / size,
+      fontWeight: FontWeight.w700,
+      letterSpacing: tracking,
+      color: onSurface,
+    );
+  }
+
   TextStyle sans(
     double size,
     double lineHeight,
@@ -101,26 +106,26 @@ TextTheme _buildTextTheme(Color onSurface, Color onSurfaceVariant) {
   }
 
   return TextTheme(
-    // display bleibt Mono – grosse Zahlen sind immer Messwerte.
-    displayLarge: MonoText.display.copyWith(color: onSurface),
-    displayMedium: MonoText.display.copyWith(color: onSurface),
-    displaySmall: MonoText.metric.copyWith(color: onSurface),
+    // Alles Große ist Grotesk: Titel wie Zahlen.
+    displayLarge: grotesk(36, 40, -1.08),
+    displayMedium: grotesk(33, 36, -0.99),
+    displaySmall: grotesk(30, 33, -0.9),
 
-    headlineLarge: sans(26, 32, FontWeight.w600),
-    headlineMedium: sans(26, 32, FontWeight.w600),
-    headlineSmall: sans(26, 32, FontWeight.w600),
+    headlineLarge: grotesk(26, 30, -0.52),
+    headlineMedium: grotesk(23, 25, -0.46),
+    headlineSmall: grotesk(21, 24, -0.42),
 
-    titleLarge: sans(20, 26, FontWeight.w600),
-    titleMedium: sans(20, 26, FontWeight.w600),
-    titleSmall: sans(16, 22, FontWeight.w600),
+    titleLarge: sans(17, 24, FontWeight.w600),
+    titleMedium: sans(15.5, 21, FontWeight.w600),
+    titleSmall: sans(14, 20, FontWeight.w600),
 
-    bodyLarge: sans(16, 24, FontWeight.w400),
-    bodyMedium: sans(16, 24, FontWeight.w400),
-    bodySmall: sans(14, 20, FontWeight.w400, color: onSurfaceVariant),
+    bodyLarge: sans(16.5, 26, FontWeight.w400),
+    bodyMedium: sans(15, 23, FontWeight.w400),
+    bodySmall: sans(13.5, 21, FontWeight.w400, color: onSurfaceVariant),
 
-    labelLarge: sans(15, 20, FontWeight.w600),
-    labelMedium: sans(13, 16, FontWeight.w500),
-    labelSmall: sans(12, 16, FontWeight.w500, color: onSurfaceVariant),
+    labelLarge: sans(16, 20, FontWeight.w600),
+    labelMedium: sans(13, 17, FontWeight.w500),
+    labelSmall: sans(12.5, 16, FontWeight.w500, color: onSurfaceVariant),
   );
 }
 
@@ -129,56 +134,58 @@ ColorScheme _buildScheme(Brightness brightness, ExamTokens tokens) {
 
   return ColorScheme(
     brightness: brightness,
-    // Die Hauptaktion ist die Tinte, nicht das Mathematik-Blau: Blau soll
-    // eindeutig „Mathematik" heissen und nicht zugleich Markenfarbe sein.
+    // Die Hauptaktion ist die Tinte, nicht eine der drei Bereichsfarben:
+    // Blau heißt Mathematik, Grün Logik, Orange Sprache – und sonst nichts.
     primary: tokens.ink,
     onPrimary: tokens.onInk,
     primaryContainer: tokens.ink,
     onPrimaryContainer: tokens.onInk,
 
-    secondary: tokens.interactive,
-    onSecondary: isLight ? Colors.white : const Color(0xFF0E1116),
+    secondary: tokens.math.accent,
+    onSecondary: Colors.white,
     secondaryContainer: tokens.sunk,
     onSecondaryContainer: isLight
-        ? const Color(0xFF14181F)
-        : const Color(0xFFEDEFF2),
+        ? const Color(0xFF1C1B1A)
+        : const Color(0xFFFAF7F4),
 
-    tertiary: tokens.logic,
+    tertiary: tokens.language.accent,
     onTertiary: Colors.white,
     tertiaryContainer: tokens.sunk,
     onTertiaryContainer: isLight
-        ? const Color(0xFF14181F)
-        : const Color(0xFFEDEFF2),
+        ? const Color(0xFF1C1B1A)
+        : const Color(0xFFFAF7F4),
 
     error: tokens.wrong,
     onError: Colors.white,
-    errorContainer: isLight ? const Color(0xFFF7E4E1) : const Color(0xFF3A1D1A),
+    errorContainer: tokens.wrongSoft,
     onErrorContainer: isLight
-        ? const Color(0xFF5E1010)
-        : const Color(0xFFF7D6D0),
+        ? const Color(0xFF8C2F2A)
+        : const Color(0xFFF4C9C5),
 
     surface: tokens.paper,
-    onSurface: isLight ? const Color(0xFF14181F) : const Color(0xFFEDEFF2),
+    onSurface: isLight ? const Color(0xFF1C1B1A) : const Color(0xFFFAF7F4),
     onSurfaceVariant: isLight
-        ? const Color(0xFF4A5260)
-        : const Color(0xFFA7B0BC),
+        ? const Color(0xFF6E6A66)
+        : const Color(0xFFB4AEA8),
 
     surfaceContainerLowest: tokens.raised,
     surfaceContainerLow: tokens.raised,
     surfaceContainer: tokens.paper,
     surfaceContainerHigh: tokens.sunk,
-    surfaceContainerHighest: tokens.sunk,
+    surfaceContainerHighest: tokens.band,
 
-    outline: isLight ? const Color(0xFFB9B1A5) : const Color(0xFF3D4652),
+    // Die gedämpfte Schrift des Entwurfs (#8f8a85) – für Beschriftungen,
+    // die neben einer Zahl stehen.
+    outline: isLight ? const Color(0xFF8F8A85) : const Color(0xFF938D87),
     outlineVariant: isLight
-        ? const Color(0xFFDFD9D0)
-        : const Color(0xFF2C333D),
+        ? const Color(0xFFE8E4E0)
+        : const Color(0xFF34312E),
 
-    inverseSurface: isLight ? const Color(0xFF14181F) : const Color(0xFFEDEFF2),
+    inverseSurface: isLight ? const Color(0xFF1C1B1A) : const Color(0xFFFAF7F4),
     onInverseSurface: isLight
-        ? const Color(0xFFF7F5F1)
-        : const Color(0xFF14181F),
-    inversePrimary: tokens.interactive,
+        ? const Color(0xFFFAF7F4)
+        : const Color(0xFF1C1B1A),
+    inversePrimary: tokens.math.accent,
     shadow: const Color(0xFF000000),
     scrim: const Color(0xFF000000),
   );
@@ -186,10 +193,10 @@ ColorScheme _buildScheme(Brightness brightness, ExamTokens tokens) {
 
 /// Das Theme der App.
 ///
-/// Entwurfsrichtung „Prüfungsbogen, nicht Spielbrett": amtliche Sachlichkeit,
-/// Papierflächen statt Kartenteppich, Mono-Ziffern für alles Gemessene.
-/// Rangfolge entsteht über Fläche und Dunkelheit, nicht über Rahmen –
-/// deshalb werfen Karten keinen Schatten, sondern tragen eine Haarlinie.
+/// Entwurfsrichtung: Material 3 auf warmem Papier, deutsch, ohne
+/// Gamification. Weiße Karten mit großem Radius liegen auf dem Papier, jede
+/// Karte trägt die Farbe ihres Bereichs, und die einzige dunkle Fläche ist
+/// die Testsimulation – der Ernstfall.
 ThemeData buildAppTheme(Brightness brightness) {
   final tokens =
       brightness == Brightness.light ? ExamTokens.light : ExamTokens.dark;
@@ -212,11 +219,12 @@ ThemeData buildAppTheme(Brightness brightness) {
       elevation: 0,
       scrolledUnderElevation: 0,
       centerTitle: false,
-      titleTextStyle: textTheme.titleLarge,
+      titleTextStyle: textTheme.headlineSmall,
       iconTheme: IconThemeData(color: scheme.onSurface),
     ),
 
-    // Karten werfen keinen Schatten – nur schwebende Dinge tun das.
+    // Karten werfen keinen Schatten; sie stehen durch ihr Weiß auf dem
+    // Papier schon genug ab.
     cardTheme: CardThemeData(
       color: tokens.raised,
       elevation: 0,
@@ -237,9 +245,9 @@ ThemeData buildAppTheme(Brightness brightness) {
       style: FilledButton.styleFrom(
         backgroundColor: tokens.ink,
         foregroundColor: tokens.onInk,
-        minimumSize: const Size.fromHeight(52),
+        minimumSize: const Size.fromHeight(Gap.control),
         shape: const RoundedRectangleBorder(
-          borderRadius: Radii.surfaceRadius,
+          borderRadius: Radii.buttonRadius,
         ),
         textStyle: textTheme.labelLarge,
       ),
@@ -248,31 +256,42 @@ ThemeData buildAppTheme(Brightness brightness) {
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: scheme.onSurface,
-        minimumSize: const Size.fromHeight(48),
-        side: BorderSide(color: scheme.outline),
+        minimumSize: const Size.fromHeight(Gap.control),
+        side: BorderSide(color: scheme.outlineVariant),
         shape: const RoundedRectangleBorder(
-          borderRadius: Radii.surfaceRadius,
+          borderRadius: Radii.buttonRadius,
         ),
-        textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500),
+        textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
       ),
     ),
 
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: tokens.interactive,
-        textStyle: textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
+        foregroundColor: scheme.onSurfaceVariant,
+        textStyle: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: tokens.paper,
+      surfaceTintColor: Colors.transparent,
+      indicatorColor: tokens.sunk,
+      indicatorShape: const StadiumBorder(),
+      height: 68,
+      elevation: 0,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      labelTextStyle: WidgetStatePropertyAll(
+        textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
       ),
     ),
 
     chipTheme: ChipThemeData(
-      backgroundColor: tokens.raised,
+      backgroundColor: tokens.sunk,
       selectedColor: tokens.ink,
       checkmarkColor: tokens.onInk,
-      side: BorderSide(color: scheme.outlineVariant),
+      side: BorderSide.none,
       labelStyle: textTheme.labelMedium,
-      secondaryLabelStyle: textTheme.labelMedium?.copyWith(
-        color: tokens.onInk,
-      ),
+      secondaryLabelStyle: textTheme.labelMedium?.copyWith(color: tokens.onInk),
       shape: const StadiumBorder(),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       showCheckmark: true,
@@ -283,15 +302,15 @@ ThemeData buildAppTheme(Brightness brightness) {
       fillColor: tokens.raised,
       border: OutlineInputBorder(
         borderRadius: Radii.inputRadius,
-        borderSide: BorderSide(color: scheme.outline),
+        borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: Radii.inputRadius,
-        borderSide: BorderSide(color: scheme.outline),
+        borderSide: BorderSide(color: scheme.outlineVariant),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: Radii.inputRadius,
-        borderSide: BorderSide(color: tokens.interactive, width: 2),
+        borderSide: BorderSide(color: scheme.onSurface, width: 2),
       ),
     ),
 
@@ -305,6 +324,7 @@ ThemeData buildAppTheme(Brightness brightness) {
         (states) =>
             states.contains(WidgetState.selected) ? tokens.ink : tokens.sunk,
       ),
+      trackOutlineColor: const WidgetStatePropertyAll(Colors.transparent),
     ),
 
     progressIndicatorTheme: ProgressIndicatorThemeData(
@@ -318,7 +338,7 @@ ThemeData buildAppTheme(Brightness brightness) {
       contentTextStyle: textTheme.bodySmall?.copyWith(
         color: scheme.onInverseSurface,
       ),
-      shape: const RoundedRectangleBorder(borderRadius: Radii.cardRadius),
+      shape: const RoundedRectangleBorder(borderRadius: Radii.bandRadius),
       behavior: SnackBarBehavior.floating,
     ),
 
@@ -326,8 +346,16 @@ ThemeData buildAppTheme(Brightness brightness) {
       backgroundColor: tokens.raised,
       surfaceTintColor: Colors.transparent,
       shape: const RoundedRectangleBorder(borderRadius: Radii.cardRadius),
-      titleTextStyle: textTheme.titleMedium,
+      titleTextStyle: textTheme.headlineSmall,
       contentTextStyle: textTheme.bodyMedium,
+    ),
+
+    bottomSheetTheme: BottomSheetThemeData(
+      backgroundColor: tokens.raised,
+      surfaceTintColor: Colors.transparent,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(Radii.card)),
+      ),
     ),
 
     listTileTheme: ListTileThemeData(

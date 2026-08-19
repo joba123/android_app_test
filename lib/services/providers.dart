@@ -81,6 +81,34 @@ final sessionHistoryProvider =
   SessionHistoryController.new,
 );
 
+/// Trefferquote des letzten Simulationsdurchlaufs – `null`, solange es
+/// keinen gab. Steht auf der Karte im Hauptmenü, damit der Ernstfall einen
+/// Bezugspunkt hat.
+final lastSimulationScoreProvider = Provider<double?>((ref) {
+  for (final session in ref.watch(sessionHistoryProvider)) {
+    if (session.mode == SessionMode.simulation) return session.accuracy;
+  }
+  return null;
+});
+
+/// Durchschnittliche Zeit je beantworteter Aufgabe über alle gespeicherten
+/// Sitzungen. `null`, solange nichts beantwortet wurde.
+final averagePaceProvider = Provider<Duration?>((ref) {
+  var answered = 0;
+  var seconds = 0;
+
+  for (final session in ref.watch(sessionHistoryProvider)) {
+    for (final result in session.results) {
+      if (!result.answered) continue;
+      answered += 1;
+      seconds += result.timeSpent.inSeconds;
+    }
+  }
+
+  if (answered == 0) return null;
+  return Duration(seconds: seconds ~/ answered);
+});
+
 /// Hält den persistierten Lernfortschritt und schreibt Änderungen zurück.
 class StatsController extends Notifier<TrainingStats> {
   @override

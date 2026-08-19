@@ -47,16 +47,15 @@ class FeedbackSheet extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(Radii.surface),
+          top: Radius.circular(Radii.card),
         ),
         child: Container(
           width: double.infinity,
           // Die Fläche ist eingefärbt, aber nicht laut: der Ton entscheidet,
           // die Schrift bleibt lesbar.
-          color: Color.alphaBlend(
-            color.withValues(alpha: 0.10),
-            tokens.raised,
-          ),
+          color: isCorrect
+              ? Color.alphaBlend(color.withValues(alpha: 0.10), tokens.band)
+              : tokens.wrongSoft,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -64,9 +63,9 @@ class FeedbackSheet extends StatelessWidget {
               Container(height: 3, color: color),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
-                  Gap.screen,
+                  Gap.cardWide,
                   Gap.card,
-                  Gap.screen,
+                  Gap.cardWide,
                   Gap.card,
                 ),
                 child: Column(
@@ -87,7 +86,6 @@ class FeedbackSheet extends StatelessWidget {
                           isCorrect ? 'Richtig' : 'Falsch',
                           style: theme.textTheme.headlineSmall?.copyWith(
                             color: color,
-                            fontWeight: FontWeight.w700,
                           ),
                         ),
                       ],

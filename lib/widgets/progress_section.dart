@@ -1,6 +1,7 @@
 import 'package:einstellungstest_trainer/models/progress_trend.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/widgets/trend_chart.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -42,7 +43,7 @@ class ProgressSection extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(14, 16, 14, 12),
           decoration: BoxDecoration(
             color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: Radii.bandRadius,
             border: Border.all(color: theme.colorScheme.outlineVariant),
           ),
           child: Column(
@@ -87,7 +88,7 @@ class _ComparisonCard extends StatelessWidget {
     final (icon, accent, headline) = switch (comparison) {
       final c when c.improved => (
           Icons.trending_up,
-          const Color(0xFF0E9F6E),
+          context.tokens.correct,
           'Du bist besser geworden',
         ),
       final c when c.declined => (
@@ -106,7 +107,7 @@ class _ComparisonCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(

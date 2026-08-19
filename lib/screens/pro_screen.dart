@@ -1,6 +1,8 @@
 import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/models/pro_entitlement.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,7 +42,7 @@ class ProScreen extends ConsumerWidget {
             if (isPro) const _ActiveCard() else ...[
               const _Intro(),
               const SizedBox(height: 20),
-              const _BenefitList(),
+              const _Comparison(),
               const SizedBox(height: 20),
               const _FreePromise(),
               const SizedBox(height: 24),
@@ -108,7 +110,7 @@ class _BenefitList extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -203,7 +205,7 @@ class _Plans extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: theme.colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: Radii.bandRadius,
         ),
         child: Text(
           'Die Angebote lassen sich gerade nicht laden. Das liegt meist an '
@@ -266,14 +268,14 @@ class _PlanCard extends StatelessWidget {
       opacity: disabled ? 0.5 : 1,
       child: Material(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: Radii.bandRadius,
           onTap: busy || disabled ? null : onTap,
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: Radii.bandRadius,
               border: Border.all(color: theme.colorScheme.outlineVariant),
             ),
             child: Row(
@@ -374,7 +376,7 @@ class _ActiveCard extends ConsumerWidget {
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             color: theme.colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: Radii.bandRadius,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,5 +436,104 @@ class _ActiveCard extends ConsumerWidget {
   String _formatDate(DateTime value) {
     return '${value.day.toString().padLeft(2, '0')}.'
         '${value.month.toString().padLeft(2, '0')}.${value.year}';
+  }
+}
+
+/// Free und Pro nebeneinander.
+///
+/// Die Zeilen nennen echte Unterschiede. Was in der kostenlosen Version
+/// heute geht, steht auch in der Free-Spalte – eine Tabelle, die Lücken
+/// erfindet, um Pro grösser wirken zu lassen, wäre eine Täuschung.
+class _Comparison extends StatelessWidget {
+  const _Comparison();
+
+  static const List<({String label, String free, String pro})> rows = [
+    (label: 'Werbung', free: 'Banner', pro: 'keine'),
+    (label: 'Aufgabenpool', free: 'Grundbestand', pro: 'voller Bestand'),
+    (label: 'Schwierigkeit wählbar', free: '–', pro: 'dabei'),
+    (label: 'Alle drei Bereiche', free: 'dabei', pro: 'dabei'),
+    (label: 'Testsimulationen', free: 'unbegrenzt', pro: 'unbegrenzt'),
+    (label: 'Gespeicherte Sitzungen', free: '50', pro: '200'),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: tokens.raised,
+        borderRadius: Radii.cardRadius,
+        border: Border.all(color: theme.colorScheme.outlineVariant),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: Gap.cardWide,
+        vertical: Gap.card,
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              const Spacer(flex: 4),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'FREE',
+                  textAlign: TextAlign.end,
+                  style: NumText.kicker.copyWith(
+                    color: theme.colorScheme.outline,
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text(
+                  'PRO',
+                  textAlign: TextAlign.end,
+                  style: NumText.kicker.copyWith(color: tokens.language.deep),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: Gap.sm),
+          for (final row in rows) ...[
+            Divider(height: 1, color: theme.colorScheme.outlineVariant),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: Gap.md),
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: 4,
+                    child: Text(row.label, style: theme.textTheme.bodyMedium),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      row.free,
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    flex: 3,
+                    child: Text(
+                      row.pro,
+                      textAlign: TextAlign.end,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
   }
 }

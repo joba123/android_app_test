@@ -7,6 +7,7 @@ import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -247,7 +248,7 @@ class _BriefingView extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: theme.colorScheme.error.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: Radii.bandRadius,
                   ),
                   child: Text(
                     '${isSinglePart ? 'Ein Testteil' : '$totalParts Testteile'}, '
@@ -264,14 +265,14 @@ class _BriefingView extends StatelessWidget {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF0E9F6E).withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(14),
+                    color: context.tokens.correct.withValues(alpha: 0.10),
+                    borderRadius: Radii.bandRadius,
                   ),
                   child: Text(
                     'Teil ${session.partIndex} abgeschlossen. '
                     'Kurz durchatmen – dann geht es weiter.',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: const Color(0xFF07543A),
+                      color: context.tokens.logic.deep,
                     ),
                   ),
                 ),
@@ -295,7 +296,7 @@ class _BriefingView extends StatelessWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: Radii.bandRadius,
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                 ),
                 child: Column(
@@ -575,7 +576,7 @@ class _PausedView extends StatelessWidget {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerLow,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: Radii.bandRadius,
                   border: Border.all(color: theme.colorScheme.outlineVariant),
                 ),
                 child: Column(

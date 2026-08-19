@@ -46,25 +46,23 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # IBM Plex, gebuendelt statt zur Laufzeit geladen: Die App wird unterwegs
-  # und offline benutzt: eine Schrift, die beim ersten Start nachgeladen
-  # werden muss, waere dort nicht da. Latin-Subset, OFL 1.1.
+  # Manrope und Space Grotesk, gebuendelt statt zur Laufzeit geladen: Die App
+  # wird unterwegs und offline benutzt: eine Schrift, die beim ersten Start
+  # nachgeladen werden muss, waere dort nicht da. Latin-Subset, OFL 1.1.
   fonts:
-    - family: IBMPlexSans
+    - family: Manrope
       fonts:
-        - asset: assets/fonts/IBMPlexSans-400.ttf
+        - asset: assets/fonts/Manrope-400.ttf
           weight: 400
-        - asset: assets/fonts/IBMPlexSans-500.ttf
+        - asset: assets/fonts/Manrope-500.ttf
           weight: 500
-        - asset: assets/fonts/IBMPlexSans-600.ttf
+        - asset: assets/fonts/Manrope-600.ttf
           weight: 600
-        - asset: assets/fonts/IBMPlexSans-700.ttf
+        - asset: assets/fonts/Manrope-700.ttf
           weight: 700
-    - family: IBMPlexMono
+    - family: SpaceGrotesk
       fonts:
-        - asset: assets/fonts/IBMPlexMono-400.ttf
-          weight: 400
-        - asset: assets/fonts/IBMPlexMono-500.ttf
+        - asset: assets/fonts/SpaceGrotesk-500.ttf
           weight: 500
-        - asset: assets/fonts/IBMPlexMono-600.ttf
-          weight: 600
+        - asset: assets/fonts/SpaceGrotesk-700.ttf
+          weight: 700

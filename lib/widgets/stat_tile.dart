@@ -39,7 +39,7 @@ class StatTile extends StatelessWidget {
         children: [
           Text(
             value,
-            style: MonoText.metric.copyWith(
+            style: NumText.metric.copyWith(
               color: color ?? theme.colorScheme.onSurface,
             ),
           ),

@@ -7,6 +7,7 @@ import 'package:einstellungstest_trainer/models/pro_entitlement.dart';
 import 'package:einstellungstest_trainer/models/reminder_settings.dart';
 import 'package:einstellungstest_trainer/models/review_book.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
+import 'package:einstellungstest_trainer/models/user_profile.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Persistiert Lernfortschritt und Sitzungsverlauf lokal auf dem Gerät.
@@ -30,6 +31,8 @@ class StorageService {
   static const String _adFrequencyKey = 'ad_frequency_v1';
   static const String _reviewBookKey = 'review_book_v1';
   static const String _onboardingKey = 'onboarding_done_v1';
+  static const String _profileKey = 'user_profile_v1';
+  static const String _themeModeKey = 'theme_mode_v1';
 
   /// Obergrenze für den gespeicherten Verlauf. Ältere Sitzungen fallen hinten
   /// heraus, damit die Preferences nicht unbegrenzt wachsen.
@@ -240,6 +243,33 @@ class StorageService {
     await _prefs.setString(_reviewBookKey, jsonEncode(book.toJson()));
   }
 
+  // --- Profil ---
+
+  UserProfile loadProfile() {
+    final raw = _prefs.getString(_profileKey);
+    if (raw == null) return UserProfile.empty;
+
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map<String, dynamic>) return UserProfile.empty;
+      return UserProfile.fromJson(decoded);
+    } on FormatException {
+      return UserProfile.empty;
+    }
+  }
+
+  Future<void> saveProfile(UserProfile profile) async {
+    await _prefs.setString(_profileKey, jsonEncode(profile.toJson()));
+  }
+
+  // --- Darstellung ---
+
+  String get themeModeId => _prefs.getString(_themeModeKey) ?? 'system';
+
+  Future<void> saveThemeModeId(String id) async {
+    await _prefs.setString(_themeModeKey, id);
+  }
+
   // --- Einfuehrung ---
 
   /// Ob die Einfuehrung schon durchlaufen wurde.
@@ -263,6 +293,7 @@ class StorageService {
     await _prefs.remove(_examDateKey);
     await _prefs.remove(_reminderSettingsKey);
     await _prefs.remove(_adFrequencyKey);
+    await _prefs.remove(_profileKey);
     // Die Pro-Berechtigung bleibt bewusst stehen: Sie haengt am Store-Konto,
     // nicht an den Lerndaten. Wer sein Konto loescht, verliert nicht, wofuer
     // er bezahlt hat.

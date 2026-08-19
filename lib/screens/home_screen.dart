@@ -1,293 +1,208 @@
+import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/data/simulation_blueprints.dart';
+import 'package:einstellungstest_trainer/models/module_stats.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
-import 'package:einstellungstest_trainer/models/todays_plan.dart';
+import 'package:einstellungstest_trainer/models/session_mode.dart';
+import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
-import 'package:einstellungstest_trainer/screens/practice_setup_screen.dart';
+import 'package:einstellungstest_trainer/screens/categories_screen.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
+import 'package:einstellungstest_trainer/screens/settings_screen.dart';
 import 'package:einstellungstest_trainer/screens/simulation_screen.dart';
-import 'package:einstellungstest_trainer/screens/sprint_setup_screen.dart';
 import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
+import 'package:einstellungstest_trainer/services/profile_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
+import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
-import 'package:einstellungstest_trainer/widgets/exam_header.dart';
-import 'package:einstellungstest_trainer/widgets/module_row.dart';
-import 'package:einstellungstest_trainer/widgets/plan_card.dart';
+import 'package:einstellungstest_trainer/widgets/domain_card.dart';
 import 'package:einstellungstest_trainer/widgets/section_title.dart';
+import 'package:einstellungstest_trainer/widgets/simulation_card.dart';
+import 'package:einstellungstest_trainer/widgets/today_band.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Die Startseite beantwortet **eine** Frage: Was soll ich jetzt tun?
+/// Das Hauptmenü.
 ///
-/// Deshalb genau ein Vorschlag mit einem Knopf, darunter nur noch Datenzeilen.
-/// Alles Erklärende ist verschwunden – wer wissen will, wie die App
-/// funktioniert, findet die Einführung unter „Mehr".
-class HomeScreen extends ConsumerWidget {
+/// Begrüßung, das Band mit Termin und Tagesziel, drei Bereiche zum
+/// Ausklappen, darunter der Ernstfall. Der Modus wird in der Karte des
+/// Bereichs gewählt, nicht auf einem eigenen Bildschirm – dadurch braucht
+/// der Weg von „App auf" bis „erste Aufgabe" zwei Tipper.
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  /// Höchstens ein Bereich ist offen: Zwei ausgeklappte Karten passen nicht
+  /// mehr auf den Bildschirm, und die Wahl ist ohnehin eine.
+  TrainingModule? _open;
+
+  void _openScreen(Widget screen) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(builder: (_) => screen),
+    );
+  }
+
+  void _start(SessionMode mode, PracticeScope scope) {
+    _openScreen(QuizScreen(mode: mode, scope: scope));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final stats = ref.watch(statsControllerProvider);
     final examDate = ref.watch(examDateProvider);
-    final book = ref.watch(reviewBookProvider);
+    final profile = ref.watch(profileProvider);
+    final answeredToday = ref.watch(answeredTodayProvider);
+    final isPro = ref.watch(isProProvider);
+    final lastSimulation = ref.watch(lastSimulationScoreProvider);
+    final dueErrors = ref.watch(dueReviewCountProvider);
     final side = Gap.screenPadding(MediaQuery.sizeOf(context).width);
 
-    final plan = TodaysPlan.from(
-      book: book,
-      totalAnswered: stats.totalAnswered,
-      now: DateTime.now(),
-    );
-
-    void open(Widget screen) {
-      Navigator.of(context).push(
-        MaterialPageRoute<void>(builder: (_) => screen),
-      );
-    }
-
-    void startPractice(PracticeScope scope, int length) {
-      open(
-        QuizScreen(
-          mode: SessionMode.practice,
-          scope: scope,
-          length: length,
-        ),
-      );
-    }
-
     return Scaffold(
-      body: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          ExamHeader(
-            examDate: examDate,
-            accuracy: stats.totalAnswered == 0 ? null : stats.accuracy,
-            answered: stats.totalAnswered,
-            onTapDate: () => open(const PracticeSetupScreen()),
-          ),
-          Padding(
-            padding: EdgeInsets.fromLTRB(side, Gap.section, side, Gap.section),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SectionTitle('Heute dran'),
-                PlanCard(
-                  plan: plan,
-                  onStart: () => startPractice(plan.scope, plan.length),
-                  onOther: () => open(const PracticeSetupScreen()),
-                ),
-                const SizedBox(height: Gap.md),
-                _SprintRow(
-                  best: stats.bestSprintOverall,
-                  onTap: () => open(const SprintSetupScreen()),
-                ),
-                const SizedBox(height: Gap.section),
-                const SectionTitle('Stand je Modul'),
-                for (final module in TrainingModule.values)
-                  ModuleRow(
-                    module: module,
-                    accuracy: stats.forModule(module).accuracy,
-                    // Antippen startet sofort – kein Zwischenbildschirm.
-                    onTap: () => startPractice(
-                      PracticeScope.module(module),
-                      TodaysPlan.regularLength,
+      body: SafeArea(
+        bottom: false,
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(side, 0, side, Gap.header),
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(Gap.sm, 14, Gap.sm, 18),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    profile.greeting(DateTime.now()),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: theme.colorScheme.outline,
                     ),
                   ),
-                const SizedBox(height: Gap.section),
-                const SectionTitle('Ernstfall'),
-                // Erst der kurze Weg hinein, dann der lange. Wer 45 Minuten
-                // am Stueck nicht aufbringt, soll das Format trotzdem einmal
-                // erlebt haben.
-                _TryoutRow(
-                  onTap: () => open(
-                    const SimulationScreen(
-                      blueprint: SimulationBlueprints.tryout,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: Gap.md),
-                _SimulationRow(
-                  onTap: () => open(
-                    const SimulationScreen(
-                      blueprint: SimulationBlueprints.full,
-                    ),
-                  ),
-                ),
-              ],
+                  const SizedBox(height: Gap.xs),
+                  Text(profile.headline, style: theme.textTheme.headlineLarge),
+                ],
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Der Sprint als eigene, kleinere Karte – mit seinem Bestwert, weil der
-/// der eigentliche Anreiz ist.
-class _SprintRow extends StatelessWidget {
-  const _SprintRow({required this.best, required this.onTap});
-
-  final int best;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.tokens;
-
-    return Material(
-      color: tokens.raised,
-      borderRadius: Radii.cardRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: Radii.cardRadius,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Gap.card,
-            vertical: Gap.md,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: Radii.cardRadius,
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.bolt_outlined,
-                size: 20,
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: Gap.md),
-              Expanded(
-                child: Text('Sprint · 60 s', style: theme.textTheme.titleSmall),
-              ),
-              if (best > 0)
-                Text(
-                  'Bestwert $best',
-                  style: MonoText.inline.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+            TodayBand(
+              examDate: examDate,
+              answeredToday: answeredToday,
+              goal: profile.dailyGoal,
+              onTap: () => _openScreen(const SettingsScreen()),
+            ),
+            // Die Wiederholung steht nur da, wenn es etwas zu wiederholen
+            // gibt – eine Zeile „0 Fehler" waere Fuellmaterial.
+            if (dueErrors > 0) ...[
+              const SizedBox(height: Gap.sm),
+              _ReviewRow(
+                count: dueErrors,
+                onTap: () => _start(
+                  SessionMode.practice,
+                  const PracticeScope.review(),
                 ),
-              const SizedBox(width: Gap.sm),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: theme.colorScheme.outline,
               ),
             ],
-          ),
+            const SizedBox(height: Gap.card),
+            for (final module in TrainingModule.values) ...[
+              DomainCard(
+                module: module,
+                subtitle: _subtitle(module, stats.forModule(module), isPro),
+                accuracy: stats.forModule(module).accuracy,
+                topicCount: SubCategory.of(module).length,
+                expanded: _open == module,
+                onToggle: () => setState(
+                  () => _open = _open == module ? null : module,
+                ),
+                onPractice: () => _start(
+                  SessionMode.practice,
+                  PracticeScope.module(module),
+                ),
+                onSprint: () => _start(
+                  SessionMode.sprint,
+                  PracticeScope.module(module),
+                ),
+                onTopics: () => _openScreen(CategoriesScreen(module: module)),
+              ),
+              const SizedBox(height: Gap.md),
+            ],
+            const SizedBox(height: Gap.md),
+            const SectionTitle('Testsimulation'),
+            SimulationCard(
+              blueprint: SimulationBlueprints.full,
+              lastScore: lastSimulation,
+              onStart: () => _openScreen(
+                const SimulationScreen(blueprint: SimulationBlueprints.full),
+              ),
+            ),
+            const SizedBox(height: Gap.sm),
+            TryoutRow(
+              blueprint: SimulationBlueprints.tryout,
+              onTap: () => _openScreen(
+                const SimulationScreen(blueprint: SimulationBlueprints.tryout),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-/// Der Probelauf: dieselbe Mechanik wie die Simulation, aber auf Papier
-/// statt in Tinte – er soll einladen, nicht einschüchtern.
-class _TryoutRow extends StatelessWidget {
-  const _TryoutRow({required this.onTap});
+  /// „142 Aufgaben · 64 % gemeistert" – und solange nichts geübt wurde, die
+  /// halbe Zeile statt einer Null.
+  String _subtitle(TrainingModule module, ModuleStats stats, bool isPro) {
+    final size = QuestionPool.describeSize(module, proUnlocked: isPro);
 
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.tokens;
-    const blueprint = SimulationBlueprints.tryout;
-
-    return Material(
-      color: tokens.raised,
-      borderRadius: Radii.cardRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: Radii.cardRadius,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: Gap.card,
-            vertical: Gap.md,
-          ),
-          decoration: BoxDecoration(
-            borderRadius: Radii.cardRadius,
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(blueprint.title, style: theme.textTheme.titleSmall),
-                    Text(
-                      'Ein Teil · '
-                      '${blueprint.totalDuration.inMinutes} Min · '
-                      'zum Kennenlernen',
-                      style: theme.textTheme.labelSmall,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 20,
-                color: theme.colorScheme.outline,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
+    if (stats.answered == 0) return '$size · noch nicht geübt';
+    return '$size · ${(stats.accuracy * 100).round()} % gemeistert';
   }
 }
 
-/// Die Simulation als eine Zeile in Tinte.
-class _SimulationRow extends StatelessWidget {
-  const _SimulationRow({required this.onTap});
+/// „Fehler wiederholen" – der Weg zurück zu dem, was schiefging.
+///
+/// Sitzt direkt unter dem Band, weil Wiederholen vor Neuem kommt, sobald es
+/// etwas zu wiederholen gibt.
+class _ReviewRow extends StatelessWidget {
+  const _ReviewRow({required this.count, required this.onTap});
 
+  final int count;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = context.tokens;
-    const blueprint = SimulationBlueprints.full;
 
     return Material(
-      color: tokens.ink,
-      borderRadius: Radii.cardRadius,
+      color: tokens.wrongSoft,
+      borderRadius: Radii.bandRadius,
       child: InkWell(
         onTap: onTap,
-        borderRadius: Radii.cardRadius,
+        borderRadius: Radii.bandRadius,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: Gap.card,
-            vertical: Gap.md,
+            vertical: 14,
           ),
           child: Row(
             children: [
+              Icon(Icons.replay_rounded, size: 20, color: tokens.wrong),
+              const SizedBox(width: Gap.md),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      blueprint.title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: tokens.onInk,
-                      ),
-                    ),
-                    Text(
-                      '${blueprint.parts.length} Teile · '
-                      '${blueprint.totalDuration.inMinutes} Min',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: tokens.onInk.withValues(alpha: 0.65),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Deine Fehler wiederholen',
+                  style: theme.textTheme.titleMedium,
                 ),
               ),
+              Text(
+                '$count',
+                style: NumText.inline.copyWith(color: tokens.wrong),
+              ),
+              const SizedBox(width: Gap.sm),
               Icon(
-                Icons.chevron_right,
+                Icons.chevron_right_rounded,
                 size: 20,
-                color: tokens.onInk.withValues(alpha: 0.6),
+                color: theme.colorScheme.outline,
               ),
             ],
           ),

@@ -2,8 +2,10 @@ import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/widgets/progress_section.dart';
-import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
+import 'package:einstellungstest_trainer/widgets/section_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,10 +17,12 @@ class StatsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final stats = ref.watch(statsControllerProvider);
+    final averagePace = ref.watch(averagePaceProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Statistik'),
+        title: const Text('Statistiken'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             tooltip: 'Fortschritt zurücksetzen',
@@ -29,49 +33,62 @@ class StatsScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          padding: EdgeInsets.fromLTRB(
+            Gap.screenPadding(MediaQuery.sizeOf(context).width),
+            Gap.sm,
+            Gap.screenPadding(MediaQuery.sizeOf(context).width),
+            Gap.header,
+          ),
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: StatTile(
-                    value: '${stats.totalAnswered}',
-                    label: 'Aufgaben gelöst',
-                    icon: Icons.checklist_rtl,
+            // Drei Zahlen, die den Stand beschreiben: Menge, Treffer, Tempo.
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Gap.card,
+                vertical: Gap.card,
+              ),
+              decoration: BoxDecoration(
+                color: context.tokens.sunk,
+                borderRadius: Radii.bandRadius,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _Headline(
+                      value: '${stats.totalAnswered}',
+                      label: 'Aufgaben',
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatTile(
-                    value: '${stats.totalCorrect}',
-                    label: 'davon richtig',
-                    icon: Icons.check_circle_outline,
-                    color: const Color(0xFF0E9F6E),
+                  Expanded(
+                    child: _Headline(
+                      value: stats.totalAnswered == 0
+                          ? '–'
+                          : '${(stats.accuracy * 100).round()} %',
+                      label: 'Trefferquote',
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const ProgressSection(),
-            const SizedBox(height: 24),
-            Text(
-              'Nach Modul',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
+                  Expanded(
+                    child: _Headline(
+                      value: averagePace == null
+                          ? '–'
+                          : formatShortDuration(averagePace),
+                      label: 'Ø Tempo',
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
+            const ProgressSection(),
+            const SizedBox(height: Gap.section),
+            const SectionTitle('Nach Bereich'),
             for (final module in TrainingModule.values)
               _ModuleStatsCard(module: module),
             const _SessionHistorySection(),
             if (stats.totalAnswered == 0) ...[
-              const SizedBox(height: 20),
+              const SizedBox(height: Gap.cardWide),
               Text(
                 'Noch keine Daten. Starte eine Übungsrunde – die Ergebnisse '
                 'werden automatisch auf diesem Gerät gespeichert.',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                  height: 1.45,
-                ),
+                style: theme.textTheme.bodyMedium,
               ),
             ],
           ],
@@ -123,7 +140,7 @@ class _ModuleStatsCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -154,7 +171,7 @@ class _ModuleStatsCard extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(Radii.pill),
             child: LinearProgressIndicator(
               value: stats.accuracy,
               minHeight: 6,
@@ -247,7 +264,7 @@ class _SessionTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Row(
@@ -316,6 +333,31 @@ class _MiniStat extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Eine der drei Kopfzahlen der Statistik.
+class _Headline extends StatelessWidget {
+  const _Headline({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: NumText.metric.copyWith(color: theme.colorScheme.onSurface),
+        ),
+        Text(label, style: theme.textTheme.labelSmall),
+      ],
     );
   }
 }

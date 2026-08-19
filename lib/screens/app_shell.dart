@@ -1,8 +1,7 @@
 import 'package:einstellungstest_trainer/screens/home_screen.dart';
-import 'package:einstellungstest_trainer/screens/more_screen.dart';
+import 'package:einstellungstest_trainer/screens/settings_screen.dart';
 import 'package:einstellungstest_trainer/screens/onboarding_screen.dart';
 import 'package:einstellungstest_trainer/screens/stats_screen.dart';
-import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,13 +21,21 @@ class _AppShellState extends ConsumerState<AppShell> {
   int _tab = 0;
 
   static const _tabs = [
-    (icon: Icons.home_outlined, active: Icons.home, label: 'Start'),
+    (
+      icon: Icons.grid_view_outlined,
+      active: Icons.grid_view_rounded,
+      label: 'Hauptmenü',
+    ),
     (
       icon: Icons.insights_outlined,
       active: Icons.insights,
-      label: 'Statistik'
+      label: 'Statistiken',
     ),
-    (icon: Icons.more_horiz, active: Icons.more_horiz, label: 'Mehr'),
+    (
+      icon: Icons.settings_outlined,
+      active: Icons.settings,
+      label: 'Einstellungen',
+    ),
   ];
 
   @override
@@ -38,7 +45,6 @@ class _AppShellState extends ConsumerState<AppShell> {
     }
 
     final theme = Theme.of(context);
-    final tokens = context.tokens;
 
     return Scaffold(
       body: IndexedStack(
@@ -46,7 +52,7 @@ class _AppShellState extends ConsumerState<AppShell> {
         children: const [
           HomeScreen(),
           StatsScreen(),
-          MoreScreen(),
+          SettingsScreen(embedded: true),
         ],
       ),
       bottomNavigationBar: DecoratedBox(
@@ -58,12 +64,6 @@ class _AppShellState extends ConsumerState<AppShell> {
         child: NavigationBar(
           selectedIndex: _tab,
           onDestinationSelected: (index) => setState(() => _tab = index),
-          backgroundColor: tokens.paper,
-          surfaceTintColor: Colors.transparent,
-          indicatorColor: tokens.sunk,
-          elevation: 0,
-          height: 64,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           destinations: [
             for (final tab in _tabs)
               NavigationDestination(

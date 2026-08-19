@@ -1,8 +1,10 @@
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/quiz_session.dart';
-import 'package:einstellungstest_trainer/models/todays_plan.dart';
+import 'package:einstellungstest_trainer/models/session_mode.dart';
+import 'package:einstellungstest_trainer/models/training_module.dart';
 import 'package:einstellungstest_trainer/screens/quiz_screen.dart';
 import 'package:einstellungstest_trainer/services/exam_date_controller.dart';
+import 'package:einstellungstest_trainer/services/profile_controller.dart';
 import 'package:einstellungstest_trainer/services/providers.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
@@ -23,23 +25,69 @@ class OnboardingController extends Notifier<bool> {
     await ref.read(storageServiceProvider).setOnboardingDone(true);
   }
 
-  /// Für den Eintrag „So funktioniert die App" unter „Mehr": Die Einführung
-  /// lässt sich noch einmal ansehen, ohne den Fortschritt anzufassen.
+  /// Für den Eintrag „Einführung erneut ansehen" in den Einstellungen.
   Future<void> replay() async {
     await ref.read(storageServiceProvider).setOnboardingDone(false);
     state = false;
   }
 }
 
-/// Die Einführung: drei Schritte, dann direkt in die erste Runde.
+/// Ein Schritt der Einführung: ein Zeichen, ein Satz, ein Absatz.
+class _Step {
+  const _Step({
+    required this.glyph,
+    required this.module,
+    required this.title,
+    required this.text,
+    this.icon,
+  });
+
+  /// Das große Zeichen auf der Kachel. Leer, wenn ein [icon] gesetzt ist.
+  final String glyph;
+  final IconData? icon;
+
+  /// Woher die Kachel ihre Farbe nimmt.
+  final TrainingModule module;
+
+  final String title;
+  final String text;
+}
+
+const List<_Step> _steps = [
+  _Step(
+    glyph: '3',
+    module: TrainingModule.math,
+    title: 'Drei Bereiche, ein Ziel',
+    text: 'Mathematik, Logik und Sprache – genau die Aufgabentypen, die in '
+        'Einstellungstests wirklich vorkommen.',
+  ),
+  _Step(
+    glyph: '60',
+    module: TrainingModule.logic,
+    title: 'Üben oder Sprint',
+    text: 'In Ruhe lernen mit Lösungsweg – oder im 60-Sekunden-Sprint Tempo '
+        'aufbauen.',
+  ),
+  _Step(
+    // Das Häkchen führt keine der beiden Schriften, deshalb als Symbol.
+    glyph: '',
+    icon: Icons.check_rounded,
+    module: TrainingModule.language,
+    title: 'Der Ernstfall zum Üben',
+    text: 'Die Testsimulation kombiniert alle Bereiche unter echten '
+        'Zeitvorgaben – ohne Lösungen, mit laufender Uhr.',
+  ),
+];
+
+/// Die Einführung: drei Schritte, die die App erklären, ein vierter, der
+/// nach Namen und Termin fragt – und danach sofort die erste Runde.
 ///
-/// Bewusst kein vierter Bildschirm mit „Los geht's" – man versteht die App
-/// beim Tun, nicht beim Lesen. Deshalb endet die Einführung nicht auf der
-/// Startseite, sondern in einer echten Übungsrunde.
+/// Der vierte Schritt steht bewusst am Ende: Wer noch nicht weiß, was die
+/// App tut, kann mit der Frage nach einem Prüfungstermin nichts anfangen.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key, this.replayOnly = false});
 
-  /// Beim Wiederansehen aus „Mehr" wird am Ende nichts gestartet.
+  /// Beim Wiederansehen aus den Einstellungen wird am Ende nichts gestartet.
   final bool replayOnly;
 
   @override
@@ -47,26 +95,33 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  final _pages = PageController();
+  final _name = TextEditingController();
   int _step = 0;
-  bool? _hasExam;
   DateTime? _pickedDate;
 
-  static const int _steps = 3;
+  /// Wie viele Aufgaben die erste Runde hat. Kurz genug, um sie zu Ende zu
+  /// bringen, lang genug, um alle drei Bereiche zu zeigen.
+  static const int firstRoundLength = 10;
+
+  int get _lastStep => _steps.length;
 
   @override
   void dispose() {
-    _pages.dispose();
+    _name.dispose();
     super.dispose();
   }
 
-  void _goTo(int step) {
-    setState(() => _step = step);
-    _pages.animateToPage(
-      step,
-      duration: const Duration(milliseconds: 240),
-      curve: Curves.easeOut,
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: now.add(const Duration(days: 30)),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 365 * 2)),
+      helpText: 'Testtermin wählen',
     );
+
+    if (picked != null) setState(() => _pickedDate = picked);
   }
 
   Future<void> _finish() async {
@@ -74,6 +129,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (date != null) {
       await ref.read(examDateProvider.notifier).set(date);
     }
+    await ref.read(profileProvider.notifier).setName(_name.text);
     await ref.read(onboardingDoneProvider.notifier).complete();
 
     if (!mounted) return;
@@ -83,273 +139,91 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       return;
     }
 
-    // Direkt in die erste Runde statt auf die Startseite.
-    Navigator.of(context).pushReplacement(
+    // Direkt in die erste Runde statt ins Hauptmenü: Man versteht die App
+    // beim Tun, nicht beim Lesen. Aufgesetzt und nicht ersetzt – darunter
+    // liegt der Rahmen, der jetzt das Hauptmenü zeigt, und dorthin führt der
+    // Weg nach der Runde zurück.
+    Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => const QuizScreen(
           mode: SessionMode.practice,
           scope: PracticeScope.mixed(),
-          length: TodaysPlan.firstRoundLength,
+          length: firstRoundLength,
         ),
       ),
     );
   }
 
+  void _next() {
+    if (_step == _lastStep) {
+      _finish();
+      return;
+    }
+    setState(() => _step += 1);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final tokens = context.tokens;
+    final theme = Theme.of(context);
+    final onLast = _step == _lastStep;
 
     return Scaffold(
-      backgroundColor: tokens.ink,
       body: SafeArea(
-        child: Column(
-          children: [
-            _StepBar(step: _step, steps: _steps),
-            Expanded(
-              child: PageView(
-                controller: _pages,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  const _WhatItDoes(),
-                  _GoalStep(
-                    selected: _hasExam,
-                    onSelect: (value) {
-                      setState(() => _hasExam = value);
-                      _goTo(2);
-                    },
-                  ),
-                  _DateStep(
-                    hasExam: _hasExam ?? false,
-                    picked: _pickedDate,
-                    onPick: (value) => setState(() => _pickedDate = value),
-                  ),
-                ],
-              ),
-            ),
-            _Actions(
-              step: _step,
-              canContinue: _step != 1 || _hasExam != null,
-              onBack: _step == 0 ? null : () => _goTo(_step - 1),
-              onNext: _step == _steps - 1 ? _finish : () => _goTo(_step + 1),
-              lastLabel: widget.replayOnly
-                  ? 'Fertig'
-                  : 'Erste Runde starten',
-              isLast: _step == _steps - 1,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Fortschritt der Einführung – drei Striche, kein Text.
-class _StepBar extends StatelessWidget {
-  const _StepBar({required this.step, required this.steps});
-
-  final int step;
-  final int steps;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        Gap.screen,
-        Gap.card,
-        Gap.screen,
-        Gap.sm,
-      ),
-      child: Row(
-        children: [
-          for (var index = 0; index < steps; index++) ...[
-            if (index > 0) const SizedBox(width: Gap.xs),
-            Expanded(
-              child: Container(
-                height: 3,
-                decoration: BoxDecoration(
-                  color: index <= step
-                      ? tokens.onInk
-                      : tokens.onInk.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// Schritt 1: Was die App macht. Ein Satz je Zeile, keine Absätze.
-class _WhatItDoes extends StatelessWidget {
-  const _WhatItDoes();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.tokens;
-
-    const points = [
-      (Icons.school_outlined, 'Üben', 'Mit Lösung und Rechenweg nach jeder '
-          'Antwort.'),
-      (Icons.bolt_outlined, 'Sprint', '60 Sekunden Tempo auf einen '
-          'Aufgabentyp.'),
-      (Icons.timer_outlined, 'Ernstfall', 'Ein kompletter Test unter Zeit – '
-          'ohne Lösungen zwischendurch.'),
-    ];
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.screen),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: Gap.header),
-          Text(
-            'Drei Wege zum Test',
-            style: theme.textTheme.headlineSmall?.copyWith(color: tokens.onInk),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            Gap.section,
+            0,
+            Gap.section,
+            Gap.section,
           ),
-          const SizedBox(height: Gap.section),
-          for (final (icon, title, text) in points)
-            Padding(
-              padding: const EdgeInsets.only(bottom: Gap.section),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(icon, color: tokens.onInk, size: 22),
-                  const SizedBox(width: Gap.card),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: theme.textTheme.titleSmall?.copyWith(
-                            color: tokens.onInk,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          text,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: tokens.onInk.withValues(alpha: 0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Schritt 2: Prüfungstermin oder freies Üben.
-class _GoalStep extends StatelessWidget {
-  const _GoalStep({required this.selected, required this.onSelect});
-
-  final bool? selected;
-  final ValueChanged<bool> onSelect;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.tokens;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.screen),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const SizedBox(height: Gap.header),
-          Text(
-            'Hast du schon einen Termin?',
-            style: theme.textTheme.headlineSmall?.copyWith(color: tokens.onInk),
-          ),
-          const SizedBox(height: Gap.section),
-          _Choice(
-            title: 'Ja, ich habe einen Prüfungstermin',
-            subtitle: 'Du siehst dann einen Countdown und wirst erinnert.',
-            selected: selected == true,
-            onTap: () => onSelect(true),
-          ),
-          const SizedBox(height: Gap.md),
-          _Choice(
-            title: 'Nein, ich übe erst mal',
-            subtitle: 'Geht genauso – du kannst den Termin später eintragen.',
-            selected: selected == false,
-            onTap: () => onSelect(false),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Choice extends StatelessWidget {
-  const _Choice({
-    required this.title,
-    required this.subtitle,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String title;
-  final String subtitle;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = context.tokens;
-
-    return Material(
-      color: selected
-          ? tokens.onInk.withValues(alpha: 0.14)
-          : Colors.transparent,
-      borderRadius: Radii.cardRadius,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: Radii.cardRadius,
-        child: Container(
-          padding: const EdgeInsets.all(Gap.card),
-          decoration: BoxDecoration(
-            borderRadius: Radii.cardRadius,
-            border: Border.all(
-              color: tokens.onInk.withValues(alpha: selected ? 0.9 : 0.3),
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              SizedBox(
+                height: 64,
+                child: Row(
                   children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        color: tokens.onInk,
+                    for (var index = 0; index <= _lastStep; index++)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          width: 24,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: index <= _step
+                                ? theme.colorScheme.onSurface
+                                : context.tokens.sunk,
+                            borderRadius: BorderRadius.circular(Radii.pill),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: tokens.onInk.withValues(alpha: 0.7),
-                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: _finish,
+                      child: const Text('Überspringen'),
                     ),
                   ],
                 ),
               ),
-              if (selected)
-                Icon(Icons.check, color: tokens.onInk, size: 20),
+              Expanded(
+                child: onLast
+                    ? _AboutYou(
+                        name: _name,
+                        pickedDate: _pickedDate,
+                        onPickDate: _pickDate,
+                        onClearDate: () => setState(() => _pickedDate = null),
+                      )
+                    : _Explainer(step: _steps[_step]),
+              ),
+              FilledButton(
+                onPressed: _next,
+                child: Text(
+                  onLast
+                      ? (widget.replayOnly ? 'Fertig' : 'Erste Runde starten')
+                      : 'Weiter',
+                ),
+              ),
             ],
           ),
         ),
@@ -358,146 +232,142 @@ class _Choice extends StatelessWidget {
   }
 }
 
-/// Schritt 3: Datum wählen – oder überspringen, wenn kein Termin ansteht.
-class _DateStep extends StatelessWidget {
-  const _DateStep({
-    required this.hasExam,
-    required this.picked,
-    required this.onPick,
+/// Einer der drei erklärenden Schritte.
+class _Explainer extends StatelessWidget {
+  const _Explainer({required this.step});
+
+  final _Step step;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = step.module.palette(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 148,
+          height: 148,
+          decoration: BoxDecoration(
+            color: palette.soft,
+            borderRadius: BorderRadius.circular(40),
+          ),
+          alignment: Alignment.center,
+          child: step.icon != null
+              ? Icon(step.icon, size: 62, color: palette.deep)
+              : Text(
+                  step.glyph,
+                  style: TextStyle(
+                    fontFamily: AppFonts.display,
+                    fontFamilyFallback: AppFonts.displayFallback,
+                    fontSize: 58,
+                    height: 1,
+                    fontWeight: FontWeight.w700,
+                    color: palette.deep,
+                  ),
+                ),
+        ),
+        const SizedBox(height: Gap.header),
+        Text(step.title, style: theme.textTheme.displayLarge),
+        const SizedBox(height: Gap.card),
+        Text(step.text, style: theme.textTheme.bodyLarge),
+      ],
+    );
+  }
+}
+
+/// Der letzte Schritt: Name und Termin, beides freiwillig.
+class _AboutYou extends StatelessWidget {
+  const _AboutYou({
+    required this.name,
+    required this.pickedDate,
+    required this.onPickDate,
+    required this.onClearDate,
   });
 
-  final bool hasExam;
-  final DateTime? picked;
-  final ValueChanged<DateTime> onPick;
+  final TextEditingController name;
+  final DateTime? pickedDate;
+  final VoidCallback onPickDate;
+  final VoidCallback onClearDate;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final tokens = context.tokens;
+    final date = pickedDate;
 
-    if (!hasExam) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: Gap.screen),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: Gap.header),
-            Text(
-              'Dann legen wir los',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: tokens.onInk,
-              ),
-            ),
-            const SizedBox(height: Gap.md),
-            Text(
-              'Die erste Runde ist kurz und geht quer durch alle Bereiche. '
-              'Danach schlägt dir die App vor, woran du arbeiten solltest.',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: tokens.onInk.withValues(alpha: 0.75),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Gap.screen),
+    return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const SizedBox(height: Gap.header),
+          const SizedBox(height: Gap.section),
+          Text('Damit wir uns kennen', style: theme.textTheme.displayLarge),
+          const SizedBox(height: Gap.card),
           Text(
-            'Wann ist es so weit?',
-            style: theme.textTheme.headlineSmall?.copyWith(color: tokens.onInk),
+            'Beides ist freiwillig und bleibt auf deinem Gerät.',
+            style: theme.textTheme.bodyLarge,
+          ),
+          const SizedBox(height: Gap.header),
+          TextField(
+            controller: name,
+            textCapitalization: TextCapitalization.words,
+            decoration: const InputDecoration(
+              labelText: 'Vorname',
+              hintText: 'für die Begrüßung',
+            ),
           ),
           const SizedBox(height: Gap.section),
-          if (picked != null) ...[
-            Text(
-              '${picked!.day.toString().padLeft(2, '0')}.'
-              '${picked!.month.toString().padLeft(2, '0')}.${picked!.year}',
-              style: MonoText.display.copyWith(color: tokens.onInk),
+          Text('Hast du schon einen Testtermin?',
+              style: theme.textTheme.titleLarge),
+          const SizedBox(height: Gap.md),
+          if (date == null)
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onPickDate,
+                    child: const Text('Ja, Datum wählen'),
+                  ),
+                ),
+              ],
+            )
+          else
+            Material(
+              color: tokens.band,
+              borderRadius: Radii.bandRadius,
+              child: InkWell(
+                onTap: onPickDate,
+                borderRadius: Radii.bandRadius,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: Gap.card,
+                    vertical: Gap.card,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${date.day.toString().padLeft(2, '0')}.'
+                          '${date.month.toString().padLeft(2, '0')}.'
+                          '${date.year}',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: onClearDate,
+                        child: const Text('Entfernen'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: Gap.sm),
-          ],
-          OutlinedButton(
-            onPressed: () async {
-              final now = DateTime.now();
-              final result = await showDatePicker(
-                context: context,
-                initialDate: picked ?? now.add(const Duration(days: 30)),
-                firstDate: now,
-                lastDate: now.add(const Duration(days: 730)),
-                helpText: 'Wann ist dein Einstellungstest?',
-              );
-              if (result != null) onPick(result);
-            },
-            style: OutlinedButton.styleFrom(
-              foregroundColor: tokens.onInk,
-              side: BorderSide(color: tokens.onInk.withValues(alpha: 0.4)),
-            ),
-            child: Text(picked == null ? 'Datum wählen' : 'Datum ändern'),
-          ),
           const SizedBox(height: Gap.md),
           Text(
-            'Ohne Datum geht es auch – du kannst es später eintragen.',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: tokens.onInk.withValues(alpha: 0.6),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.step,
-    required this.canContinue,
-    required this.onBack,
-    required this.onNext,
-    required this.lastLabel,
-    required this.isLast,
-  });
-
-  final int step;
-  final bool canContinue;
-  final VoidCallback? onBack;
-  final VoidCallback onNext;
-  final String lastLabel;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    final tokens = context.tokens;
-
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        Gap.screen,
-        Gap.md,
-        Gap.screen,
-        Gap.screen,
-      ),
-      child: Row(
-        children: [
-          if (onBack != null)
-            TextButton(
-              onPressed: onBack,
-              style: TextButton.styleFrom(
-                foregroundColor: tokens.onInk.withValues(alpha: 0.7),
-              ),
-              child: const Text('Zurück'),
-            ),
-          const Spacer(),
-          FilledButton(
-            onPressed: canContinue ? onNext : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: tokens.onInk,
-              foregroundColor: tokens.ink,
-              minimumSize: const Size(160, 52),
-            ),
-            child: Text(isLast ? lastLabel : 'Weiter'),
+            'Ohne Termin zählt die App stattdessen dein Tagesziel mit.',
+            style: theme.textTheme.bodySmall,
           ),
         ],
       ),

@@ -11,45 +11,63 @@ enum TrainingModule {
   math(
     id: 'math',
     label: 'Mathematik',
+    menuLabel: 'Mathematik',
     shortLabel: 'Mathe',
     description: 'Grundrechnen, Dreisatz, Prozent- und Textaufgaben',
     icon: Icons.calculate_outlined,
-    color: Color(0xFF2F6FED),
+    glyph: '×',
+    color: Color(0xFF4087DE),
   ),
   logic(
     id: 'logic',
     label: 'Logisches Denken',
+    menuLabel: 'Logik',
     shortLabel: 'Logik',
     description: 'Zahlenreihen, Analogien, Muster und Schlussfolgerungen',
     icon: Icons.extension_outlined,
-    // Rostrot statt des frueheren Lila: Lila und das Blau von Mathematik
-    // waren fuer Rot-Gruen-Blinde nicht zu unterscheiden (Delta E 2,3 unter
-    // Deuteranopie). Diese Palette besteht die Pruefung in hell und dunkel.
-    color: Color(0xFFC2410C),
+    // Die Raute des Entwurfs fuehrt keine der beiden Schriften; sie wird
+    // deshalb gezeichnet, nicht gesetzt (siehe ModuleGlyph).
+    glyph: '',
+    color: Color(0xFF0FA05C),
   ),
   language(
     id: 'language',
     label: 'Sprache',
+    menuLabel: 'Sprache',
     shortLabel: 'Sprache',
     description: 'Rechtschreibung, Grammatik, Wortschatz und Textverstaendnis',
     icon: Icons.menu_book_outlined,
-    color: Color(0xFF0E9F6E),
+    glyph: 'Aa',
+    color: Color(0xFFCD632D),
   );
 
   const TrainingModule({
     required this.id,
     required this.label,
+    required this.menuLabel,
     required this.shortLabel,
     required this.description,
     required this.icon,
+    required this.glyph,
     required this.color,
   });
 
   final String id;
   final String label;
+
+  /// Der Name im Hauptmenue: kurz genug fuer eine Zeile, aber nicht
+  /// abgekuerzt – „Logisches Denken" bricht dort um, „Logik" nicht.
+  final String menuLabel;
+
   final String shortLabel;
   final String description;
   final IconData icon;
+
+  /// Das Zeichen auf der Bereichskachel. Leer heisst: gezeichnet statt
+  /// gesetzt.
+  final String glyph;
+
+  /// Die Bereichsfarbe im Hellmodus – fuer Stellen ohne BuildContext.
   final Color color;
 
   static TrainingModule fromId(String id) {
@@ -59,12 +77,8 @@ enum TrainingModule {
     );
   }
 
-  /// Die Modulfarbe im aktuellen Hell-/Dunkelmodus.
-  ///
-  /// [color] bleibt der Hellmodus-Wert und wird dort weiter verwendet, wo
-  /// kein BuildContext zur Hand ist. Im Dunkeln braucht dieselbe Farbe einen
-  /// helleren Schritt, sonst verschwindet sie auf der dunklen Flaeche.
-  Color resolveColor(BuildContext context) {
+  /// Die drei Farben des Bereichs im aktuellen Hell-/Dunkelmodus.
+  ModulePalette palette(BuildContext context) {
     final tokens = context.tokens;
     return switch (this) {
       TrainingModule.math => tokens.math,
@@ -72,4 +86,7 @@ enum TrainingModule {
       TrainingModule.language => tokens.language,
     };
   }
+
+  /// Die Bereichsfarbe im aktuellen Hell-/Dunkelmodus.
+  Color resolveColor(BuildContext context) => palette(context).accent;
 }

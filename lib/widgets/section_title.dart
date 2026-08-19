@@ -2,41 +2,33 @@ import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
-/// Abschnittsüberschrift: gesperrte Versalien in Mono.
+/// Beschriftung über einem Abschnitt: gesperrt, klein, in Versalien.
 ///
-/// Kein fetter Fließtext mehr – die Überschrift soll als Beschriftung
-/// erkennbar sein und nicht mit dem Inhalt konkurrieren.
+/// Sie ist eine Marke, kein Satz – deshalb keine Überschrift in Lesegröße,
+/// sondern eine Zeile, die man überliest, bis man sie sucht.
 class SectionTitle extends StatelessWidget {
-  const SectionTitle(this.title, {super.key, this.trailing});
+  const SectionTitle(this.text, {super.key, this.trailing});
 
-  final String title;
+  final String text;
 
-  /// Kleiner Zusatz rechts, etwa „alle Themen".
-  final String? trailing;
+  /// Optional rechts daneben, etwa „alle" als Verweis auf die volle Liste.
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: Gap.md),
+      padding: const EdgeInsets.fromLTRB(Gap.sm, 0, Gap.sm, Gap.md),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
         children: [
-          Text(
-            title.toUpperCase(),
-            style: MonoText.kicker.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
+          Expanded(
+            child: Text(
+              text.toUpperCase(),
+              style: NumText.kicker.copyWith(color: theme.colorScheme.outline),
             ),
           ),
-          if (trailing != null) ...[
-            const Spacer(),
-            Text(
-              trailing!,
-              style: theme.textTheme.labelSmall,
-            ),
-          ],
+          if (trailing != null) trailing!,
         ],
       ),
     );

@@ -1,3 +1,5 @@
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Formatiert Sekunden als "M:SS" bzw. "MM:SS".
@@ -15,10 +17,46 @@ String formatShortDuration(Duration duration) {
   return seconds < 60 ? '$seconds s' : '${formatMmSs(seconds)} min';
 }
 
-/// Countdown-Anzeige fuer Sprint und Testsimulation.
+/// Der Countdown als Pille in der Kopfzeile.
 ///
-/// Faerbt sich in den letzten 10 Sekunden warnend ein - das ist der Moment,
-/// in dem im echten Test die meisten Fehler passieren.
+/// Faerbt sich in den letzten zehn Sekunden warnend ein – das ist der
+/// Moment, in dem im echten Test die meisten Fehler passieren.
+class TimerPill extends StatelessWidget {
+  const TimerPill({super.key, required this.remainingSeconds});
+
+  final int remainingSeconds;
+
+  static const int warningThreshold = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+    final isWarning = remainingSeconds <= warningThreshold;
+
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: isWarning ? tokens.wrong : tokens.sunk,
+        borderRadius: BorderRadius.circular(Radii.pill),
+      ),
+      child: Text(
+        formatMmSs(remainingSeconds),
+        style: NumText.inline.copyWith(
+          fontSize: 15,
+          color: isWarning ? Colors.white : theme.colorScheme.onSurface,
+        ),
+      ),
+    );
+  }
+}
+
+/// Der Countdown eines Testteils: Zeile mit Namen, Zeit und Balken.
+///
+/// In der Simulation steht mehr Zeit auf der Uhr als im Sprint, und der
+/// Teil hat einen Namen – deshalb hier die breite Form.
 class TimerBar extends StatelessWidget {
   const TimerBar({
     super.key,
@@ -37,7 +75,8 @@ class TimerBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isWarning = remainingSeconds <= warningThreshold;
-    final color = isWarning ? theme.colorScheme.error : theme.colorScheme.primary;
+    final color =
+        isWarning ? theme.colorScheme.error : theme.colorScheme.onSurface;
     final progress = totalSeconds == 0
         ? 0.0
         : (remainingSeconds / totalSeconds).clamp(0.0, 1.0);
@@ -56,21 +95,17 @@ class TimerBar extends StatelessWidget {
             ),
             Text(
               formatMmSs(remainingSeconds),
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: color,
-                fontWeight: FontWeight.w700,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
+              style: NumText.inline.copyWith(fontSize: 16, color: color),
             ),
           ],
         ),
         const SizedBox(height: 6),
         ClipRRect(
-          borderRadius: BorderRadius.circular(99),
+          borderRadius: BorderRadius.circular(Radii.pill),
           child: LinearProgressIndicator(
             value: progress,
-            minHeight: 6,
-            backgroundColor: theme.colorScheme.surfaceContainerHighest,
+            minHeight: 5,
+            backgroundColor: theme.colorScheme.surfaceContainerHigh,
             valueColor: AlwaysStoppedAnimation<Color>(color),
           ),
         ),

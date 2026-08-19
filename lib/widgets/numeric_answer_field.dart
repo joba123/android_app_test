@@ -1,4 +1,5 @@
 import 'package:einstellungstest_trainer/models/question.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -77,8 +78,8 @@ class _NumericAnswerFieldState extends State<NumericAnswerField> {
                   hintText: 'Ergebnis eingeben',
                   suffixText: widget.format.unit,
                   errorText: _showError ? 'Bitte eine Zahl eingeben' : null,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  border: const OutlineInputBorder(
+                    borderRadius: Radii.bandRadius,
                   ),
                 ),
               ),
@@ -90,8 +91,8 @@ class _NumericAnswerFieldState extends State<NumericAnswerField> {
                 onPressed: _submit,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(96, 58),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: Radii.bandRadius,
                   ),
                 ),
                 child: const Text('Prüfen'),
@@ -129,14 +130,14 @@ class NumericAnswerSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = isCorrect ? const Color(0xFF0E9F6E) : theme.colorScheme.error;
+    final color = isCorrect ? context.tokens.correct : theme.colorScheme.error;
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(

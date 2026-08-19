@@ -1,3 +1,4 @@
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
@@ -21,28 +22,35 @@ enum AnswerOptionState {
 
 /// Eine anklickbare Antwortmöglichkeit.
 ///
-/// Jeder Zustand ist **vierfach** unterschieden: über die Farbe, über die
-/// Glyphe im Marker, über ein Wort am Ende und über die Textauszeichnung. So
-/// bleibt die Rückmeldung auch bei Farbfehlsichtigkeit und im Sonnenlicht
-/// lesbar – Farbe allein trägt hier nie eine Bedeutung.
+/// Der Zustand ist dreifach unterschieden: über die Fläche, über den
+/// Buchstabenmarker und über eine Glyphe am Ende. Farbe allein trägt hier
+/// nie eine Bedeutung – im Sonnenlicht und bei Farbfehlsichtigkeit bliebe
+/// sonst nichts übrig.
 ///
-/// Die Glyphen sind Material-Icons und keine Textzeichen: ✓ und ✕ fehlen im
-/// gebündelten Schriftschnitt und würden auf eine Systemschrift zurückfallen.
+/// Die Glyphen sind Material-Icons und keine Textzeichen: ✓ und ✕ fehlen in
+/// den gebündelten Schriftschnitten.
 class AnswerOptionTile extends StatelessWidget {
   const AnswerOptionTile({
     super.key,
     required this.label,
     required this.text,
     required this.state,
+    this.accent,
     this.onTap,
   });
 
   final String label;
   final String text;
   final AnswerOptionState state;
+
+  /// Die Farbe des Bereichs, zu dem die Aufgabe gehört. Ohne Angabe die
+  /// Schriftfarbe – dann trägt nur die Form.
+  final ModulePalette? accent;
+
   final VoidCallback? onTap;
 
-  /// Das Wort, das den Zustand benennt. `null` heißt: nichts zu sagen.
+  /// Das Wort, das den Zustand benennt – für Vorlesehilfen, nicht fürs Auge.
+  /// Sichtbar tragen den Zustand Fläche, Rand und Glyphe.
   static String? wordFor(AnswerOptionState state) => switch (state) {
         AnswerOptionState.correct => 'richtig',
         AnswerOptionState.wrong => 'deine Antwort',
@@ -53,149 +61,118 @@ class AnswerOptionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
     final tokens = context.tokens;
+    final palette = accent ?? tokens.math;
 
-    final (Color background, Color accent, Color foreground) = switch (state) {
+    // Fläche, Rand, Markerfläche, Markerschrift.
+    final (Color background, Color border, Color badge, Color onBadge) =
+        switch (state) {
       AnswerOptionState.idle => (
           tokens.raised,
-          scheme.outlineVariant,
-          scheme.onSurface,
+          theme.colorScheme.outlineVariant,
+          tokens.sunk,
+          theme.colorScheme.outline,
         ),
       AnswerOptionState.selected => (
-          tokens.sunk,
-          tokens.ink,
-          scheme.onSurface,
+          palette.soft,
+          palette.accent,
+          palette.accent,
+          Colors.white,
         ),
       AnswerOptionState.correct => (
-          tokens.raised,
-          tokens.correct,
-          tokens.correct,
+          palette.soft,
+          palette.accent,
+          palette.accent,
+          Colors.white,
         ),
       AnswerOptionState.wrong => (
-          tokens.raised,
+          tokens.wrongSoft,
           tokens.wrong,
           tokens.wrong,
+          Colors.white,
         ),
       AnswerOptionState.dimmed => (
           tokens.raised,
-          scheme.outlineVariant,
-          scheme.onSurfaceVariant,
+          theme.colorScheme.outlineVariant,
+          tokens.sunk,
+          theme.colorScheme.outline,
         ),
     };
 
-    // Der Marker traegt entweder den Buchstaben oder die Zustandsglyphe.
-    final markerIcon = switch (state) {
-      AnswerOptionState.correct => Icons.check,
-      AnswerOptionState.wrong => Icons.close,
+    final mark = switch (state) {
+      AnswerOptionState.correct => Icons.check_rounded,
+      AnswerOptionState.wrong => Icons.close_rounded,
       _ => null,
     };
 
+    final dimmed = state == AnswerOptionState.dimmed;
+
     final word = wordFor(state);
-    final emphasised =
-        state == AnswerOptionState.correct || state == AnswerOptionState.wrong;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: Gap.sm),
-      child: Material(
-        color: background,
-        borderRadius: Radii.inputRadius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: Radii.inputRadius,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: Gap.md,
-              vertical: 14,
-            ),
-            decoration: BoxDecoration(
-              borderRadius: Radii.inputRadius,
-              border: Border.all(
-                color: accent,
-                width: state == AnswerOptionState.idle ? 1 : 1.5,
+      padding: const EdgeInsets.only(bottom: 9),
+      child: Semantics(
+        container: true,
+        button: onTap != null,
+        label: word == null ? '$label. $text' : '$label. $text, $word',
+        child: ExcludeSemantics(
+          child: Opacity(
+            opacity: dimmed ? 0.55 : 1,
+            child: Material(
+              color: background,
+              borderRadius: Radii.bandRadius,
+              child: InkWell(
+                onTap: onTap,
+                borderRadius: Radii.bandRadius,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 60),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: Radii.bandRadius,
+                    border: Border.all(color: border, width: 1.5),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: badge,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          label,
+                          style: NumText.inline.copyWith(
+                            fontSize: 13,
+                            color: onBadge,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          text,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                      if (mark != null) ...[
+                        const SizedBox(width: Gap.sm),
+                        Icon(mark, size: 20, color: badge),
+                      ],
+                    ],
+                  ),
+                ),
               ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                _Marker(
-                  label: label,
-                  icon: markerIcon,
-                  accent: accent,
-                  filled: emphasised || state == AnswerOptionState.selected,
-                ),
-                const SizedBox(width: Gap.md),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: theme.textTheme.bodyLarge?.copyWith(
-                      color: foreground,
-                      fontWeight:
-                          emphasised ? FontWeight.w600 : FontWeight.w400,
-                    ),
-                  ),
-                ),
-                if (word != null) ...[
-                  const SizedBox(width: Gap.sm),
-                  Text(
-                    word,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: emphasised ? accent : scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
             ),
           ),
         ),
       ),
-    );
-  }
-}
-
-/// Buchstaben-Marker, im aufgedeckten Zustand mit Glyphe statt Buchstabe.
-class _Marker extends StatelessWidget {
-  const _Marker({
-    required this.label,
-    required this.icon,
-    required this.accent,
-    required this.filled,
-  });
-
-  final String label;
-  final IconData? icon;
-  final Color accent;
-  final bool filled;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: 28,
-      height: 28,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: filled ? accent : Colors.transparent,
-        borderRadius: Radii.inputRadius,
-        border: Border.all(color: accent),
-      ),
-      child: icon != null
-          ? Icon(
-              icon,
-              size: 18,
-              color: filled
-                  ? theme.colorScheme.surface
-                  : accent,
-            )
-          : Text(
-              label,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: filled ? theme.colorScheme.surface : accent,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
     );
   }
 }

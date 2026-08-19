@@ -2,6 +2,7 @@ import 'package:einstellungstest_trainer/data/question_pool.dart';
 import 'package:einstellungstest_trainer/models/practice_scope.dart';
 import 'package:einstellungstest_trainer/models/sub_category.dart';
 import 'package:einstellungstest_trainer/models/training_module.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
 import 'package:flutter/material.dart';
 
 /// Auswahlliste für einen Übungs- bzw. Sprint-Umfang.
@@ -122,14 +123,14 @@ class _ScopeTile extends StatelessWidget {
         color: selected
             ? color.withValues(alpha: 0.10)
             : theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.bandRadius,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: Radii.bandRadius,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: Radii.bandRadius,
               border: Border.all(
                 color: selected ? color : theme.colorScheme.outlineVariant,
                 width: selected ? 1.6 : 1,

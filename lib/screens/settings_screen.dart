@@ -9,135 +9,506 @@ import 'package:einstellungstest_trainer/services/notifications/reminder_control
 import 'package:einstellungstest_trainer/services/notifications/reminder_service.dart';
 import 'package:einstellungstest_trainer/services/purchase/entitlement_controller.dart';
 import 'package:einstellungstest_trainer/services/sync/sync_controller.dart';
+import 'package:einstellungstest_trainer/models/user_profile.dart';
+import 'package:einstellungstest_trainer/services/auth/auth_service.dart';
+import 'package:einstellungstest_trainer/screens/onboarding_screen.dart';
+import 'package:einstellungstest_trainer/services/appearance_controller.dart';
+import 'package:einstellungstest_trainer/services/profile_controller.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
+import 'package:einstellungstest_trainer/widgets/section_title.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Testtermin, Erinnerungen und der Weg zum Konto.
+
+/// Alles, was nicht Üben ist: Konto, Pro, Vorbereitung, App.
+///
+/// Flache Zeilen statt Karten. Jede Zeile trägt ihren aktuellen Wert rechts,
+/// damit man nicht hineingehen muss, um zu sehen, wie etwas steht. Was
+/// eingestellt wird, öffnet sich als eigener Bildschirm – so bleibt diese
+/// Liste kurz genug, um sie zu überblicken.
 class SettingsScreen extends ConsumerWidget {
-  const SettingsScreen({super.key});
+  const SettingsScreen({super.key, this.embedded = false});
+
+  /// Als Reiter eingebettet gibt es keinen Zurück-Pfeil.
+  final bool embedded;
+
+  static const String appVersion = '0.1.0';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final tokens = context.tokens;
     final user = ref.watch(authUserProvider).value;
+    final profile = ref.watch(profileProvider);
+    final examDate = ref.watch(examDateProvider);
+    final reminders = ref.watch(reminderControllerProvider);
+    final isPro = ref.watch(isProProvider);
+    final mode = ref.watch(themeModeProvider);
+    final side = Gap.screenPadding(MediaQuery.sizeOf(context).width);
+
+    void open(Widget screen) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => screen),
+      );
+    }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Einstellungen')),
+      appBar: AppBar(
+        title: const Text('Einstellungen'),
+        automaticallyImplyLeading: !embedded,
+      ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
+          padding: EdgeInsets.fromLTRB(side, Gap.sm, side, Gap.header),
           children: [
-            const _ProCard(),
-            const SizedBox(height: 26),
-            const _SectionTitle(
-              title: 'Testtermin',
-              subtitle: 'Dein Termin steuert den Countdown auf der Startseite '
-                  'und die Erinnerungen.',
+            _AccountRow(
+              user: user,
+              profile: profile,
+              onTap: () => open(const AccountScreen()),
             ),
-            const SizedBox(height: 12),
-            const ExamDateCard(),
-            const SizedBox(height: 26),
-            const _SectionTitle(
-              title: 'Erinnerungen',
-              subtitle: 'Kurze Hinweise vor dem Termin – damit das Üben nicht '
-                  'in der Woche davor untergeht.',
-            ),
-            const SizedBox(height: 12),
-            const _ReminderCard(),
-            const SizedBox(height: 26),
-            const _AdPrivacySection(),
-            const _SectionTitle(
-              title: 'Konto',
-              subtitle: 'Anmeldung, Cloud-Abgleich und Datenschutz.',
-            ),
-            const SizedBox(height: 12),
-            Material(
-              color: theme.colorScheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(16),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const AccountScreen()),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 14,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        user == null
-                            ? Icons.phone_android
-                            : Icons.cloud_done_outlined,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              user == null ? 'Lokaler Modus' : 'Angemeldet',
-                              style: theme.textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              user == null
-                                  ? 'Fortschritt nur auf diesem Gerät'
-                                  : 'Fortschritt wird abgeglichen',
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right,
-                        color: theme.colorScheme.outline,
-                      ),
-                    ],
-                  ),
+            const SizedBox(height: Gap.card),
+            _ProRow(isPro: isPro, onTap: () => open(const ProScreen())),
+            const SizedBox(height: Gap.section),
+            const SectionTitle('Vorbereitung'),
+            _Row(
+              label: 'Testtermin',
+              value: examDate == null
+                  ? 'nicht gesetzt'
+                  : examDate.describe(DateTime.now()),
+              onTap: () => open(
+                const _DetailScreen(
+                  title: 'Testtermin',
+                  child: ExamDateCard(),
                 ),
               ),
+            ),
+            _Row(
+              label: 'Tagesziel',
+              value: '${profile.dailyGoal} Aufgaben',
+              onTap: () => _pickGoal(context, ref, profile.dailyGoal),
+            ),
+            _Row(
+              label: 'Erinnerungen',
+              value: reminders.enabled ? 'an · ${reminders.timeLabel}' : 'aus',
+              onTap: () => open(
+                const _DetailScreen(
+                  title: 'Erinnerungen',
+                  child: _ReminderCard(),
+                ),
+              ),
+              last: true,
+            ),
+            const SizedBox(height: Gap.section),
+            const SectionTitle('App'),
+            _Row(
+              label: 'Darstellung',
+              value: AppearanceController.label(mode),
+              onTap: () => _pickTheme(context, ref, mode),
+            ),
+            _Row(
+              label: 'Einführung erneut ansehen',
+              value: '',
+              onTap: () => open(const OnboardingScreen(replayOnly: true)),
+            ),
+            _Row(
+              label: 'Datenschutz und Werbung',
+              value: '',
+              onTap: () => open(
+                const _DetailScreen(
+                  title: 'Datenschutz',
+                  child: _AdPrivacySection(),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Gap.sm,
+                vertical: Gap.card,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text('Version', style: theme.textTheme.bodyLarge),
+                  ),
+                  Text(appVersion, style: theme.textTheme.labelSmall),
+                ],
+              ),
+            ),
+            const SizedBox(height: Gap.sm),
+            Text(
+              'Dein Fortschritt liegt auf diesem Gerät. Erst mit einer '
+              'Anmeldung wird er zusätzlich in der Cloud gesichert.',
+              style: theme.textTheme.labelSmall?.copyWith(color: tokens.ink
+                  .withValues(alpha: 0.45)),
             ),
           ],
         ),
       ),
     );
   }
+
+  Future<void> _pickGoal(
+    BuildContext context,
+    WidgetRef ref,
+    int current,
+  ) async {
+    final picked = await showModalBottomSheet<int>(
+      context: context,
+      builder: (sheetContext) => _ChoiceSheet<int>(
+        title: 'Tagesziel',
+        subtitle: 'Wie viele Aufgaben willst du dir am Tag vornehmen?',
+        options: [
+          for (final goal in UserProfile.goalChoices)
+            (value: goal, label: '$goal Aufgaben'),
+        ],
+        current: current,
+      ),
+    );
+
+    if (picked != null) {
+      await ref.read(profileProvider.notifier).setDailyGoal(picked);
+    }
+  }
+
+  Future<void> _pickTheme(
+    BuildContext context,
+    WidgetRef ref,
+    ThemeMode current,
+  ) async {
+    final picked = await showModalBottomSheet<ThemeMode>(
+      context: context,
+      builder: (sheetContext) => _ChoiceSheet<ThemeMode>(
+        title: 'Darstellung',
+        subtitle: 'Gilt für die ganze App. Die Testsimulation bleibt in '
+            'jedem Fall dunkel.',
+        options: [
+          for (final mode in ThemeMode.values)
+            (value: mode, label: AppearanceController.label(mode)),
+        ],
+        current: current,
+      ),
+    );
+
+    if (picked != null) {
+      await ref.read(themeModeProvider.notifier).set(picked);
+    }
+  }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title, required this.subtitle});
+/// Eine Einstellungszeile: Name links, Zustand rechts, Trennlinie darunter.
+class _Row extends StatelessWidget {
+  const _Row({
+    required this.label,
+    required this.value,
+    required this.onTap,
+    this.last = false,
+  });
 
-  final String title;
-  final String subtitle;
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+  final bool last;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: theme.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
+        InkWell(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: Gap.sm,
+              vertical: Gap.card,
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(label, style: theme.textTheme.bodyLarge),
+                ),
+                if (value.isNotEmpty)
+                  Text(value, style: theme.textTheme.labelSmall),
+                const SizedBox(width: Gap.sm),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: theme.colorScheme.outline,
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          subtitle,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: theme.colorScheme.onSurfaceVariant,
-            height: 1.4,
-          ),
-        ),
+        if (!last) Divider(height: 1, color: theme.colorScheme.outlineVariant),
       ],
+    );
+  }
+}
+
+/// Die Kontozeile mit Initialen.
+class _AccountRow extends StatelessWidget {
+  const _AccountRow({
+    required this.user,
+    required this.profile,
+    required this.onTap,
+  });
+
+  final AuthUser? user;
+  final UserProfile profile;
+  final VoidCallback onTap;
+
+  /// Höchstens zwei Buchstaben – aus dem Namen, sonst aus der Mailadresse.
+  String get _initials {
+    final source = profile.name ?? user?.displayName ?? '';
+    final parts = source
+        .trim()
+        .split(RegExp(r'[\s@._-]+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.isEmpty) return '–';
+    if (parts.length == 1) {
+      return parts.first.substring(0, 1).toUpperCase();
+    }
+    return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+
+    return Material(
+      color: tokens.raised,
+      borderRadius: Radii.cardRadius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: Radii.cardRadius,
+        child: Container(
+          padding: const EdgeInsets.all(Gap.card),
+          decoration: BoxDecoration(
+            borderRadius: Radii.cardRadius,
+            border: Border.all(color: theme.colorScheme.outlineVariant),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: tokens.sunk,
+                  borderRadius: Radii.tileRadius,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _initials,
+                  style: NumText.metric.copyWith(
+                    fontSize: 19,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                ),
+              ),
+              const SizedBox(width: Gap.card),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      profile.name ?? user?.displayName ?? 'Ohne Anmeldung',
+                      style: theme.textTheme.titleLarge,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      user == null
+                          ? 'Fortschritt nur auf diesem Gerät'
+                          : 'Fortschritt wird abgeglichen',
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                user == null ? 'Anmelden' : 'Konto',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(width: Gap.xs),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: theme.colorScheme.outline,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Der Hinweis auf Pro – eine Zeile, kein Werbeblock.
+class _ProRow extends StatelessWidget {
+  const _ProRow({required this.isPro, required this.onTap});
+
+  final bool isPro;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+    final palette = tokens.language;
+
+    return Material(
+      color: isPro ? tokens.sunk : palette.soft,
+      borderRadius: Radii.cardRadius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: Radii.cardRadius,
+        child: Padding(
+          padding: const EdgeInsets.all(Gap.card),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isPro ? 'Pro ist aktiv' : 'Pro freischalten',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: isPro
+                            ? theme.colorScheme.onSurface
+                            : palette.deep,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      isPro
+                          ? 'Werbefrei, voller Aufgabenpool, Lösungswege.'
+                          : 'Werbefrei üben, mehr Aufgaben, Lösungswege.',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: isPro
+                            ? theme.colorScheme.onSurfaceVariant
+                            : palette.deep.withValues(alpha: 0.8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 22,
+                color: isPro ? theme.colorScheme.outline : palette.deep,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Rahmen für eine einzelne Einstellung, die mehr als eine Zeile braucht.
+class _DetailScreen extends StatelessWidget {
+  const _DetailScreen({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final side = Gap.screenPadding(MediaQuery.sizeOf(context).width);
+
+    return Scaffold(
+      appBar: AppBar(title: Text(title)),
+      body: SafeArea(
+        child: ListView(
+          padding: EdgeInsets.fromLTRB(side, Gap.card, side, Gap.header),
+          children: [child],
+        ),
+      ),
+    );
+  }
+}
+
+/// Auswahl aus wenigen Möglichkeiten, von unten eingeblendet.
+class _ChoiceSheet<T> extends StatelessWidget {
+  const _ChoiceSheet({
+    required this.title,
+    required this.subtitle,
+    required this.options,
+    required this.current,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<({T value, String label})> options;
+  final T current;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final tokens = context.tokens;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(
+          Gap.cardWide,
+          Gap.cardWide,
+          Gap.cardWide,
+          Gap.card,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(title, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: Gap.xs),
+            Text(subtitle, style: theme.textTheme.bodySmall),
+            const SizedBox(height: Gap.card),
+            for (final option in options)
+              Padding(
+                padding: const EdgeInsets.only(bottom: Gap.sm),
+                child: Material(
+                  color: option.value == current ? tokens.ink : tokens.sunk,
+                  borderRadius: Radii.buttonRadius,
+                  child: InkWell(
+                    borderRadius: Radii.buttonRadius,
+                    onTap: () => Navigator.of(context).pop(option.value),
+                    child: Container(
+                      height: Gap.control,
+                      padding: const EdgeInsets.symmetric(horizontal: 22),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              option.label,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                color: option.value == current
+                                    ? tokens.onInk
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          ),
+                          if (option.value == current)
+                            Icon(
+                              Icons.check_rounded,
+                              size: 20,
+                              color: tokens.onInk,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -155,7 +526,7 @@ class ExamDateCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -249,7 +620,7 @@ class _ReminderCard extends ConsumerWidget {
       padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -420,85 +791,6 @@ class _ReminderCard extends ConsumerWidget {
 
 
 /// Einstieg zu Pro – im Free-Tier ein Hinweis, mit Pro eine Bestätigung.
-class _ProCard extends ConsumerWidget {
-  const _ProCard();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-    final isPro = ref.watch(isProProvider);
-
-    return Material(
-      color: isPro
-          ? theme.colorScheme.primaryContainer
-          : theme.colorScheme.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute<void>(builder: (_) => const ProScreen()),
-        ),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isPro
-                  ? Colors.transparent
-                  : theme.colorScheme.outlineVariant,
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.workspace_premium_outlined,
-                color: isPro
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.primary,
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isPro ? 'Pro ist aktiv' : 'Pro',
-                      style: theme.textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: isPro
-                            ? theme.colorScheme.onPrimaryContainer
-                            : null,
-                      ),
-                    ),
-                    Text(
-                      isPro
-                          ? 'Werbefrei, mit dem vollen Aufgabenbestand'
-                          : 'Zusätzliche Aufgaben und keine Werbung',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: isPro
-                            ? theme.colorScheme.onPrimaryContainer
-                                .withValues(alpha: 0.85)
-                            : theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: isPro
-                    ? theme.colorScheme.onPrimaryContainer
-                    : theme.colorScheme.outline,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Einwilligung zur Werbung – muss widerrufbar sein, solange Werbung läuft.
 class _AdPrivacySection extends ConsumerWidget {
   const _AdPrivacySection();
 
@@ -515,12 +807,13 @@ class _AdPrivacySection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
-          title: 'Werbung',
-          subtitle: 'Die kostenlose Version zeigt Anzeigen. Deine '
-              'Einwilligung dazu kannst du jederzeit ändern.',
+        const SectionTitle('Werbung'),
+        Text(
+          'Die kostenlose Version zeigt Anzeigen. Deine Einwilligung dazu '
+          'kannst du jederzeit ändern.',
+          style: Theme.of(context).textTheme.bodySmall,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Gap.card),
         OutlinedButton.icon(
           onPressed: () => service.showPrivacyOptions(),
           icon: const Icon(Icons.privacy_tip_outlined),

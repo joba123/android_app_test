@@ -1,23 +1,55 @@
 import 'package:flutter/material.dart';
 
+/// Die Farben eines Bereichs.
+///
+/// Jeder Bereich trägt seine Farbe durch die ganze App: Kachel im Hauptmenü,
+/// Knopf für den Modus, Rand der richtigen Antwort, Balken in der Statistik.
+/// Drei Abstufungen reichen dafür — kräftig für Flächen, zart als Untergrund,
+/// dunkel für Schrift auf dem zarten Untergrund.
+@immutable
+class ModulePalette {
+  const ModulePalette({
+    required this.accent,
+    required this.soft,
+    required this.deep,
+  });
+
+  /// Volle Fläche: Knopf „Üben", Fortschrittsbalken, Markierung.
+  final Color accent;
+
+  /// Zarter Untergrund: Glyphenkachel, ausgewählte Antwort.
+  final Color soft;
+
+  /// Schrift und Glyphe auf [soft].
+  final Color deep;
+
+  static ModulePalette lerp(ModulePalette a, ModulePalette b, double t) {
+    return ModulePalette(
+      accent: Color.lerp(a.accent, b.accent, t)!,
+      soft: Color.lerp(a.soft, b.soft, t)!,
+      deep: Color.lerp(a.deep, b.deep, t)!,
+    );
+  }
+}
+
 /// Rollen, die Material 3 nicht kennt, das Design aber braucht.
 ///
-/// Material bietet `surface`, `surfaceContainer*` und `outline` – aber keine
-/// Begriffe für „Papier", „erhabene Datenkarte" und „eingelassene Rille". Der
-/// Entwurf unterscheidet diese drei bewusst, weil die Rangfolge über Fläche
-/// entsteht und nicht über Rahmen. Deshalb eine eigene Erweiterung statt einer
-/// erzwungenen Zuordnung auf Material-Rollen.
+/// Der Entwurf arbeitet mit warmem Papier, weißen Karten darauf und einer
+/// eingelassenen Stufe dazwischen. Material bietet dafür nur `surface` und
+/// `surfaceContainer*` — Begriffe, die nicht sagen, wofür sie da sind.
+/// Deshalb eigene Namen.
 @immutable
 class ExamTokens extends ThemeExtension<ExamTokens> {
   const ExamTokens({
     required this.paper,
     required this.raised,
     required this.sunk,
+    required this.band,
     required this.ink,
     required this.onInk,
-    required this.interactive,
     required this.correct,
     required this.wrong,
+    required this.wrongSoft,
     required this.math,
     required this.logic,
     required this.language,
@@ -26,96 +58,139 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
   /// Papiergrund – die Grundfläche der App.
   final Color paper;
 
-  /// Erhabene Datenkarte.
+  /// Weiße Karte auf dem Papier.
   final Color raised;
 
-  /// Eingelassene Fläche: Rille, Balkengrund.
+  /// Eingelassene Stufe: Balkengrund, ruhiger Knopf, Glyphenkreis.
   final Color sunk;
 
-  /// Tinte: dunkle Kopfflächen und die Hauptaktion.
+  /// Etwas kräftiger als [sunk]: das Band mit dem Countdown.
+  final Color band;
+
+  /// Tinte: die Testsimulation und die Hauptaktion.
   final Color ink;
 
   /// Schrift auf der Tinte.
   final Color onInk;
 
-  /// Links und Fokus. Bewusst getrennt von [math], obwohl im Hellmodus
-  /// dieselbe Farbe: Wenn Mathematik einmal eine andere Farbe bekommt, soll
-  /// sich der Link nicht mitverschieben.
-  final Color interactive;
-
+  /// Richtig beantwortet. Ist absichtlich das Grün der Logik: Grün heißt in
+  /// dieser App „stimmt", auch wenn gerade Mathematik geübt wird.
   final Color correct;
+
   final Color wrong;
 
-  final Color math;
-  final Color logic;
-  final Color language;
+  /// Untergrund der falsch gewählten Antwort.
+  final Color wrongSoft;
 
-  static const ExamTokens light = ExamTokens(
-    paper: Color(0xFFF7F5F1),
-    raised: Color(0xFFFFFFFF),
-    sunk: Color(0xFFEFEBE4),
-    ink: Color(0xFF16233A),
-    onInk: Color(0xFFF7F5F1),
-    interactive: Color(0xFF2F6FED),
-    correct: Color(0xFF146B45),
-    wrong: Color(0xFFA61B1B),
-    math: Color(0xFF2F6FED),
-    logic: Color(0xFFC2410C),
-    language: Color(0xFF0E9F6E),
-  );
+  final ModulePalette math;
+  final ModulePalette logic;
+  final ModulePalette language;
 
-  static const ExamTokens dark = ExamTokens(
-    paper: Color(0xFF0E1116),
-    raised: Color(0xFF171B22),
-    sunk: Color(0xFF1F242C),
-    ink: Color(0xFFE7EAEF),
-    onInk: Color(0xFF0E1116),
-    interactive: Color(0xFF6C9BFF),
-    correct: Color(0xFF2FA875),
-    wrong: Color(0xFFF1705F),
-    math: Color(0xFF6C9BFF),
-    logic: Color(0xFFF08B4C),
-    language: Color(0xFF37C79A),
-  );
-
-  /// Die Fläche, auf der die Testsimulation läuft.
+  /// Die Farben des Entwurfs, umgerechnet aus OKLCH.
   ///
-  /// Der Ernstfall ist **in hell wie dunkel** schwarz – der Wechsel ins
-  /// Dunkel ist der Vorhang vor der Prüfung. Deshalb eine feste Farbe und
-  /// keine, die vom Modus abhängt.
-  static const Color examSurface = Color(0xFF0E1116);
-  static const Color examRaised = Color(0xFF171B22);
-  static const Color onExam = Color(0xFFEDEFF2);
-  static const Color onExamVariant = Color(0xFFA7B0BC);
-  static const Color examOutline = Color(0xFF2C333D);
+  /// Blau, Grün und Orange liegen alle auf L 0,62 / C 0,15 — dadurch wirkt
+  /// keine der drei Flächen schwerer als die andere. Grün und Orange liegen
+  /// unter Deuteranopie mit ΔE 6,0 dicht beieinander; die App nennt deshalb
+  /// überall den Bereichsnamen neben der Farbe und verlässt sich nie auf die
+  /// Farbe allein.
+  static const ExamTokens light = ExamTokens(
+    paper: Color(0xFFFAF7F4),
+    raised: Color(0xFFFFFFFF),
+    sunk: Color(0xFFF2ECE8),
+    band: Color(0xFFECE5E0),
+    ink: Color(0xFF1C1B1A),
+    onInk: Color(0xFFFFFFFF),
+    correct: Color(0xFF0FA05C),
+    wrong: Color(0xFFC1453F),
+    wrongSoft: Color(0xFFF7EEEA),
+    math: ModulePalette(
+      accent: Color(0xFF4087DE),
+      soft: Color(0xFFDAEDFF),
+      deep: Color(0xFF17559B),
+    ),
+    logic: ModulePalette(
+      accent: Color(0xFF0FA05C),
+      soft: Color(0xFFD7F4E0),
+      deep: Color(0xFF005F2E),
+    ),
+    language: ModulePalette(
+      accent: Color(0xFFCD632D),
+      soft: Color(0xFFFFE3D3),
+      deep: Color(0xFF8A3400),
+    ),
+  );
 
-  /// Warme Papierfläche des Sprints. Hektik entsteht über Größe und
-  /// Bewegung, nicht über eine rote Warnfarbe.
-  static const Color sprintPaper = Color(0xFFFDF6F0);
+  /// Im Dunkeln bleibt das Warme erhalten: die Grundfläche ist die Tinte des
+  /// Entwurfs, die Karten sind eine Spur heller. Die Bereichsfarben werden
+  /// aufgehellt, sonst versinken sie im Grund.
+  static const ExamTokens dark = ExamTokens(
+    paper: Color(0xFF1C1B1A),
+    raised: Color(0xFF262523),
+    sunk: Color(0xFF302E2B),
+    band: Color(0xFF35322F),
+    ink: Color(0xFFFAF7F4),
+    onInk: Color(0xFF1C1B1A),
+    correct: Color(0xFF3FC584),
+    wrong: Color(0xFFE98A84),
+    wrongSoft: Color(0xFF3A2523),
+    math: ModulePalette(
+      accent: Color(0xFF74AAEE),
+      soft: Color(0xFF23303F),
+      deep: Color(0xFFBBD8F7),
+    ),
+    logic: ModulePalette(
+      accent: Color(0xFF3FC584),
+      soft: Color(0xFF1E332A),
+      deep: Color(0xFFAEECC9),
+    ),
+    language: ModulePalette(
+      accent: Color(0xFFE28A5A),
+      soft: Color(0xFF3A2A22),
+      deep: Color(0xFFF6C7AC),
+    ),
+  );
+
+  /// Die Fläche der Testsimulation.
+  ///
+  /// Der Ernstfall ist in hell wie dunkel schwarz – der Wechsel ins Dunkel
+  /// ist der Vorhang vor der Prüfung. Deshalb feste Werte statt Tokens.
+  static const Color examSurface = Color(0xFF1C1B1A);
+  static const Color examRaised = Color(0xFF262523);
+  static const Color onExam = Color(0xFFFAF7F4);
+  static const Color onExamVariant = Color(0xFF9E9892);
+  static const Color examOutline = Color(0xFF35322F);
+
+  ModulePalette paletteOf(String moduleId) => switch (moduleId) {
+        'logic' => logic,
+        'language' => language,
+        _ => math,
+      };
 
   @override
   ExamTokens copyWith({
     Color? paper,
     Color? raised,
     Color? sunk,
+    Color? band,
     Color? ink,
     Color? onInk,
-    Color? interactive,
     Color? correct,
     Color? wrong,
-    Color? math,
-    Color? logic,
-    Color? language,
+    Color? wrongSoft,
+    ModulePalette? math,
+    ModulePalette? logic,
+    ModulePalette? language,
   }) {
     return ExamTokens(
       paper: paper ?? this.paper,
       raised: raised ?? this.raised,
       sunk: sunk ?? this.sunk,
+      band: band ?? this.band,
       ink: ink ?? this.ink,
       onInk: onInk ?? this.onInk,
-      interactive: interactive ?? this.interactive,
       correct: correct ?? this.correct,
       wrong: wrong ?? this.wrong,
+      wrongSoft: wrongSoft ?? this.wrongSoft,
       math: math ?? this.math,
       logic: logic ?? this.logic,
       language: language ?? this.language,
@@ -130,14 +205,15 @@ class ExamTokens extends ThemeExtension<ExamTokens> {
       paper: Color.lerp(paper, other.paper, t)!,
       raised: Color.lerp(raised, other.raised, t)!,
       sunk: Color.lerp(sunk, other.sunk, t)!,
+      band: Color.lerp(band, other.band, t)!,
       ink: Color.lerp(ink, other.ink, t)!,
       onInk: Color.lerp(onInk, other.onInk, t)!,
-      interactive: Color.lerp(interactive, other.interactive, t)!,
       correct: Color.lerp(correct, other.correct, t)!,
       wrong: Color.lerp(wrong, other.wrong, t)!,
-      math: Color.lerp(math, other.math, t)!,
-      logic: Color.lerp(logic, other.logic, t)!,
-      language: Color.lerp(language, other.language, t)!,
+      wrongSoft: Color.lerp(wrongSoft, other.wrongSoft, t)!,
+      math: ModulePalette.lerp(math, other.math, t),
+      logic: ModulePalette.lerp(logic, other.logic, t),
+      language: ModulePalette.lerp(language, other.language, t),
     );
   }
 }
@@ -149,30 +225,42 @@ extension ExamTokensAccess on BuildContext {
       Theme.of(this).extension<ExamTokens>() ?? ExamTokens.light;
 }
 
-/// Eckradien. Vier statt einem: Ein kleiner Radius heißt „hier wird
-/// eingegeben", ein großer „hier wird gestartet". Das ersetzt die
-/// gleichförmigen Material-Karten als Rangordnung.
+/// Eckradien. Der Entwurf rundet großzügig: Karten sind Kissen, Knöpfe sind
+/// Pillen. Klein wird nur, was Text aufnimmt.
 abstract final class Radii {
-  /// Eingabefeld, Antwortoption.
-  static const double input = 4;
+  /// Eingabefeld.
+  static const double input = 16;
 
-  /// Datenkarte.
-  static const double card = 10;
+  /// Glyphenkachel, kleine Marke.
+  static const double tile = 18;
 
-  /// Kopffläche, Hauptknopf.
-  static const double surface = 20;
+  /// Band mit dem Countdown, Antwortoption.
+  static const double band = 24;
 
-  /// Chip, Pille.
+  /// Karte im Hauptmenü.
+  static const double card = 28;
+
+  /// Knopf – gleich dem Kartenradius, damit ein Knopf in einer Karte wie ihr
+  /// Inneres wirkt.
+  static const double button = 28;
+
+  /// Pille, Fortschrittsbalken.
   static const double pill = 999;
 
   static const BorderRadius inputRadius = BorderRadius.all(
     Radius.circular(input),
   );
+  static const BorderRadius tileRadius = BorderRadius.all(
+    Radius.circular(tile),
+  );
+  static const BorderRadius bandRadius = BorderRadius.all(
+    Radius.circular(band),
+  );
   static const BorderRadius cardRadius = BorderRadius.all(
     Radius.circular(card),
   );
-  static const BorderRadius surfaceRadius = BorderRadius.all(
-    Radius.circular(surface),
+  static const BorderRadius buttonRadius = BorderRadius.all(
+    Radius.circular(button),
   );
 }
 
@@ -187,22 +275,23 @@ abstract final class Gap {
   /// Karten im Stapel.
   static const double md = 12;
 
-  /// Karteninnenrand.
+  /// Karteninnenrand, Seitenrand des Screens.
   static const double card = 16;
 
-  /// Seitenrand des Screens.
-  static const double screen = 20;
+  /// Innenrand einer großen Karte.
+  static const double cardWide = 20;
 
   /// Abschnitt zu Abschnitt.
   static const double section = 24;
 
-  /// Vor dem Ende einer Kopffläche.
+  /// Vor einer Überschrift.
   static const double header = 32;
 
-  /// Ab dieser Breite fällt der Seitenrand auf 16 und zweispaltige
-  /// Kennzahlen brechen auf eine Spalte um.
+  /// Höhe eines Knopfes und einer Modus-Zeile.
+  static const double control = 56;
+
+  /// Ab dieser Breite fällt der Seitenrand auf 12.
   static const double narrowWidth = 360;
 
-  static double screenPadding(double width) =>
-      width < narrowWidth ? 16 : screen;
+  static double screenPadding(double width) => width < narrowWidth ? 12 : card;
 }

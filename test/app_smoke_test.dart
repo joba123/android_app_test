@@ -8,6 +8,7 @@ import 'package:einstellungstest_trainer/services/purchase/purchase_service.dart
 import 'package:einstellungstest_trainer/widgets/feedback_sheet.dart';
 import 'package:einstellungstest_trainer/widgets/numeric_answer_field.dart';
 import 'package:einstellungstest_trainer/widgets/question_card.dart';
+import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -58,102 +59,158 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  /// Startseite → „anderes Thema" → Auswahlbildschirm.
+  /// Klappt eine Bereichskarte im Hauptmenue auf.
+  Future<void> openDomain(WidgetTester tester, String name) async {
+    await tester.tap(find.text(name));
+    await tester.pumpAndSettle();
+  }
+
+  /// Bereich aufklappen und den Modus waehlen.
+  Future<void> startPractice(
+    WidgetTester tester, {
+    String domain = 'Mathematik',
+  }) async {
+    await openDomain(tester, domain);
+    await tester.tap(find.text('Üben'));
+    await tester.pumpAndSettle();
+  }
+
+  Future<void> openCategories(
+    WidgetTester tester, {
+    String domain = 'Logik',
+  }) async {
+    await openDomain(tester, domain);
+    await tester.tap(find.text('Kategorien'));
+    await tester.pumpAndSettle();
+  }
+
+  /// Ueber die Kategorien zum Feineinsteller fuer Umfang und Schwierigkeit.
+  Future<void> openPracticeSetup(
+    WidgetTester tester, {
+    String domain = 'Logik',
+  }) async {
+    await openCategories(tester, domain: domain);
+    await tester.tap(find.byIcon(Icons.tune_rounded));
+    await tester.pumpAndSettle();
+  }
+
+  /// Wechselt auf den Reiter „Einstellungen".
   ///
-  /// Der fruehere Einstieg ueber eine „Uebungsmodus"-Karte gibt es nicht
-  /// mehr: Die Startseite schlaegt eine Runde vor, und wer etwas anderes
-  /// will, geht ueber diesen Link.
-  Future<void> openPracticeSetup(WidgetTester tester) async {
-    await tester.tap(find.text('anderes Thema'));
+  /// „Einstellungen" steht auch in der Kopfzeile des Reiters – deshalb der
+  /// letzte Treffer, das ist die Leiste unten.
+  Future<void> openSettings(WidgetTester tester) async {
+    await tester.tap(find.text('Einstellungen').last);
     await tester.pumpAndSettle();
   }
 
-  /// Wechselt auf den Reiter „Mehr".
-  Future<void> openMore(WidgetTester tester) async {
-    await tester.tap(find.text('Mehr'));
+  /// Oeffnet eine Zeile in den Einstellungen.
+  Future<void> openSetting(WidgetTester tester, String row) async {
+    await openSettings(tester);
+    await tester.tap(find.text(row));
     await tester.pumpAndSettle();
   }
 
-  testWidgets('Startseite macht genau einen Vorschlag', (tester) async {
-    await pumpApp(tester);
-
-    // Ein Vorschlag mit einem Knopf – keine Liste von Moeglichkeiten.
-    expect(find.text('HEUTE DRAN'), findsOneWidget);
-    expect(find.text('Los'), findsOneWidget);
-    expect(find.text('10 Aufgaben zum Einstieg'), findsOneWidget);
-    expect(find.text('quer durch alle drei Bereiche'), findsOneWidget);
-  });
-
-  testWidgets('Startseite zeigt Module nur noch als Zeilen', (tester) async {
-    await pumpApp(tester);
-
-    expect(find.text('STAND JE MODUL'), findsOneWidget);
-    // Die Zeilen tragen die Kurzform, nicht den vollen Modulnamen.
-    expect(find.text('Mathe'), findsOneWidget);
-    expect(find.text('Logik'), findsOneWidget);
-    expect(find.text('Sprache'), findsOneWidget);
-    // Die frueheren Beschreibungstexte sind weg.
-    expect(
-      find.textContaining('Zahlenreihen, Analogien'),
-      findsNothing,
-    );
-  });
-
-  testWidgets('eine Modulzeile startet sofort eine Runde', (tester) async {
-    await pumpApp(tester);
-
-    await tester.tap(find.text('Mathe'));
-    await tester.pumpAndSettle();
-
-    // Kein Zwischenbildschirm mehr.
-    expect(find.text('Aufgabe 1/20'), findsOneWidget);
-  });
-
-  testWidgets('die untere Leiste fuehrt zu Statistik und Mehr',
+  testWidgets('Hauptmenue zeigt die drei Bereiche und den Ernstfall',
       (tester) async {
     await pumpApp(tester);
 
-    expect(find.text('Start'), findsOneWidget);
-    expect(find.text('Statistik'), findsWidgets);
-    expect(find.text('Mehr'), findsOneWidget);
+    expect(find.text('Mathematik'), findsOneWidget);
+    expect(find.text('Logik'), findsOneWidget);
+    expect(find.text('Sprache'), findsOneWidget);
+    expect(find.text('TESTSIMULATION'), findsOneWidget);
+    expect(find.text('Gesamtsimulation'), findsOneWidget);
+    expect(find.text('Probelauf'), findsOneWidget);
 
-    await openMore(tester);
-    expect(find.text('Prüfungstermin'), findsOneWidget);
-    expect(find.text('So funktioniert die App'), findsOneWidget);
+    // Der Modus steht erst in der aufgeklappten Karte.
+    expect(find.text('Üben'), findsNothing);
+  });
+
+  testWidgets('eine Bereichskarte klappt die drei Modi aus', (tester) async {
+    await pumpApp(tester);
+    await openDomain(tester, 'Mathematik');
+
+    expect(find.text('Üben'), findsOneWidget);
+    expect(find.text('Sprint'), findsOneWidget);
+    expect(find.text('Kategorien'), findsOneWidget);
+    expect(find.text('ohne Zeitdruck'), findsOneWidget);
+  });
+
+  testWidgets('„Üben" startet ohne Zwischenbildschirm', (tester) async {
+    await pumpApp(tester);
+    await startPractice(tester);
+
+    expect(find.textContaining('Aufgabe 1/'), findsOneWidget);
+  });
+
+  testWidgets('die untere Leiste fuehrt zu Statistiken und Einstellungen',
+      (tester) async {
+    await pumpApp(tester);
+
+    expect(find.text('Hauptmenü'), findsOneWidget);
+    expect(find.text('Statistiken'), findsWidgets);
+    expect(find.text('Einstellungen'), findsWidgets);
+
+    await openSettings(tester);
+    expect(find.text('Testtermin'), findsOneWidget);
+    expect(find.text('Tagesziel'), findsOneWidget);
+    expect(find.text('Einführung erneut ansehen'), findsOneWidget);
   });
 
   group('Einführung', () {
     testWidgets('erscheint beim allerersten Start', (tester) async {
       await pumpApp(tester, onboarded: false);
 
-      expect(find.text('Drei Wege zum Test'), findsOneWidget);
+      expect(find.text('Drei Bereiche, ein Ziel'), findsOneWidget);
       expect(find.text('Weiter'), findsOneWidget);
     });
 
-    testWidgets('fragt nach dem Prüfungstermin und endet in einer Runde',
+    testWidgets('fragt nach Name und Termin und endet in einer Runde',
         (tester) async {
       await pumpApp(tester, onboarded: false);
 
-      await tester.tap(find.text('Weiter'));
-      await tester.pumpAndSettle();
-      expect(find.text('Hast du schon einen Termin?'), findsOneWidget);
+      for (var step = 0; step < 3; step++) {
+        await tester.tap(find.text('Weiter'));
+        await tester.pumpAndSettle();
+      }
 
-      await tester.tap(find.text('Nein, ich übe erst mal'));
-      await tester.pumpAndSettle();
-      expect(find.text('Dann legen wir los'), findsOneWidget);
+      expect(find.text('Damit wir uns kennen'), findsOneWidget);
+      expect(find.text('Hast du schon einen Testtermin?'), findsOneWidget);
 
+      await tester.enterText(find.byType(TextField), 'Lena');
       await tester.tap(find.text('Erste Runde starten'));
       await tester.pumpAndSettle();
 
-      // Direkt in die erste Runde, nicht auf die Startseite.
+      // Direkt in die erste Runde, nicht ins Hauptmenue.
       expect(find.text('Aufgabe 1/10'), findsOneWidget);
+    });
+
+    testWidgets('der Name steht danach im Hauptmenue', (tester) async {
+      await pumpApp(tester, onboarded: false);
+
+      for (var step = 0; step < 3; step++) {
+        await tester.tap(find.text('Weiter'));
+        await tester.pumpAndSettle();
+      }
+      await tester.enterText(find.byType(TextField), 'Lena');
+      await tester.tap(find.text('Erste Runde starten'));
+      await tester.pumpAndSettle();
+
+      // Die erste Runde liegt auf dem Hauptmenue – zurueck fuehrt dorthin.
+      await tester.tap(find.byIcon(Icons.close_rounded));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Beenden'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Zum Menü'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Lena'), findsOneWidget);
     });
 
     testWidgets('laeuft nach dem Durchlaufen nicht erneut', (tester) async {
       await pumpApp(tester);
 
-      expect(find.text('Drei Wege zum Test'), findsNothing);
-      expect(find.text('HEUTE DRAN'), findsOneWidget);
+      expect(find.text('Drei Bereiche, ein Ziel'), findsNothing);
+      expect(find.text('Gesamtsimulation'), findsOneWidget);
     });
   });
 
@@ -172,12 +229,13 @@ void main() {
       expect(find.text('Wortanalogien'), findsOneWidget);
     });
 
-    testWidgets('startet standardmäßig im Misch-Modus', (tester) async {
+    testWidgets('uebernimmt den Bereich, aus dem er geoeffnet wurde',
+        (tester) async {
       await pumpApp(tester);
       await openPracticeSetup(tester);
 
       expect(
-        find.text('Auswahl: Alle Kategorien gemischt'),
+        find.text('Auswahl: Logisches Denken · alle Themen'),
         findsOneWidget,
       );
     });
@@ -304,21 +362,16 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      expect(find.text('Auswertung'), findsOneWidget); // AppBar-Titel
+      expect(find.text('Übungsmodus abgeschlossen'), findsOneWidget);
       expect(find.text('Fehlerquote'), findsOneWidget);
       expect(find.text('Ø pro Aufgabe'), findsOneWidget);
-      expect(find.text('Gesamtdauer'), findsOneWidget);
-      expect(find.text('Noch eine Runde'), findsOneWidget);
+      expect(find.text('Gesamtzeit'), findsOneWidget);
+      expect(find.text('ZEIT PRO AUFGABE'), findsOneWidget);
+      expect(find.text('Nochmal'), findsOneWidget);
     });
   });
 
   group('Sprint', () {
-    /// Startseite → Sprint-Modus → Auswahl des Aufgabentyps.
-    Future<void> openSprintSetup(WidgetTester tester) async {
-      await tester.tap(find.text('Sprint · 60 s'));
-      await tester.pumpAndSettle();
-    }
-
     /// Route-Wechsel abwarten, ohne auf den laufenden Countdown zu warten –
     /// pumpAndSettle würde bei einem periodischen Timer nie zurückkehren.
     Future<void> settleRoute(WidgetTester tester) async {
@@ -326,45 +379,23 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
     }
 
-    testWidgets('lässt den Aufgabentyp wählen, aber nicht mischen',
-        (tester) async {
+    testWidgets('startet direkt aus der Bereichskarte', (tester) async {
       await pumpApp(tester);
-      await openSprintSetup(tester);
-
-      expect(find.text('Welchen Aufgabentyp?'), findsOneWidget);
-      expect(find.text('Grundrechenarten'), findsOneWidget);
-      expect(find.text('Zahlenreihen'), findsOneWidget);
-      // Ein Sprint misst das Tempo in einer Disziplin – kein Misch-Modus.
-      expect(find.text('Alle Kategorien gemischt'), findsNothing);
-      // Ohne Umfangswahl: die Runde dauert immer 60 Sekunden.
-      expect(find.text('10 Aufgaben'), findsNothing);
-    });
-
-    testWidgets('zeigt den Aufgabentyp im Titel der Runde', (tester) async {
-      await pumpApp(tester);
-      await openSprintSetup(tester);
-
-      await tester.tap(find.text('Zahlenreihen'));
-      await tester.pumpAndSettle();
-      expect(find.text('Zahlenreihen Sprint'), findsOneWidget);
-
-      await tester.tap(find.text('Sprint starten'));
+      await openDomain(tester, 'Logik');
+      await tester.tap(find.text('Sprint'));
       await settleRoute(tester);
 
-      expect(find.text('Zahlenreihen Sprint'), findsOneWidget);
-      expect(find.text('Sprint läuft'), findsOneWidget);
+      // Kein Zwischenbildschirm mehr: die Uhr laeuft sofort.
+      expect(find.byType(TimerPill), findsOneWidget);
+      expect(find.text('Sprint'), findsOneWidget);
+      expect(find.text('0 bearbeitet'), findsOneWidget);
     });
 
     testWidgets('schaltet ohne Erklärung direkt weiter', (tester) async {
       await pumpApp(tester);
-      await openSprintSetup(tester);
-
-      await tester.tap(find.text('Zahlenreihen'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Sprint starten'));
+      await openDomain(tester, 'Logik');
+      await tester.tap(find.text('Sprint'));
       await settleRoute(tester);
-
-      expect(find.text('0 richtig · 0 bearbeitet'), findsOneWidget);
 
       await tester.tap(find.text('A'));
       await tester.pump();
@@ -372,16 +403,13 @@ void main() {
       // Kein Feedback, kein "Weiter" – die nächste Aufgabe steht sofort da.
       expect(find.byType(FeedbackSheet), findsNothing);
       expect(find.text('Weiter'), findsNothing);
-      expect(find.textContaining('1 bearbeitet'), findsOneWidget);
+      expect(find.text('1 bearbeitet'), findsOneWidget);
     });
 
     testWidgets('wertet nach Ablauf der Zeit aus', (tester) async {
       await pumpApp(tester);
-      await openSprintSetup(tester);
-
-      await tester.tap(find.text('Zahlenreihen'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Sprint starten'));
+      await openDomain(tester, 'Logik');
+      await tester.tap(find.text('Sprint'));
       await settleRoute(tester);
 
       await tester.tap(find.text('A'));
@@ -393,7 +421,7 @@ void main() {
       }
       await tester.pumpAndSettle();
 
-      expect(find.text('bearbeitet'), findsOneWidget);
+      expect(find.text('Sprint-Modus abgeschlossen'), findsOneWidget);
       expect(find.text('Fehlerquote'), findsOneWidget);
       expect(find.text('Ø pro Aufgabe'), findsOneWidget);
       expect(find.textContaining('Bestwert'), findsWidgets);
@@ -403,7 +431,7 @@ void main() {
   group('Testsimulation', () {
     /// Startseite → Modul → Testsimulation, Briefing des ersten Teils.
     Future<void> openSimulation(WidgetTester tester) async {
-      await tester.tap(find.text('Gesamtsimulation'));
+      await tester.tap(find.text('Starten'));
       await tester.pumpAndSettle();
     }
 
@@ -563,17 +591,14 @@ void main() {
   });
 
   group('Einstellungen', () {
-    /// Mehr → Prüfungstermin führt in die Einstellungen.
-    Future<void> openSettings(WidgetTester tester) async {
-      await openMore(tester);
-      await tester.tap(find.text('Prüfungstermin'));
-      await tester.pumpAndSettle();
-    }
+    /// Einstellungen → Testtermin.
+    Future<void> openExamDate(WidgetTester tester) =>
+        openSetting(tester, 'Testtermin');
 
-    /// Mehr → Anmeldung und Abgleich.
+    /// Einstellungen → Kontozeile.
     Future<void> openAccount(WidgetTester tester) async {
-      await openMore(tester);
-      await tester.tap(find.text('Anmeldung und Abgleich'));
+      await openSettings(tester);
+      await tester.tap(find.text('Ohne Anmeldung'));
       await tester.pumpAndSettle();
     }
 
@@ -602,10 +627,10 @@ void main() {
       expect(find.textContaining('EU-Region'), findsOneWidget);
     });
 
-    testWidgets('der gesetzte Testtermin erscheint auf der Startseite',
+    testWidgets('der gesetzte Testtermin erscheint im Hauptmenue',
         (tester) async {
       await pumpApp(tester);
-      await openSettings(tester);
+      await openExamDate(tester);
 
       expect(find.text('Noch kein Termin hinterlegt.'), findsOneWidget);
 
@@ -615,18 +640,18 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
 
-      // In den Einstellungen steht der Termin als Satz ...
+      // Im Einstellungsbildschirm steht der Termin als Satz ...
       expect(find.text('Noch 30 Tage'), findsOneWidget);
 
       await goBack(tester);
-      await tester.tap(find.text('Start'));
+      await tester.tap(find.text('Hauptmenü'));
       await tester.pumpAndSettle();
 
-      // ... in der Kopfflaeche der Startseite dagegen getrennt: die Zahl in
-      // Mono, das Wort daneben in Prosa.
+      // ... im Band des Hauptmenues dagegen getrennt: die Zahl gross, die
+      // Einheit klein darunter.
       expect(find.text('30'), findsOneWidget);
-      expect(find.text('Tage'), findsOneWidget);
-      expect(find.text('BIS ZUR PRÜFUNG'), findsOneWidget);
+      expect(find.text('TAGE'), findsOneWidget);
+      expect(find.text('bis zum Testtermin'), findsOneWidget);
     });
   });
 
@@ -635,28 +660,35 @@ void main() {
 
     setUp(() => reminders = InMemoryReminderService());
 
-    /// Startseite → Einstellungen, mit einem Erinnerungsdienst, der ohne
-    /// Platform-Channels auskommt.
-    Future<void> openSettings(WidgetTester tester) async {
-      await pumpApp(
-        tester,
-        overrides: [reminderServiceProvider.overrideWithValue(reminders)],
-      );
-      await openMore(tester);
-      await tester.tap(find.text('Erinnerungen'));
-      await tester.pumpAndSettle();
+    /// Startet die App mit einem Erinnerungsdienst, der ohne
+    /// Platform-Channels auskommt, und oeffnet die Erinnerungen.
+    Future<void> openReminders(WidgetTester tester, {bool fresh = true}) async {
+      if (fresh) {
+        await pumpApp(
+          tester,
+          overrides: [reminderServiceProvider.overrideWithValue(reminders)],
+        );
+      }
+      await openSetting(tester, 'Erinnerungen');
     }
 
-    /// Testtermin auf „in 30 Tagen" setzen.
+    /// Testtermin auf „in 30 Tagen" setzen – von den Erinnerungen aus ueber
+    /// die Einstellungen und wieder zurueck.
     Future<void> setExamDate(WidgetTester tester) async {
+      await goBack(tester);
+      await tester.tap(find.text('Testtermin'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Termin setzen'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
+      await goBack(tester);
+      await tester.tap(find.text('Erinnerungen'));
+      await tester.pumpAndSettle();
     }
 
     testWidgets('sind zunächst aus und zeigen keine Details', (tester) async {
-      await openSettings(tester);
+      await openReminders(tester);
 
       expect(find.text('Ans Üben erinnern'), findsOneWidget);
       expect(find.text('Wann vorher?'), findsNothing);
@@ -665,7 +697,7 @@ void main() {
 
     testWidgets('planen nach dem Einschalten die Erinnerungen',
         (tester) async {
-      await openSettings(tester);
+      await openReminders(tester);
       await setExamDate(tester);
 
       await tester.tap(find.byType(Switch));
@@ -680,7 +712,7 @@ void main() {
 
     testWidgets('erklären ohne Termin, dass noch nichts geplant ist',
         (tester) async {
-      await openSettings(tester);
+      await openReminders(tester);
 
       await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
@@ -694,7 +726,7 @@ void main() {
 
     testWidgets('eine weitere Vorlaufzeit wird sofort übernommen',
         (tester) async {
-      await openSettings(tester);
+      await openReminders(tester);
       await setExamDate(tester);
       await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
@@ -707,7 +739,7 @@ void main() {
 
     testWidgets('bleiben aus, wenn die Berechtigung fehlt', (tester) async {
       reminders.grantPermission = false;
-      await openSettings(tester);
+      await openReminders(tester);
       await setExamDate(tester);
 
       await tester.tap(find.byType(Switch));
@@ -720,12 +752,16 @@ void main() {
 
     testWidgets('ein entfernter Termin nimmt die Erinnerungen zurück',
         (tester) async {
-      await openSettings(tester);
+      await openReminders(tester);
       await setExamDate(tester);
       await tester.tap(find.byType(Switch));
       await tester.pumpAndSettle();
       expect(reminders.scheduled, isNotEmpty);
 
+      // Termin ueber die Einstellungen wieder entfernen.
+      await goBack(tester);
+      await tester.tap(find.text('Testtermin'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Entfernen'));
       await tester.pumpAndSettle();
 
@@ -760,16 +796,21 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      // Der Auswertungs-Screen hat keinen Zurueck-Pfeil, sondern einen
-      // eigenen Knopf; danach vom Auswahlbildschirm zur Startseite.
-      await tester.tap(find.text('Zurück zur Auswahl'));
+      // Zurueck ueber die Auswertung bis zu den Kategorien: Dort steht der
+      // Stand je Thema, und der hat sich jetzt geaendert.
+      await tester.tap(find.text('Zum Menü'));
       await tester.pumpAndSettle();
       await goBack(tester);
 
-      // Der Vorschlag hat sich der Lage angepasst: keine Einstiegsrunde mehr.
-      expect(find.text('10 Aufgaben zum Einstieg'), findsNothing);
-      expect(find.text('HEUTE DRAN'), findsOneWidget);
-      expect(find.text('Los'), findsOneWidget);
+      // Die Zeile „Zahlenreihen" traegt jetzt eine Quote statt „neu".
+      final row = find.ancestor(
+        of: find.text('Zahlenreihen'),
+        matching: find.byType(Column),
+      );
+      expect(
+        find.descendant(of: row.first, matching: find.textContaining('%')),
+        findsWidgets,
+      );
     });
 
     testWidgets('startet eine Runde aus den eigenen Fehlern', (tester) async {
@@ -789,12 +830,15 @@ void main() {
         await tester.tap(find.text(i == 9 ? 'Auswertung' : 'Weiter'));
         await tester.pumpAndSettle();
       }
-      await tester.tap(find.text('Zurück zur Auswahl'));
+      await tester.tap(find.text('Zum Menü'));
       await tester.pumpAndSettle();
       await goBack(tester);
+      await goBack(tester);
 
-      await tester.tap(find.text('Los'));
+      // Im Hauptmenue steht jetzt die Zeile mit den offenen Fehlern.
+      await tester.tap(find.text('Deine Fehler wiederholen'));
       await tester.pumpAndSettle();
+
       // Bewusst ohne feste Aufgabenzahl: Wie viele Aufgaben anstehen, haengt
       // davon ab, wie viele der zufaellig angeordneten Optionen zufaellig
       // richtig waren. Der Prueferpunkt ist, dass die Runde ueberhaupt aus
@@ -806,9 +850,7 @@ void main() {
   group('Deutsche Beschriftungen', () {
     testWidgets('die Datumsauswahl ist auf Deutsch', (tester) async {
       await pumpApp(tester);
-      await openMore(tester);
-      await tester.tap(find.text('Prüfungstermin'));
-      await tester.pumpAndSettle();
+      await openSetting(tester, 'Testtermin');
 
       await tester.tap(find.text('Termin setzen'));
       await tester.pumpAndSettle();
@@ -832,12 +874,12 @@ void main() {
         tester,
         overrides: [purchaseServiceProvider.overrideWithValue(store)],
       );
-      await openMore(tester);
-      await tester.tap(find.text('Pro'));
+      await openSettings(tester);
+      await tester.tap(find.text('Pro freischalten'));
       await tester.pumpAndSettle();
     }
 
-    testWidgets('ist von der Startseite aus erreichbar', (tester) async {
+    testWidgets('ist aus den Einstellungen erreichbar', (tester) async {
       await openPro(tester);
 
       expect(find.text('Mehr Aufgaben, keine Werbung'), findsOneWidget);
@@ -850,8 +892,11 @@ void main() {
         find.textContaining('bleiben kostenlos'),
         findsOneWidget,
       );
-      expect(find.text('Keine Werbung – weder Banner noch Unterbrechungen'),
-          findsOneWidget);
+      // Die Gegenueberstellung nennt echte Unterschiede – und zeigt in der
+      // Free-Spalte, was auch ohne Pro geht.
+      expect(find.text('Werbung'), findsOneWidget);
+      expect(find.text('Testsimulationen'), findsOneWidget);
+      expect(find.text('unbegrenzt'), findsNWidgets(2));
     });
 
     testWidgets('bietet alle drei Tarife ohne Vorauswahl an', (tester) async {
@@ -887,8 +932,8 @@ void main() {
 
       await goBack(tester);
 
-      // Die Zeile unter „Mehr" meldet den Zustand direkt.
-      expect(find.text('aktiv'), findsOneWidget);
+      // Die Zeile in den Einstellungen meldet den Zustand direkt.
+      expect(find.text('Pro ist aktiv'), findsOneWidget);
     });
 
     testWidgets('die Schwierigkeitswahl ist erst mit Pro bedienbar',

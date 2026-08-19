@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:einstellungstest_trainer/screens/app_shell.dart';
 import 'package:einstellungstest_trainer/theme/app_theme.dart';
 import 'package:einstellungstest_trainer/services/ads/ad_controller.dart';
+import 'package:einstellungstest_trainer/services/appearance_controller.dart';
 import 'package:einstellungstest_trainer/services/notifications/reminder_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,9 +12,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Das Theme lebt in `lib/theme/app_theme.dart`; hier nur weitergereicht,
 /// damit bestehende Importe von `app.dart` weiter funktionieren.
 export 'package:einstellungstest_trainer/theme/app_theme.dart'
-    show buildAppTheme, AppFonts, MonoText;
+    show buildAppTheme, AppFonts, NumText;
 export 'package:einstellungstest_trainer/theme/design_tokens.dart'
-    show ExamTokens, ExamTokensAccess, Radii, Gap;
+    show ExamTokens, ExamTokensAccess, ModulePalette, Radii, Gap;
 
 
 class EinstellungstestTrainerApp extends ConsumerStatefulWidget {
@@ -57,6 +58,7 @@ class _EinstellungstestTrainerAppState
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: buildAppTheme(Brightness.light),
       darkTheme: buildAppTheme(Brightness.dark),
+      themeMode: ref.watch(themeModeProvider),
       home: const AppShell(),
     );
   }

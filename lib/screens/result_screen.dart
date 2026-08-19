@@ -7,6 +7,10 @@ import 'package:einstellungstest_trainer/models/training_session.dart';
 import 'package:einstellungstest_trainer/services/quiz_controller.dart';
 import 'package:einstellungstest_trainer/widgets/stat_tile.dart';
 import 'package:einstellungstest_trainer/widgets/timer_bar.dart';
+import 'package:einstellungstest_trainer/theme/app_theme.dart';
+import 'package:einstellungstest_trainer/theme/design_tokens.dart';
+import 'package:einstellungstest_trainer/widgets/section_title.dart';
+import 'package:einstellungstest_trainer/widgets/time_chart.dart';
 import 'package:flutter/material.dart';
 
 /// Auswertung einer Übungs- oder Sprint-Runde.
@@ -42,147 +46,186 @@ class QuizResultScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final tokens = context.tokens;
     final byTopic = summary.resultsBySubCategory;
+    final side = Gap.screenPadding(MediaQuery.sizeOf(context).width);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Auswertung'),
-        automaticallyImplyLeading: false,
-      ),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        child: Column(
           children: [
-            _ResultHeadline(
-              title: _isSprint
-                  ? '${summary.correctCount} richtig in '
-                      '${QuizController.sprintSeconds} Sekunden'
-                  : '${summary.correctCount} von ${summary.total} richtig',
-              subtitle: _isSprint ? scopeLabel : '$scopeLabel · ${mode.label}',
-              accuracy: summary.accuracy,
-            ),
-            if (_isSprint) ...[
-              const SizedBox(height: 12),
-              _SprintRecordBanner(
-                score: summary.correctCount,
-                previousBest: previousSprintBest,
-                isNewBest: _isNewBest,
+            Padding(
+              padding: EdgeInsets.fromLTRB(side, 0, side, 0),
+              child: SizedBox(
+                height: 60,
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close_rounded),
+                      tooltip: 'Zurück',
+                    ),
+                    const SizedBox(width: Gap.sm),
+                    Expanded(
+                      child: Text(
+                        '${mode.label} abgeschlossen',
+                        style: theme.textTheme.titleMedium,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ],
-            const SizedBox(height: 18),
-            Row(
-              children: [
-                Expanded(
-                  child: StatTile(
-                    value: '${summary.correctCount}',
-                    label: 'richtig',
-                    icon: Icons.check_circle_outline,
-                    color: const Color(0xFF0E9F6E),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatTile(
-                    value: '${summary.wrongCount}',
-                    label: 'falsch',
-                    icon: Icons.cancel_outlined,
-                    color: theme.colorScheme.error,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _isSprint
-                      // Im Sprint ist die Warteschlange absichtlich länger als
-                      // machbar – "offen" wäre hier ohne Aussage.
-                      ? StatTile(
-                          value: '${summary.total}',
-                          label: 'bearbeitet',
-                          icon: Icons.checklist_rtl,
-                        )
-                      : StatTile(
-                          value: '${summary.skippedCount}',
-                          label: 'offen',
-                          icon: Icons.remove_circle_outline,
+            ),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.fromLTRB(side, Gap.sm, side, Gap.header),
+                children: [
+                  // Die Trefferquote ist die eine Zahl, auf die alle
+                  // schauen – deshalb steht sie allein und gross.
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: Gap.sm),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${(summary.accuracy * 100).round()} %',
+                          style: NumText.display.copyWith(
+                            color: theme.colorScheme.onSurface,
+                          ),
                         ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: StatTile(
-                    value: '${((1 - summary.accuracy) * 100).round()} %',
-                    label: 'Fehlerquote',
-                    icon: Icons.percent,
-                    color: theme.colorScheme.error,
+                        const SizedBox(height: Gap.xs),
+                        Text(
+                          _isSprint
+                              ? '${summary.correctCount} richtig in '
+                                  '${QuizController.sprintSeconds} Sekunden · '
+                                  '$scopeLabel'
+                              : '${summary.correctCount} von ${summary.total} '
+                                  'richtig · $scopeLabel',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatTile(
-                    value: formatShortDuration(summary.averageTimePerQuestion),
-                    label: 'Ø pro Aufgabe',
-                    icon: Icons.speed_outlined,
+                  if (_isSprint) ...[
+                    const SizedBox(height: Gap.card),
+                    _SprintRecordBanner(
+                      score: summary.correctCount,
+                      previousBest: previousSprintBest,
+                      isNewBest: _isNewBest,
+                    ),
+                  ],
+                  const SizedBox(height: Gap.cardWide),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: Gap.card,
+                      vertical: Gap.card,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tokens.sunk,
+                      borderRadius: Radii.bandRadius,
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _Fact(
+                            value: '${((1 - summary.accuracy) * 100).round()} %',
+                            label: 'Fehlerquote',
+                          ),
+                        ),
+                        Expanded(
+                          child: _Fact(
+                            value: formatShortDuration(
+                              summary.averageTimePerQuestion,
+                            ),
+                            label: 'Ø pro Aufgabe',
+                          ),
+                        ),
+                        Expanded(
+                          child: _Fact(
+                            value: formatShortDuration(summary.duration),
+                            label: 'Gesamtzeit',
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: StatTile(
-                    value: formatShortDuration(summary.duration),
-                    label: 'Gesamtdauer',
-                    icon: Icons.schedule_outlined,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              _isSprint
-                  ? 'Die Fehlerquote bezieht sich auf die bearbeiteten '
-                      'Aufgaben. Der Durchschnitt zählt nur beantwortete.'
-                  : 'Die Fehlerquote bezieht offene Aufgaben mit ein. '
-                      'Der Durchschnitt zählt nur tatsächlich bearbeitete '
-                      'Aufgaben.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+                  if (answers.isNotEmpty) ...[
+                    const SizedBox(height: Gap.section),
+                    const SectionTitle('Zeit pro Aufgabe'),
+                    TimePerQuestionChart(
+                      bars: [
+                        for (final record in answers)
+                          TimeBar(
+                            seconds: record.timeSpent.inSeconds,
+                            correct: record.isCorrect,
+                          ),
+                      ],
+                    ),
+                  ],
+                  if (byTopic.length > 1) ...[
+                    const SizedBox(height: Gap.section),
+                    const SectionTitle('Nach Thema'),
+                    for (final entry in byTopic.entries)
+                      _TopicRow(subCategory: entry.key, results: entry.value),
+                  ],
+                  const SizedBox(height: Gap.section),
+                  const SectionTitle('Aufgaben im Überblick'),
+                  for (var index = 0; index < answers.length; index++)
+                    _AnswerReviewTile(number: index + 1, record: answers[index]),
+                ],
               ),
             ),
-            if (byTopic.length > 1) ...[
-              const SizedBox(height: 26),
-              Text(
-                'Nach Thema',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(side, Gap.sm, side, Gap.md),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('Zum Menü'),
+                    ),
+                  ),
+                  const SizedBox(width: Gap.md),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: onRetry,
+                      child: const Text('Nochmal'),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              for (final entry in byTopic.entries)
-                _TopicRow(subCategory: entry.key, results: entry.value),
-            ],
-            const SizedBox(height: 26),
-            Text(
-              'Aufgaben im Überblick',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 10),
-            for (var index = 0; index < answers.length; index++)
-              _AnswerReviewTile(number: index + 1, record: answers[index]),
-            const SizedBox(height: 20),
-            FilledButton(
-              onPressed: onRetry,
-              child: const Text('Noch eine Runde'),
-            ),
-            const SizedBox(height: 10),
-            OutlinedButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Zurück zur Auswahl'),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Eine Kennzahl in der Rille unter der Trefferquote.
+class _Fact extends StatelessWidget {
+  const _Fact({required this.value, required this.label});
+
+  final String value;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          value,
+          style: NumText.metric.copyWith(
+            fontSize: 19,
+            color: theme.colorScheme.onSurface,
+          ),
+        ),
+        Text(label, style: theme.textTheme.labelSmall),
+      ],
     );
   }
 }
@@ -361,7 +404,7 @@ class _PauseNotice extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
@@ -410,7 +453,7 @@ class _CategoryRow extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -441,7 +484,7 @@ class _CategoryRow extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(Radii.pill),
             child: LinearProgressIndicator(
               value: results.isEmpty ? 0 : correct / results.length,
               minHeight: 6,
@@ -503,7 +546,7 @@ class _SprintRecordBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: color.withValues(alpha: 0.35)),
       ),
       child: Row(
@@ -552,7 +595,7 @@ class _ResultHeadline extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: theme.colorScheme.primaryContainer,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: Radii.bandRadius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +616,7 @@ class _ResultHeadline extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(Radii.pill),
             child: LinearProgressIndicator(
               value: accuracy,
               minHeight: 8,
@@ -632,7 +675,7 @@ class _TopicRow extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(Radii.pill),
             child: LinearProgressIndicator(
               value: ratio,
               minHeight: 5,
@@ -662,7 +705,7 @@ class _PartResultCard extends StatelessWidget {
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: theme.colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: Radii.bandRadius,
         border: Border.all(color: theme.colorScheme.outlineVariant),
       ),
       child: Column(
@@ -689,7 +732,7 @@ class _PartResultCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(99),
+            borderRadius: BorderRadius.circular(Radii.pill),
             child: LinearProgressIndicator(
               value: result.accuracy,
               minHeight: 6,
@@ -726,7 +769,7 @@ class _AnswerReviewTile extends StatelessWidget {
 
     final (Color color, IconData icon, String status) = switch (record) {
       _ when record.isCorrect => (
-          const Color(0xFF0E9F6E),
+          context.tokens.correct,
           Icons.check_circle,
           'Richtig',
         ),
@@ -743,7 +786,7 @@ class _AnswerReviewTile extends StatelessWidget {
       elevation: 0,
       color: theme.colorScheme.surfaceContainerLow,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: Radii.bandRadius,
         side: BorderSide(color: theme.colorScheme.outlineVariant),
       ),
       child: ExpansionTile(
@@ -777,13 +820,13 @@ class _AnswerReviewTile extends StatelessWidget {
           _ReviewLine(
             label: 'Deine Antwort',
             value: record.responseText,
-            color: record.isCorrect ? const Color(0xFF0E9F6E) : color,
+            color: record.isCorrect ? context.tokens.correct : color,
           ),
           const SizedBox(height: 4),
           _ReviewLine(
             label: 'Richtige Antwort',
             value: question.correctAnswerText,
-            color: const Color(0xFF0E9F6E),
+            color: context.tokens.correct,
           ),
           const SizedBox(height: 10),
           Text(
